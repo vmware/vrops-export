@@ -1,5 +1,5 @@
 @ECHO OFF
-REM Copyright 2017 Pontus Rydin
+REM Copyright 2017 VMware, Inc. All Rights Reserved.
 REM
 REM Licensed under the Apache License, Version 2.0 (the "License");
 REM you may not use this file except in compliance with the License.
