@@ -1,6 +1,8 @@
 @ECHO OFF
 REM Copyright 2017 VMware, Inc. All Rights Reserved.
 REM
+REM SPDX-License-Identifier: Apache-2.0
+REM
 REM Licensed under the Apache License, Version 2.0 (the "License");
 REM you may not use this file except in compliance with the License.
 REM You may obtain a copy of the License at
