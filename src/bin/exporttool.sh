@@ -28,4 +28,4 @@ if [ -n "$JDBC_JAR" ]
 then
 	CP=$CP:$JDBC_JAR
 fi
-$JAVA -cp $CP -Djsse.enableSNIExtension=false net.virtualviking.vropsexport.Main "$@"
+$JAVA -cp $CP -Djsse.enableSNIExtension=false com.vmware.vropsexport.Main "$@"

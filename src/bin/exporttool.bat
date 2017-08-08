@@ -25,4 +25,4 @@ SET CP=%DIR%\vrops-export-%VERSION%.jar
 IF [%JDBC_JAR%] == [] GOTO :NO_JDBC_JAR
 SET CP=%CP%;%JDBC_JAR%
 :NO_JDBC_JAR
-JAVA -cp %CP% -Djsse.enableSNIExtension=false net.virtualviking.vropsexport.Main %*
+JAVA -cp %CP% -Djsse.enableSNIExtension=false com.vmware.vropsexport.Main %*

@@ -81,7 +81,7 @@
 				<archive>
 					<manifest>
 						<addClasspath>true</addClasspath>
-						<mainClass>net.virtualviking.vropsexport.Main</mainClass>
+						<mainClass>com.vmware.vropsexport.Main</mainClass>
 					</manifest>
 				</archive>
 			</configuration>
@@ -117,7 +117,7 @@
 				</descriptorRefs>
 				<archive>
 					<manifest>
-						<mainClass>net.virtualviking.vropsexport.Main</mainClass>
+						<mainClass>com.vmware.vropsexport.Main</mainClass>
 					</manifest>
 				</archive -->
 				<descriptors>
