@@ -15,31 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.virtualviking.vropsexport.processors;
+package com.vmware.vropsexport.processors;
 
-import net.virtualviking.vropsexport.CSVConfig;
-import net.virtualviking.vropsexport.Config;
-import net.virtualviking.vropsexport.DataProvider;
-import net.virtualviking.vropsexport.ExporterException;
-import net.virtualviking.vropsexport.ProgressMonitor;
+import com.vmware.vropsexport.CSVConfig;
+import com.vmware.vropsexport.Config;
+import com.vmware.vropsexport.DataProvider;
+import com.vmware.vropsexport.ExporterException;
+import com.vmware.vropsexport.ProgressMonitor;
 
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import net.virtualviking.vropsexport.RowMetadata;
+import com.vmware.vropsexport.RowMetadata;
 
 import org.apache.http.HttpException;
 
 import java.util.Date;
 import java.util.Iterator;
 
-import net.virtualviking.vropsexport.Row;
+import com.vmware.vropsexport.Row;
 import java.io.BufferedWriter;
 
-import net.virtualviking.vropsexport.Rowset;
-import net.virtualviking.vropsexport.RowsetProcessor;
-import net.virtualviking.vropsexport.RowsetProcessorFacotry;
+import com.vmware.vropsexport.Rowset;
+import com.vmware.vropsexport.RowsetProcessor;
+import com.vmware.vropsexport.RowsetProcessorFacotry;
 
 public class CSVPrinter implements RowsetProcessor {
 
