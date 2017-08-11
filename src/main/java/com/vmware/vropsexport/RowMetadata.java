@@ -152,6 +152,16 @@ public class RowMetadata {
 	public boolean hasProperties() {
 		return propMap.size() > 0;
 	}
+
+	public boolean needsPropertyLoad() {
+		if(!hasProperties())
+			return false;
+		for(String key : propMap.keySet()) {
+			if(!(key.equals("$resId") || key.equals("$resName")))
+				return true;
+		}
+		return false;
+	}
 	
 	public boolean isValid() {
 		return resourceKind != null;

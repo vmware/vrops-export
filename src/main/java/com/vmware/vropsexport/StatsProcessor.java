@@ -99,13 +99,15 @@ public class StatsProcessor {
 	 			this.expect(p,  "key");
 	 			String statKey = p.nextTextValue();
 	 			this.expect(p, JsonToken.END_OBJECT);
-	 			this.expect(p, "rollUpType");
-	 			p.nextTextValue(); // Ignore value for now...
-	 			this.skipStruct(p, "intervalUnit");
+
+	 			// Keep skipping members until we've found the data node
+				//
+				while(!expectMaybe(p, "data")) {
+					this.skipMember(p, null);
+				}
 	 			
 	 			// Process data[ ...
 	 			//
-	 			this.expect(p, "data");
 	 			this.expect(p, JsonToken.START_ARRAY);
 	 			int metricIdx = rowMetadata.getMetricIndex(statKey);
 	 			int i = 0;
@@ -154,12 +156,14 @@ public class StatsProcessor {
 					
 					// Splice in properties
 					//
-					Map<String, String> props = dataProvider.fetchProps(resourceId);
-					for(Map.Entry<String, String> e : props.entrySet()) {
-						int idx = rowMetadata.getPropertyIndex(e.getKey());
-						if(idx != -1) {
-							for(Row row : rs.getRows().values()) {
-								row.setProp(idx, e.getValue());
+					if(rowMetadata.needsPropertyLoad()) {
+						Map<String, String> props = dataProvider.fetchProps(resourceId);
+						for (Map.Entry<String, String> e : props.entrySet()) {
+							int idx = rowMetadata.getPropertyIndex(e.getKey());
+							if (idx != -1) {
+								for (Row row : rs.getRows().values()) {
+									row.setProp(idx, e.getValue());
+								}
 							}
 						}
 					}
@@ -222,16 +226,23 @@ public class StatsProcessor {
 	}
 	
 	private void expect(JsonParser p, String fieldname) throws ExporterException, IOException {
-		p.nextToken();
-		if(!fieldname.equals(p.getCurrentName())) {
+		if(!expectMaybe(p, fieldname)) {
 			throw new ExporterException("Expected field name " + fieldname + ", got " + p.getCurrentName());
 		}
 	}
-	
+
+	private boolean expectMaybe(JsonParser p, String fieldname) throws ExporterException, IOException {
+		p.nextToken();
+		return fieldname == null || fieldname.equals(p.getCurrentName());
+	}
 	private void expectCurrent(JsonParser p, String fieldname) throws ExporterException, IOException {
 		if(!fieldname.equals(p.getCurrentName())) {
 			throw new ExporterException("Expected field name " + fieldname + ", got " + p.getCurrentName());
 		}
+	}
+
+	private boolean expectCurrentMaybe(JsonParser p, String fieldname) throws ExporterException, IOException {
+		return fieldname.equals(p.getCurrentName());
 	}
 	
 	private void skipStruct(JsonParser p, String fieldname) throws ExporterException, IOException {
@@ -239,5 +250,37 @@ public class StatsProcessor {
 		this.expect(p, JsonToken.START_OBJECT);
 		while(p.nextToken() != JsonToken.END_OBJECT)
 			;
+	}
+
+	private boolean skipMemberMaybe(JsonParser p, String fieldName) throws ExporterException, IOException {
+		if(fieldName != null && !expectCurrentMaybe(p, fieldName))
+			return false;
+		expect(p, fieldName); // Advance past the field name
+		JsonToken t = p.nextToken();
+		if(t == JsonToken.START_ARRAY)
+			skipComplex(p, 0, 1);
+		else if(t == JsonToken.START_OBJECT)
+			skipComplex(p, 1, 0);
+		return true;
+	}
+
+	private boolean skipMember(JsonParser p, String fieldName) throws ExporterException, IOException {
+		if(!skipMemberMaybe(p, fieldName))
+			throw new ExporterException("Expected field name " + fieldName + ", got " + p.getCurrentName());
+		return true;
+	}
+
+	private void skipComplex(JsonParser p, int structLevel, int arrayLevel) throws IOException {
+		while(structLevel > 0 && arrayLevel > 0) {
+			JsonToken t = p.nextToken();
+			if(t == JsonToken.START_ARRAY)
+				++arrayLevel;
+			else if(t == JsonToken.END_ARRAY)
+				--arrayLevel;
+			else if(t == JsonToken.START_OBJECT)
+				++structLevel;
+			else if(t == JsonToken.END_OBJECT)
+				--structLevel;
+		}
 	}
 }

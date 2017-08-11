@@ -62,7 +62,7 @@ public class Client {
 
 	private static final int CONNECTION_REQUEST_TIMEOUT_MS = 60000;
 
-	private static final int SOCKET_TIMEOUT_MS = 60000;
+	private static final int SOCKET_TIMEOUT_MS = 300000;
 
 	private final HttpClient client;
 

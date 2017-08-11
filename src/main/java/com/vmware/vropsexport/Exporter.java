@@ -71,7 +71,7 @@ public class Exporter implements DataProvider {
 
 	private final Map<String, Integer> statPos = new HashMap<>();
 	
-	private final LRUCache<String, String> nameCache = new LRUCache<>(1000);
+	private final LRUCache<String, String> nameCache = new LRUCache<>(10000);
 	
 	private final Client client;
 	
@@ -80,10 +80,6 @@ public class Exporter implements DataProvider {
 	private LRUCache<String, Rowset> rowsetCache = new LRUCache<>(200); 
 		
 	private static final int MAX_RESPONSE_ROWS = 100000; // TODO: This is a wild guess. It seems vR Ops barfs on responses that are too long.
-	
-	private static final int MAX_CHUNKSIZE = 10;
-	
-	private static final int PAGE_SIZE = 1000;
 			
 	private final boolean verbose;
 	
@@ -94,6 +90,10 @@ public class Exporter implements DataProvider {
 	private RowsetProcessorFacotry rspFactory;
 	
 	private final int maxRows;
+
+	private final int maxResourceFetch;
+
+	private final int maxMetricFetch;
 	
 	private static final Map<String, RowsetProcessorFacotry> rspFactories = new HashMap<>();
 	
@@ -103,7 +103,7 @@ public class Exporter implements DataProvider {
 	}
 
 	public Exporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows,
-			KeyStore extendedTrust)
+			int maxResourceFetch, int maxMetricFetch, KeyStore extendedTrust)
 			throws IOException, HttpException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException, ExporterException {
 		if(conf != null)  {
 			this.rspFactory = rspFactories.get(conf.getOutputFormat());
@@ -116,6 +116,8 @@ public class Exporter implements DataProvider {
 		this.useTempFile = useTempFile;
 		this.conf = conf;
 		this.maxRows = maxRows;
+		this.maxMetricFetch = maxMetricFetch;
+		this.maxResourceFetch = maxResourceFetch;
 		this.client = new Client(urlBase, username, password, threads, extendedTrust);
 		
 		// Calling this with a null conf is only valid if we're printing field names and nothing else. 
@@ -190,15 +192,12 @@ public class Exporter implements DataProvider {
 			long rollupMs = (conf.getRollupMinutes() * 60000);
 			long nSamplesPerRes = Math.max((end - begin) / rollupMs, 1);
 			long estimatedRows = conf.getFields().length * nSamplesPerRes;
-			int chunkSize = (int) Math.min(Math.max(MAX_RESPONSE_ROWS / estimatedRows, 1), MAX_CHUNKSIZE);
+			int chunkSize = (int) Math.min(Math.max(MAX_RESPONSE_ROWS / estimatedRows, 1), maxMetricFetch);
 			if(verbose) 
 				System.err.println("Processing chunks of " + chunkSize + " resources");
 			ArrayList<JSONObject> chunk = new ArrayList<>(chunkSize);
 			for (int i = 0; i < resources.length(); ++i) {
 				JSONObject res = resources.getJSONObject(i);
-				synchronized(nameCache) {
-					nameCache.put(res.getString("identifier"), res.getJSONObject("resourceKey").getString("name"));
-				}
 				chunk.add(res);
 				if(chunk.size() >= chunkSize || i == resources.length() - 1) { 
 					
@@ -246,12 +245,18 @@ public class Exporter implements DataProvider {
 			@Override
 			public void run() {
 				try {
+					preloadCache(chunk);
 					handleResources(bw, chunk, rsp, meta, begin, end, progress);
 				} catch (Exception e) {
 					log.error("Error while processing resource", e);
 				}
 			}
 		});
+	}
+
+	private void preloadCache(List<JSONObject> resources) {
+		for(JSONObject res : resources)
+			nameCache.put(res.getString("identifier"), res.getJSONObject("resourceKey").getString("name"));
 	}
 	
 	private JSONObject fetchResources(String resourceKind, String adapterKind, String name, int page) throws JSONException, IOException, HttpException {
@@ -260,7 +265,7 @@ public class Exporter implements DataProvider {
 		if(adapterKind != null)
 			qs.add("adapterKind=" + adapterKind);
 		qs.add("resourceKind=" + resourceKind);
-		qs.add("pageSize=" + PAGE_SIZE);
+		qs.add("pageSize=" + maxResourceFetch);
 		qs.add("page=" + page);
 		if(name != null)
 			qs.add("name=" + name);
@@ -277,12 +282,15 @@ public class Exporter implements DataProvider {
 			if(name != null)
 				return name;
 		}
+		long start = System.currentTimeMillis();
 		String url = "/suite-api/api/resources/" + resourceId;
 		JSONObject res = client.getJson(url);
 		String name = res.getJSONObject("resourceKey").getString("name");
 		synchronized(nameCache) {
 			nameCache.put(resourceId, name);
 		}
+		if(verbose)
+			System.err.println("Name cache miss. Lookup took " + (System.currentTimeMillis() - start));
 		return name;
 	}
 	
@@ -293,11 +301,13 @@ public class Exporter implements DataProvider {
 		for(JSONObject res : resList) 
 			ids.put(res.getString("identifier"));
 		q.put("resourceId", ids);
-		q.put("intervalType", "MINUTES");
-		q.put("intervalQuantifier", conf.getRollupMinutes());
 		q.put("rollUpType", conf.getRollupType());
-		q.put("begin", begin);
-		q.put("end", end);
+		if(!conf.getRollupType().equals("LATEST")) {
+			q.put("intervalType", "MINUTES");
+			q.put("intervalQuantifier", conf.getRollupMinutes());
+			q.put("begin", begin);
+			q.put("end", end);
+		}
 		JSONArray stats = new JSONArray();
 		for(String f : meta.getMetricMap().keySet())
 			stats.put(f);

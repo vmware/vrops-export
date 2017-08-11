@@ -97,11 +97,11 @@ public class Main {
 			//
 			String resourceKind = commandLine.getOptionValue('F');
 			if(resourceKind != null) {
-				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, trustStore, trustPass);
+				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, 1000, 100, trustStore, trustPass);
 				exporter.printResourceMetadata(resourceKind, System.out);
 			} else if(commandLine.hasOption('R')) {
 				String adapterKind = commandLine.getOptionValue('R');
-				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, trustStore, trustPass);
+				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, 1000, 100, trustStore, trustPass);
 				exporter.printResourceKinds(adapterKind, System.out);
 			} else {	
 				String defFile = commandLine.getOptionValue('d');
@@ -135,6 +135,30 @@ public class Main {
 						throw new ExporterException("Number of threads must be a valid integer");
 					}
 				}
+				int maxRes = 1000;
+				int maxStats = 100;
+				tmp = commandLine.getOptionValue("resfetch");
+				if(tmp != null) {
+					try {
+						maxRes = Integer.parseInt(tmp);
+						if(threads < 1 || threads > 50000) {
+							throw new ExporterException("Resource fetch must greater than 0 and smaller than 50000");
+						}
+					} catch(NumberFormatException e) {
+						throw new ExporterException("Resource fetch must be a valid integer");
+					}
+				}
+				tmp = commandLine.getOptionValue("statfetch");
+				if(tmp != null) {
+					try {
+						maxStats = Integer.parseInt(tmp);
+						if(threads < 1 || threads > 5000) {
+							throw new ExporterException("Stat fetch must greater than 0 and smaller than 5000");
+						}
+					} catch(NumberFormatException e) {
+						throw new ExporterException("Stat fetch must be a valid integer");
+					}
+				}
 
 				// Read definition and run it!
 				//
@@ -165,7 +189,7 @@ public class Main {
 							throw new ExporterException(e.getMessage());
 						}
 					}
-					Exporter exporter = createExporter(host, username, password, threads, conf, verbose, useTmpFile, maxRows, trustStore, trustPass);
+					Exporter exporter = createExporter(host, username, password, threads, conf, verbose, useTmpFile, maxRows, maxRes, maxStats, trustStore, trustPass);
 					Writer wrt = output != null ? new FileWriter(output) : new OutputStreamWriter(System.out);
 					exporter.exportTo(wrt, begin, end, namePattern, parentSpec, quiet);
 
@@ -182,13 +206,13 @@ public class Main {
 		}
 	}
 
-	private static Exporter createExporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows, String trustStore, String trustPass) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, KeyManagementException, HttpException, ExporterException
+	private static Exporter createExporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows, int maxRes, int maxStats, String trustStore, String trustPass) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, KeyManagementException, HttpException, ExporterException
 	{
 		boolean retry = false;
 		do {
 			KeyStore ks = CertUtils.loadExtendedTrust(trustStore, trustPass);
 			try {
-				return new Exporter(urlBase, username, password, threads, conf, verbose, useTempFile, maxRows, ks);
+				return new Exporter(urlBase, username, password, threads, conf, verbose, useTempFile, maxRows, maxRes, maxStats, ks);
 			} catch(RecoverableCertificateException e) {
 				retry = promptForTrust(e.getCapturedCerts()[0], trustStore, trustPass);
 				if(!retry)
@@ -236,6 +260,8 @@ public class Main {
 		opts.addOption("m", "max-rows", true, "Maximum number of rows to fetch from API (default=unlimited)");
 		opts.addOption("T", "truststore", true, "Truststore filename");
 		opts.addOption(null, "trustpass", true, "Truststore password (default=changeit)");
+		opts.addOption(null, "resfetch", true, "Resource fetch count (default=1000)");
+		opts.addOption(null, "statfetch", true, "Stats fetch count (default=100)");
 		opts.addOption("h", "help", false, "Print a short help text");
 		return opts;
 	}		
