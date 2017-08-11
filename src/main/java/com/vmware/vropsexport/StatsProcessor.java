@@ -235,6 +235,7 @@ public class StatsProcessor {
 		p.nextToken();
 		return fieldname == null || fieldname.equals(p.getCurrentName());
 	}
+
 	private void expectCurrent(JsonParser p, String fieldname) throws ExporterException, IOException {
 		if(!fieldname.equals(p.getCurrentName())) {
 			throw new ExporterException("Expected field name " + fieldname + ", got " + p.getCurrentName());
@@ -243,13 +244,6 @@ public class StatsProcessor {
 
 	private boolean expectCurrentMaybe(JsonParser p, String fieldname) throws ExporterException, IOException {
 		return fieldname.equals(p.getCurrentName());
-	}
-	
-	private void skipStruct(JsonParser p, String fieldname) throws ExporterException, IOException {
-		this.expect(p, fieldname);
-		this.expect(p, JsonToken.START_OBJECT);
-		while(p.nextToken() != JsonToken.END_OBJECT)
-			;
 	}
 
 	private boolean skipMemberMaybe(JsonParser p, String fieldName) throws ExporterException, IOException {
