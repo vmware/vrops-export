@@ -855,7 +855,14 @@
       <option name="project" value="LOCAL" />
       <updated>1502465046433</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Increased socket read timeout to allow bigger chunks&#10;&#10;Optimized name caching&#10;&#10;Optimized parser">
+      <created>1502465055799</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1502465055799</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="ToolWindowManager">
