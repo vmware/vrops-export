@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 resourceType: VMWARE:VirtualMachine
-rollupType: LATEST
+rollupType: AVG
 rollupMinutes: 5
 compact: true
 outputFormat: csv

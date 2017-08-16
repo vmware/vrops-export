@@ -78,6 +78,8 @@ public class Config {
 	private SQLConfig sqlConfig;
 	private String resourceKind;
 	private String adapterKind;
+	private boolean compact;
+	private String compactifyAlg = "LATEST";
 	private CSVConfig csvConfig;
 
 	public Config() {
@@ -178,5 +180,25 @@ public class Config {
 
 	public void setCsvConfig(CSVConfig csvConfig) {
 		this.csvConfig = csvConfig;
+	}
+
+	public String getResourceType() {
+		return resourceType;
+	}
+
+	public boolean isCompact() {
+		return compact;
+	}
+
+	public void setCompact(boolean compact) {
+		this.compact = compact;
+	}
+
+	public String getCompactifyAlg() {
+		return compactifyAlg;
+	}
+
+	public void setCompactifyAlg(String compactifyAlg) {
+		this.compactifyAlg = compactifyAlg;
 	}
 }

@@ -206,9 +206,65 @@ public class StatsProcessor {
 			if(verbose)
 				System.err.println("Processed " + rs.getRows().size() + " rows. Memory used: " + 
 						Runtime.getRuntime().totalMemory() + " max=" + Runtime.getRuntime().maxMemory());
+
+			// Compactify if needed
+			//
+			if(conf.isCompact())
+				rs = this.compactify(rs);
 			proc.process(rs, rowMetadata);
 		}
 		this.expect(p, JsonToken.END_OBJECT);
+	}
+
+	private Rowset compactify(Rowset rs) throws ExporterException {
+		// No need to process empty rowsets
+		//
+		if(rs.getRows().size() == 0)
+			return rs;
+
+		// Calculate range according to compactification algorithm.
+		//
+        long startTime = System.currentTimeMillis();
+		TreeMap<Long, Row> rows = rs.getRows();
+		long start = 0;
+		long end = 0;
+		long ts = 0;
+		String alg = conf.getCompactifyAlg();
+		if(alg == null || alg.equalsIgnoreCase("LATEST")) { // "LATEST" is the default
+			end = rows.lastKey();
+			start = end - conf.getRollupMinutes() * 60000;
+			ts = end;
+		} else if(alg.equalsIgnoreCase("MEDIAN")) {
+			long median = 0;
+			long half = rows.size() / 2;
+			int i = 0;
+			for(long t : rows.keySet()) {
+				median = t;
+				if(i++ > half)
+					break;
+			}
+			start = median - conf.getRollupMinutes() * 30000;
+			end = median + conf.getRollupMinutes() * 30000;
+			ts = median;
+		} else if(alg.equalsIgnoreCase("LOCAL")) {
+			end = System.currentTimeMillis();
+			start = end - conf.getRollupMinutes() * 60000;
+			ts = end;
+		} else
+			throw new ExporterException("Unknown compactification algorithm: " + alg);
+
+		// Compactify everything that fits within the timerange into a single row
+		//
+		Row target = rowMetadata.newRow(ts);
+		for(Row r : rows.values()) {
+			if(r.getTimestamp() <= end && r.getTimestamp() >= start)
+				target.merge(r);
+		}
+		TreeMap<Long, Row> result = new TreeMap<>();
+		result.put(ts, target);
+		if(verbose)
+		    System.err.println("Compactifying " + rs.getRows().size() + " rows took " + (System.currentTimeMillis() - startTime) + " ms");
+		return new Rowset(rs.getResourceId(), result);
 	}
 	
 	private void expect(JsonParser p, JsonToken token) throws ExporterException, IOException {

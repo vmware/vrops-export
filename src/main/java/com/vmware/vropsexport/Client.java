@@ -68,8 +68,6 @@ public class Client {
 
 	private final String urlBase;
 
-	private final  LRUCache<String, JSONObject> jsonCache = new LRUCache<>(1000);
-
 	private String authToken;
 
 	private Certificate[] peerCerts;
@@ -122,15 +120,16 @@ public class Client {
 	}
 
 	public JSONObject getJson(String uri, String ...queries) throws IOException, HttpException {
+		HttpResponse resp = this.innerGet(uri, queries);
+		JSONObject result = new JSONObject(EntityUtils.toString(resp.getEntity()));
+		return result;
+	}
+
+	private HttpResponse innerGet(String uri, String ...queries) throws IOException, HttpException {
 		if(queries != null) {
 			for(int i = 0; i < queries.length; ++i) {
 				uri += i == 0 ? '?' : '&';
 				uri += queries[i];
-			}
-		}
-		synchronized(jsonCache) {
-			if(jsonCache.containsKey(uri)) {
-				return jsonCache.get(uri);
 			}
 		}
 		HttpGet get = new HttpGet(urlBase + uri);
@@ -139,11 +138,7 @@ public class Client {
 			get.addHeader("Authorization", "vRealizeOpsToken " + this.authToken + "");
 		HttpResponse resp = client.execute(get);
 		this.checkResponse(resp);
-		JSONObject result = new JSONObject(EntityUtils.toString(resp.getEntity()));
-		synchronized(jsonCache) {
-			jsonCache.put(uri, result);
-		}
-		return result;
+		return resp;
 	}
 
 	public InputStream postJsonReturnStream(String uri, JSONObject payload) throws IOException, HttpException {
@@ -160,13 +155,26 @@ public class Client {
 	}
 
 	public JSONObject getJson(String uri, List<String> queries) throws IOException, HttpException {
+		return this.getJson(uri, this.packQueries(queries));
+	}
+
+	public InputStream getStream(String uri, List<String> queries) throws IOException, HttpException {
+		return this.getStream(uri, this.packQueries(queries));
+	}
+
+	public InputStream getStream(String uri, String ...queries) throws IOException, HttpException {
+		HttpResponse resp = this.innerGet(uri, queries);
+		return resp.getEntity().getContent();
+	}
+
+	private String[] packQueries(List<String> queries) {
 		String[] s;
 		if(queries != null) {
 			s = new String[queries.size()];
 			queries.toArray(s);
 		} else
 			s = new String[0];
-		return this.getJson(uri, s);
+		return s;
 	}
 	
 	private HttpResponse checkResponse(HttpResponse response)

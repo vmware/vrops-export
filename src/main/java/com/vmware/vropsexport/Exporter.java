@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -71,7 +72,7 @@ public class Exporter implements DataProvider {
 
 	private final Map<String, Integer> statPos = new HashMap<>();
 	
-	private final LRUCache<String, String> nameCache = new LRUCache<>(10000);
+	private final LRUCache<String, String> nameCache = new LRUCache<>(100000);
 	
 	private final Client client;
 	
@@ -161,7 +162,6 @@ public class Exporter implements DataProvider {
 			parentId = pResources.getJSONObject(0).getString("identifier");
 		} 
 	
-		ProgressMonitor nullProgress = new NullProgress();
 		int page = 0;
 		for(;;) {
 			JSONObject resObj = null;
@@ -186,13 +186,7 @@ public class Exporter implements DataProvider {
 				progress = new Progress(resObj.getJSONObject("pageInfo").getInt("totalCount"));
 				progress.reportProgress(0);
 			}
-			
-			// Canculate a suitable chunk size by assuming that responses should be kept shorter than MAX_RESPONSE_ROWS.
-			//
-			long rollupMs = (conf.getRollupMinutes() * 60000);
-			long nSamplesPerRes = Math.max((end - begin) / rollupMs, 1);
-			long estimatedRows = conf.getFields().length * nSamplesPerRes;
-			int chunkSize = (int) Math.min(Math.max(MAX_RESPONSE_ROWS / estimatedRows, 1), maxMetricFetch);
+			int chunkSize = Math.min(MAX_RESPONSE_ROWS, this.maxRows);
 			if(verbose) 
 				System.err.println("Processing chunks of " + chunkSize + " resources");
 			ArrayList<JSONObject> chunk = new ArrayList<>(chunkSize);
@@ -209,19 +203,7 @@ public class Exporter implements DataProvider {
 						continue;
 					if(conf.getAdapterKind() != null && !rKey.getString("adapterKindKey").equals(conf.getAdapterKind()))
 						continue;
-					
-					// Split up into chunks
-					//
-					long b = begin;
-					long e = end;
-					while(b < end) {
-						if(this.maxRows != 0 && (end - b) / rollupMs > this.maxRows) {
-							e = b + this.maxRows * rollupMs;
-						} else
-							e = end;
-						this.startChunkJob(bw, chunk, rsp, meta, b, e, e == end ? progress : nullProgress);
-						b = e;
-					}
+					this.startChunkJob(bw, chunk, rsp, meta, begin, end, progress);
 					chunk = new ArrayList<>(chunkSize);
 				}
 			}
@@ -296,18 +278,38 @@ public class Exporter implements DataProvider {
 	
 	@Override
 	public InputStream fetchMetricStream(List<JSONObject> resList, RowMetadata meta, long begin, long end) throws IOException, HttpException {
+		return conf.getRollupType().equals("LATEST")
+				? this.fetchLatestMetrics(resList, meta)
+				: this.queryMetrics(resList, meta, begin, end);
+	}
+
+	private InputStream fetchLatestMetrics(List<JSONObject> resList, RowMetadata meta) throws IOException, HttpException {
 		JSONObject q = new JSONObject();
 		JSONArray ids = new JSONArray();
-		for(JSONObject res : resList) 
+		for(JSONObject res : resList)
+			ids.put(res.getString("identifier"));
+		q.put("resourceId", ids);
+		q.put("currentOnly", "true");
+		q.put("rollUpType", "LATEST");
+		q.put("maxSamples", 1);
+		JSONArray stats = new JSONArray();
+		for(String f : meta.getMetricMap().keySet())
+			stats.put(f);
+		q.put("statKey", stats);
+		return client.postJsonReturnStream("/suite-api/api/resources/stats/latest/query", q);
+	}
+
+	private InputStream queryMetrics(List<JSONObject> resList, RowMetadata meta, long begin, long end) throws IOException, HttpException {
+		JSONObject q = new JSONObject();
+		JSONArray ids = new JSONArray();
+		for(JSONObject res : resList)
 			ids.put(res.getString("identifier"));
 		q.put("resourceId", ids);
 		q.put("rollUpType", conf.getRollupType());
-		if(!conf.getRollupType().equals("LATEST")) {
-			q.put("intervalType", "MINUTES");
-			q.put("intervalQuantifier", conf.getRollupMinutes());
-			q.put("begin", begin);
-			q.put("end", end);
-		}
+		q.put("intervalType", "MINUTES");
+		q.put("intervalQuantifier", conf.getRollupMinutes());
+		q.put("begin", begin);
+		q.put("end", end);
 		JSONArray stats = new JSONArray();
 		for(String f : meta.getMetricMap().keySet())
 			stats.put(f);

@@ -95,4 +95,22 @@ public class Row {
 			return getMetric(mc++);
 		}
 	}
+
+	public void merge(Row r) {
+		// Merge metrics
+		//
+		for(int i = 0; i < r.getNumMetrics(); ++i) {
+			Double d = r.getMetric(i);
+			if(d != null)
+				metrics[i] = d;
+		}
+
+		// Merge properties
+		//
+		for(int i = 0; i < r.getNumProps(); ++i) {
+			String p = r.getProp(i);
+			if(p != null)
+				props[i] = p;
+		}
+	}
 }
