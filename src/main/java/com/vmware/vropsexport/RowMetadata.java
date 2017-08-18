@@ -32,8 +32,12 @@ public class RowMetadata {
 	private final Map<String, Integer> metricMap = new HashMap<>();
 	
 	private final Map<String, Integer> propMap = new HashMap<>();
+
+	private final Map<String, String> propNameToAlias = new HashMap<>();
 	
 	private final Map<String, Integer> metricAliasMap = new HashMap<>();
+
+	private final Map<String, String> metricNameToAlias = new HashMap<>();
 	
 	private final Map<String, Integer> propAliasMap = new HashMap<>();
 	
@@ -54,6 +58,7 @@ public class RowMetadata {
 					throw new ExporterException("Repeated metrics are not supported. Offending metric: " + metricKey);
 				metricMap.put(metricKey, mp);
 				metricAliasMap.put(fld.getAlias(), mp++);
+				metricNameToAlias.put(fld.getMetric(), fld.getAlias());
 			} else {
 				if(fld.hasProp()) {
 					String propKey = fld.getProp();
@@ -61,6 +66,7 @@ public class RowMetadata {
 						throw new ExporterException("Repeated properties are not supported. Offending property: " + propKey);
 					propMap.put(fld.getProp(), pp);
 					propAliasMap.put(fld.getAlias(), pp++);
+					propNameToAlias.put(fld.getProp(), fld.getAlias());
 					pip.add(mp);
 				}
 			}
@@ -136,6 +142,10 @@ public class RowMetadata {
 	public int getPropertyIndexByAlias(String property) {
 		return propAliasMap.containsKey(property) ? propAliasMap.get(property) : -1;
 	}
+
+	public String getAliasForProp(String name) { return propNameToAlias.get(name); }
+
+	public String getAliasForMetric(String name) { return metricNameToAlias.get(name); }
 	
 	public Row newRow(long timestamp) {
 		return new Row(timestamp, metricMap.size(), propMap.size());
