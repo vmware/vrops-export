@@ -20,5 +20,5 @@ package com.vmware.vropsexport;
 import java.io.BufferedWriter;
 
 public interface RowsetProcessorFacotry {
-	public RowsetProcessor makeFromConfig(BufferedWriter w, Config config, DataProvider dp, ProgressMonitor pm) throws ExporterException;
+	RowsetProcessor makeFromConfig(BufferedWriter w, Config config, DataProvider dp) throws ExporterException;
 }

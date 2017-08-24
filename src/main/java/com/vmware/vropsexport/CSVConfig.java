@@ -17,6 +17,7 @@
  */
 package com.vmware.vropsexport;
 
+@SuppressWarnings("unused")
 public class CSVConfig {
 	private boolean header = true;
 	

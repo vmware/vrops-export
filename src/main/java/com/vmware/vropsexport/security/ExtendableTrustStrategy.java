@@ -49,9 +49,9 @@ public class ExtendableTrustStrategy implements TrustStrategy, org.apache.http.s
 		if(trustManagers == null)
 			return false;
 		try {
-			for(int i = 0; i < trustManagers.length; ++i) {
-				((X509TrustManager) trustManagers[i]).checkServerTrusted(certs, authType);
-			}
+            for (TrustManager trustManager : trustManagers) {
+                ((X509TrustManager) trustManager).checkServerTrusted(certs, authType);
+            }
 		} catch(CertificateException e) {
 			return false;
 		}

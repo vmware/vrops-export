@@ -75,7 +75,7 @@ public class Row {
 		
 		private int pc;
 				
-		private RowMetadata meta;
+		private final RowMetadata meta;
 		
 		public Iterator(RowMetadata meta) {
 			this.meta = meta;
@@ -102,7 +102,7 @@ public class Row {
 		for(int i = 0; i < r.getNumMetrics(); ++i) {
 			Double d = r.getMetric(i);
 			if(d != null)
-				metrics[i] = d;
+				this.setMetric(i, d); // Don't be tempted to just set metrics[i]! Won't update the bitmap.
 		}
 
 		// Merge properties

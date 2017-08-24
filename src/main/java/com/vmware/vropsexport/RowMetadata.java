@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class RowMetadata {
 	private final String resourceKind;
@@ -38,9 +37,7 @@ public class RowMetadata {
 	private final Map<String, Integer> propAliasMap = new HashMap<>();
 	
 	private int[] propInsertionPoints;
-	
-	private Pattern parentPattern = Pattern.compile("^\\$parent\\:([_A-Za-z][_A-Za-z0-9]*)\\.(.+)$");
-	
+
 	public RowMetadata(Config conf) throws ExporterException {
 		this.resourceKind = conf.getResourceKind();
 		this.adapterKind = conf.getAdapterKind();
@@ -75,7 +72,7 @@ public class RowMetadata {
 		String t = null;
 		for(Map.Entry<String, Integer> e : child.propMap.entrySet()) {
 			String p = e.getKey();
-			Matcher m = parentPattern.matcher(p);
+			Matcher m = Patterns.parentPattern.matcher(p);
 			if(m.matches())  {
 				if(t == null)
 					t = m.group(1);
@@ -89,7 +86,7 @@ public class RowMetadata {
 		}
 		for(Map.Entry<String, Integer> e : child.metricMap.entrySet()) {
 			String mt = e.getKey();
-			Matcher m = parentPattern.matcher(mt);
+			Matcher m = Patterns.parentPattern.matcher(mt);
 			if(m.matches()) {
 				if(t == null)
 					t = m.group(1);

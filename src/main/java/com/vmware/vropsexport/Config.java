@@ -19,8 +19,10 @@ package com.vmware.vropsexport;
 
 import java.util.regex.Matcher;
 
+@SuppressWarnings("unused")
 public class Config {
-	public static class Field {
+	@SuppressWarnings("unused")
+    public static class Field {
 		private String alias;
 		private String metric;
 		private String prop;

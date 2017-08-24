@@ -51,6 +51,7 @@ import java.util.Map;
  *
  * Based on an example by Adam Crune
  */
+@SuppressWarnings("WeakerAccess")
 public class NamedParameterStatement {
 	
 	/** The statement this object is wrapping. */
@@ -90,11 +91,11 @@ public class NamedParameterStatement {
      * @return the parsed query
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	static final String parse(String query, Map paramMap) {
+	static String parse(String query, Map paramMap) {
         // I was originally using regular expressions, but they didn't work well for ignoring
         // parameter-like strings inside quotes.
         int length=query.length();
-        StringBuffer parsedQuery=new StringBuffer(length);
+        StringBuilder parsedQuery=new StringBuilder(length);
         boolean inSingleQuote=false;
         boolean inDoubleQuote=false;
         int index=1;
@@ -129,7 +130,7 @@ public class NamedParameterStatement {
                         indexList=new LinkedList();
                         paramMap.put(name, indexList);
                     }
-                    indexList.add(new Integer(index));
+                    indexList.add(index);
 
                     index++;
                 }
@@ -138,17 +139,17 @@ public class NamedParameterStatement {
         }
 
         // replace the lists of Integer objects with arrays of ints
-        for(Iterator itr=paramMap.entrySet().iterator(); itr.hasNext();) {
-            Map.Entry entry=(Map.Entry)itr.next();
-            List list=(List)entry.getValue();
-            int[] indexes=new int[list.size()];
-            int i=0;
-            for(Iterator itr2=list.iterator(); itr2.hasNext();) {
-                Integer x=(Integer)itr2.next();
-                indexes[i++]=x.intValue();
-            }
-            entry.setValue(indexes);
-        }
+		for (Object o : paramMap.entrySet()) {
+			Map.Entry entry = (Map.Entry) o;
+			List list = (List) entry.getValue();
+			int[] indexes = new int[list.size()];
+			int i = 0;
+			for (Object aList : list) {
+				Integer x = (Integer) aList;
+				indexes[i++] = x;
+			}
+			entry.setValue(indexes);
+		}
 
         return parsedQuery.toString();
     }
@@ -192,8 +193,8 @@ public class NamedParameterStatement {
 	 */
 	public void setObject(String name, Object value) throws SQLException {
 		int[] indexes = getIndexes(name);
-		for (int i = 0; i < indexes.length; i++) {
-			statement.setObject(indexes[i], value);
+		for (int index : indexes) {
+			statement.setObject(index, value);
 		}
 	}
 
@@ -212,8 +213,8 @@ public class NamedParameterStatement {
 	 */
 	public void setString(String name, String value) throws SQLException {
 		int[] indexes = getIndexes(name);
-		for (int i = 0; i < indexes.length; i++) {
-			statement.setString(indexes[i], value);
+		for (int index : indexes) {
+			statement.setString(index, value);
 		}
 	}
 
@@ -232,8 +233,8 @@ public class NamedParameterStatement {
 	 */
 	public void setInt(String name, int value) throws SQLException {
 		int[] indexes = getIndexes(name);
-		for (int i = 0; i < indexes.length; i++) {
-			statement.setInt(indexes[i], value);
+		for (int index : indexes) {
+			statement.setInt(index, value);
 		}
 	}
 
@@ -247,9 +248,9 @@ public class NamedParameterStatement {
 	     */
 	    public void setLong(String name, long value) throws SQLException {
 	        int[] indexes=getIndexes(name);
-	        for(int i=0; i < indexes.length; i++) {
-	            statement.setLong(indexes[i], value);
-	        }
+			for (int index : indexes) {
+				statement.setLong(index, value);
+			}
 	    }
 
 
@@ -264,9 +265,9 @@ public class NamedParameterStatement {
 	    public void setTimestamp(String name, Timestamp value) throws SQLException 
 	{
 	        int[] indexes=getIndexes(name);
-	        for(int i=0; i < indexes.length; i++) {
-	            statement.setTimestamp(indexes[i], value);
-	        }
+		for (int index : indexes) {
+			statement.setTimestamp(index, value);
+		}
 	    }
 
 

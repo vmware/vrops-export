@@ -55,8 +55,9 @@ import org.json.JSONObject;
 
 import com.vmware.vropsexport.security.RecoverableCertificateException;
 
-public class Client {	
-	private static Log log = LogFactory.getLog(Client.class);
+@SuppressWarnings("WeakerAccess")
+public class Client {
+	private static final Log log = LogFactory.getLog(Client.class);
 
 	private static final int CONNTECTION_TIMEOUT_MS = 60000;
 
@@ -70,9 +71,7 @@ public class Client {
 
 	private String authToken;
 
-	private Certificate[] peerCerts;
-	
-	public Client(String urlBase, String username, String password, int threads, KeyStore extendedTrust) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException, HttpException, ExporterException {
+	public Client(String urlBase, String username, String password, KeyStore extendedTrust) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException, HttpException, ExporterException {
 		this.urlBase = urlBase;
 		// Configure timeout
 		//
@@ -102,12 +101,9 @@ public class Client {
 			JSONObject rq = new JSONObject();
 			rq.put("username", username);
 			rq.put("password", password);
-			InputStream is = this.postJsonReturnStream("/suite-api/api/auth/token/acquire", rq);
-			try {
+			try (InputStream is = this.postJsonReturnStream("/suite-api/api/auth/token/acquire", rq)) {
 				JSONObject response = new JSONObject(IOUtils.toString(is, Charset.defaultCharset()));
 				this.authToken = response.getString("token");
-			} finally {
-				is.close();
 			}
 		} catch(SSLHandshakeException e) {
 			// If we captured a cert, it's recoverable by asking the user to trust it.
@@ -121,8 +117,7 @@ public class Client {
 
 	public JSONObject getJson(String uri, String ...queries) throws IOException, HttpException {
 		HttpResponse resp = this.innerGet(uri, queries);
-		JSONObject result = new JSONObject(EntityUtils.toString(resp.getEntity()));
-		return result;
+		return new JSONObject(EntityUtils.toString(resp.getEntity()));
 	}
 
 	private HttpResponse innerGet(String uri, String ...queries) throws IOException, HttpException {

@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Writer;
-import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -46,12 +45,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
+@SuppressWarnings("SameParameterValue")
 public class Exporter implements DataProvider {
-	private class NullProgress implements ProgressMonitor {
-		@Override
-		public void reportProgress(int n) {
-		}
-	}
 	private class Progress implements ProgressMonitor {
 		private final int totalRows;
 		
@@ -68,17 +63,19 @@ public class Exporter implements DataProvider {
 			System.err.print("" + pct + "% done\r");
 		}
 	}
-	private static Log log = LogFactory.getLog(Exporter.class);
+	private static final Log log = LogFactory.getLog(Exporter.class);
 
-	private final Map<String, Integer> statPos = new HashMap<>();
-	
 	private final LRUCache<String, String> nameCache = new LRUCache<>(100000);
-	
+
+	private final LRUCache<String, Map<String, String>> propCache =  new LRUCache<>(1000);
+
+	private final LRUCache<String, JSONObject> parentCache =  new LRUCache<>(1000);
+
 	private final Client client;
 	
 	private final Config conf;
 
-	private LRUCache<String, Rowset> rowsetCache = new LRUCache<>(200); 
+	private final LRUCache<String, Rowset> rowsetCache = new LRUCache<>(2000);
 		
 	private static final int MAX_RESPONSE_ROWS = 100000; // TODO: This is a wild guess. It seems vR Ops barfs on responses that are too long.
 			
@@ -94,8 +91,6 @@ public class Exporter implements DataProvider {
 
 	private final int maxResourceFetch;
 
-	private final int maxMetricFetch;
-	
 	private static final Map<String, RowsetProcessorFacotry> rspFactories = new HashMap<>();
 	
 	static {
@@ -104,7 +99,7 @@ public class Exporter implements DataProvider {
 	}
 
 	public Exporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows,
-			int maxResourceFetch, int maxMetricFetch, KeyStore extendedTrust)
+			int maxResourceFetch, KeyStore extendedTrust)
 			throws IOException, HttpException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException, ExporterException {
 		if(conf != null)  {
 			this.rspFactory = rspFactories.get(conf.getOutputFormat());
@@ -117,22 +112,11 @@ public class Exporter implements DataProvider {
 		this.useTempFile = useTempFile;
 		this.conf = conf;
 		this.maxRows = maxRows;
-		this.maxMetricFetch = maxMetricFetch;
 		this.maxResourceFetch = maxResourceFetch;
-		this.client = new Client(urlBase, username, password, threads, extendedTrust);
-		
-		// Calling this with a null conf is only valid if we're printing field names and nothing else. 
-		// Everything else will crash miserably! (Yeah, this is a bit of a hack...)
-		//
-		if(conf != null) {
-			this.registerFields();
-		}
+		this.client = new Client(urlBase, username, password, extendedTrust);
+
 		this.executor = new ThreadPoolExecutor(threads, threads, 5, TimeUnit.SECONDS,
 					new ArrayBlockingQueue<>(20), new ThreadPoolExecutor.CallerRunsPolicy());
-	}
-	
-	public boolean hasProps() {
-		return conf.hasProps();
 	}
 
 	public void exportTo(Writer out, long begin, long end, String namePattern, String parentSpec, boolean quiet) throws IOException, HttpException, ExporterException {
@@ -142,7 +126,7 @@ public class Exporter implements DataProvider {
 		// Create RowsetProcessor
 		//
 		RowMetadata meta = new RowMetadata(conf);
-		RowsetProcessor rsp = rspFactory.makeFromConfig(bw, conf, this, progress);
+		RowsetProcessor rsp = rspFactory.makeFromConfig(bw, conf, this);
 		rsp.preamble(meta, conf);
 		JSONArray resources;
 		String parentId = null;
@@ -164,7 +148,7 @@ public class Exporter implements DataProvider {
 	
 		int page = 0;
 		for(;;) {
-			JSONObject resObj = null;
+			JSONObject resObj;
 			
 			// Fetch resources
 			//
@@ -187,7 +171,12 @@ public class Exporter implements DataProvider {
 				progress.reportProgress(0);
 			}
 			int chunkSize = Math.min(MAX_RESPONSE_ROWS, this.maxRows);
-			if(verbose) 
+
+			// We don't want to make the chunks so big that not all threads will have work to do.
+			// Make sure that doesn't happen.
+			//
+			chunkSize = Math.min(chunkSize, 1 + (resources.length() / this.executor.getMaximumPoolSize()));
+			if(verbose)
 				System.err.println("Processing chunks of " + chunkSize + " resources");
 			ArrayList<JSONObject> chunk = new ArrayList<>(chunkSize);
 			for (int i = 0; i < resources.length(); ++i) {
@@ -223,22 +212,20 @@ public class Exporter implements DataProvider {
 	}
 	
 	private void startChunkJob(BufferedWriter bw, List<JSONObject> chunk, RowsetProcessor rsp, RowMetadata meta, long begin, long end, ProgressMonitor progress) {
-		this.executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					preloadCache(chunk);
-					handleResources(bw, chunk, rsp, meta, begin, end, progress);
-				} catch (Exception e) {
-					log.error("Error while processing resource", e);
-				}
-			}
-		});
+		this.executor.execute(() -> {
+            try {
+                preloadCache(chunk);
+                handleResources(bw, chunk, rsp, meta, begin, end, progress);
+            } catch (Exception e) {
+                log.error("Error while processing resource", e);
+            }
+        });
 	}
 
 	private void preloadCache(List<JSONObject> resources) {
-		for(JSONObject res : resources)
+		for(JSONObject res : resources) {
 			nameCache.put(res.getString("identifier"), res.getJSONObject("resourceKey").getString("name"));
+		}
 	}
 	
 	private JSONObject fetchResources(String resourceKind, String adapterKind, String name, int page) throws JSONException, IOException, HttpException {
@@ -319,28 +306,49 @@ public class Exporter implements DataProvider {
 	
 	@Override
 	public Map<String, String> fetchProps(String id) throws IOException, HttpException {
-		String uri = "/suite-api/api/resources/" + id + "/properties";
-		JSONObject json = client.getJson(uri);
-		JSONArray props = json.getJSONArray("property");
-		Map<String, String> result = new HashMap<>(props.length());
-		for(int i = 0; i < props.length(); ++i) {
-			JSONObject p = props.getJSONObject(i);
-			result.put(p.getString("name"), p.getString("value"));
+		synchronized(propCache) {
+			Map<String, String> result = propCache.get(id);
+			if(result != null) {
+				return result;
+			}
+
+			if(verbose)
+				System.err.println("Prop cache miss for id: " + id);
+			String uri = "/suite-api/api/resources/" + id + "/properties";
+			JSONObject json = client.getJson(uri);
+			JSONArray props = json.getJSONArray("property");
+			result = new HashMap<>(props.length());
+			for (int i = 0; i < props.length(); ++i) {
+				JSONObject p = props.getJSONObject(i);
+				result.put(p.getString("name"), p.getString("value"));
+			}
+			propCache.put(id, result);
+			return result;
 		}
-		return result;
 	}
 
 	@Override
 	public JSONObject getParentOf(String id, String parentType) throws JSONException, IOException, HttpException {
+		synchronized (parentCache) {
+			JSONObject p = parentCache.get(id + parentType);
+			if (p != null)
+				return p;
+		}
+		if(verbose)
+			System.err.println("Parent cache miss for id: " + id);
 		JSONObject json = client.getJson("/suite-api/api/resources/" + id + "/relationships", "relationshipType=PARENT");
 		JSONArray rl = json.getJSONArray("resourceList");
-		for(int i = 0; i < rl.length(); ++i) {
+		for (int i = 0; i < rl.length(); ++i) {
 			JSONObject r = rl.getJSONObject(i);
-			
+
 			// If there's more than one we only return the first one.
 			//
-			if(r.getJSONObject("resourceKey").getString("resourceKindKey").equals(parentType))
-				return r;
+			if (r.getJSONObject("resourceKey").getString("resourceKindKey").equals(parentType)) {
+				synchronized (parentCache) {
+					parentCache.put(id + parentType, r);
+					return r;
+				}
+			}
 		}
 		return null;
 	}
@@ -377,7 +385,7 @@ public class Exporter implements DataProvider {
 	}
 
 	private void handleResources(BufferedWriter bw, List<JSONObject> resList, RowsetProcessor rsp, RowMetadata meta, long begin, long end, ProgressMonitor progress) throws IOException, HttpException, ExporterException {
-		InputStream content = null;
+		InputStream content;
 		try {
 			long start = System.currentTimeMillis();
 			content = this.fetchMetricStream(resList, meta, begin, end);
@@ -412,15 +420,12 @@ public class Exporter implements DataProvider {
 			if(useTempFile) {
 				// Dump to temp file
 				//
-				File tmpFile = null;
+				File tmpFile;
 				long start = System.currentTimeMillis();
 				try {
 					tmpFile = File.createTempFile("vrops-export", ".tmp");
-					FileOutputStream out = new FileOutputStream(tmpFile);
-					try {
+					try (FileOutputStream out = new FileOutputStream(tmpFile)) {
 						IOUtils.copy(content, out);
-					} finally {
-						out.close();
 					}
 					
 				} finally {
@@ -431,41 +436,20 @@ public class Exporter implements DataProvider {
 					System.err.println("Dumping to temp file took " + (System.currentTimeMillis() - start) + " ms");
 			}
 			long start = System.currentTimeMillis();
-			StatsProcessor sp = new StatsProcessor(conf, this, rowsetCache, verbose);
-			sp.process(content,  rspFactory.makeFromConfig(bw, conf, this, progress), begin, end);
-			if(verbose)
+			StatsProcessor sp = new StatsProcessor(conf, this, rowsetCache, progress, verbose);
+			int processed = sp.process(content,  rspFactory.makeFromConfig(bw, conf, this), begin, end);
+
+			// Some resources may not have returned metrics and would not have been counted. Update the progress counter
+			// to make sure we're still in synch.
+			//
+			if(progress != null)
+				progress.reportProgress(resList.size() - processed);
+			if(verbose) {
+				System.err.println("Found data for " + processed + " out of " + resList.size() + " resources.");
 				System.err.println("Result processing took " + (System.currentTimeMillis() - start) + " ms");
+			}
 		} finally {
 			content.close();
 		}
 	}
-
-	private void registerFields() throws IOException, HttpException, ExporterException {
-		String parentType = null;
-    	List<Config.Field> parentFields = new ArrayList<Config.Field>();
-    	int pos = 2; // Advance past timestamp and resource name
-        for(Config.Field fld : conf.getFields()) {
-        	boolean isMetric = fld.hasMetric();
-        	String name = isMetric ? fld.getMetric() : fld.getProp();
-        	
-        	// Parse parent reference if present.
-        	//
-        	Matcher m = Patterns.parentPattern.matcher(name);
-        	if(m.matches()) {
-        		String pn = m.group(1);
-        		if(parentType == null) {
-        			parentType = pn;
-        		} else if(!pn.equals(parentType)) 
-        			throw new ExporterException("References to multiple parents not supported");
-        		String fn = m.group(2);
-        		parentFields.add(new Config.Field(fld.getAlias(), fn, isMetric));
-        	}
-            if(statPos.get(fld.getMetric()) == null) {
-                statPos.put(name, pos);
-            }
-            ++pos;
-        }
-    }
-
-
 }
