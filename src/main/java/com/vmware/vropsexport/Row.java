@@ -21,6 +21,8 @@ import java.util.BitSet;
 import java.util.NoSuchElementException;
 
 public class Row {
+	public int FIRST_METRIC_OFFSET = 2;
+
 	private final long timestamp;
 	
 	private final BitSet definedMetrics;
@@ -94,6 +96,16 @@ public class Row {
 				return getProp(pc++);
 			return getMetric(mc++);
 		}
+	}
+
+	public Object[] flatten(RowMetadata meta) {
+		Object[] answer = new Object[FIRST_METRIC_OFFSET + metrics.length + props.length];
+		int i = 0;
+		answer[0] = timestamp;
+		i = FIRST_METRIC_OFFSET;
+		for(java.util.Iterator<Object> itor = this.iterator(meta); itor.hasNext();)
+			answer[i++] = itor.next();
+		return answer;
 	}
 
 	public void merge(Row r) {

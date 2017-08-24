@@ -19,6 +19,7 @@ package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.SQLDumper;
+import com.vmware.vropsexport.processors.WavefrontSender;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -96,6 +97,7 @@ public class Exporter implements DataProvider {
 	static {
 		rspFactories.put("sql", new SQLDumper.Factory());
 		rspFactories.put("csv", new CSVPrinter.Factory());
+		rspFactories.put("wavefront", new WavefrontSender.Factory());
 	}
 
 	public Exporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows,
