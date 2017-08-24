@@ -55,26 +55,23 @@ import org.json.JSONObject;
 
 import com.vmware.vropsexport.security.RecoverableCertificateException;
 
-public class Client {	
-	private static Log log = LogFactory.getLog(Client.class);
+@SuppressWarnings("WeakerAccess")
+public class Client {
+	private static final Log log = LogFactory.getLog(Client.class);
 
 	private static final int CONNTECTION_TIMEOUT_MS = 60000;
 
 	private static final int CONNECTION_REQUEST_TIMEOUT_MS = 60000;
 
-	private static final int SOCKET_TIMEOUT_MS = 60000;
+	private static final int SOCKET_TIMEOUT_MS = 300000;
 
 	private final HttpClient client;
 
 	private final String urlBase;
 
-	private final  LRUCache<String, JSONObject> jsonCache = new LRUCache<>(1000);
-
 	private String authToken;
 
-	private Certificate[] peerCerts;
-	
-	public Client(String urlBase, String username, String password, int threads, KeyStore extendedTrust) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException, HttpException, ExporterException {
+	public Client(String urlBase, String username, String password, KeyStore extendedTrust) throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException, HttpException, ExporterException {
 		this.urlBase = urlBase;
 		// Configure timeout
 		//
@@ -104,12 +101,9 @@ public class Client {
 			JSONObject rq = new JSONObject();
 			rq.put("username", username);
 			rq.put("password", password);
-			InputStream is = this.postJsonReturnStream("/suite-api/api/auth/token/acquire", rq);
-			try {
+			try (InputStream is = this.postJsonReturnStream("/suite-api/api/auth/token/acquire", rq)) {
 				JSONObject response = new JSONObject(IOUtils.toString(is, Charset.defaultCharset()));
 				this.authToken = response.getString("token");
-			} finally {
-				is.close();
 			}
 		} catch(SSLHandshakeException e) {
 			// If we captured a cert, it's recoverable by asking the user to trust it.
@@ -122,15 +116,15 @@ public class Client {
 	}
 
 	public JSONObject getJson(String uri, String ...queries) throws IOException, HttpException {
+		HttpResponse resp = this.innerGet(uri, queries);
+		return new JSONObject(EntityUtils.toString(resp.getEntity()));
+	}
+
+	private HttpResponse innerGet(String uri, String ...queries) throws IOException, HttpException {
 		if(queries != null) {
 			for(int i = 0; i < queries.length; ++i) {
 				uri += i == 0 ? '?' : '&';
 				uri += queries[i];
-			}
-		}
-		synchronized(jsonCache) {
-			if(jsonCache.containsKey(uri)) {
-				return jsonCache.get(uri);
 			}
 		}
 		HttpGet get = new HttpGet(urlBase + uri);
@@ -139,11 +133,7 @@ public class Client {
 			get.addHeader("Authorization", "vRealizeOpsToken " + this.authToken + "");
 		HttpResponse resp = client.execute(get);
 		this.checkResponse(resp);
-		JSONObject result = new JSONObject(EntityUtils.toString(resp.getEntity()));
-		synchronized(jsonCache) {
-			jsonCache.put(uri, result);
-		}
-		return result;
+		return resp;
 	}
 
 	public InputStream postJsonReturnStream(String uri, JSONObject payload) throws IOException, HttpException {
@@ -160,13 +150,26 @@ public class Client {
 	}
 
 	public JSONObject getJson(String uri, List<String> queries) throws IOException, HttpException {
+		return this.getJson(uri, this.packQueries(queries));
+	}
+
+	public InputStream getStream(String uri, List<String> queries) throws IOException, HttpException {
+		return this.getStream(uri, this.packQueries(queries));
+	}
+
+	public InputStream getStream(String uri, String ...queries) throws IOException, HttpException {
+		HttpResponse resp = this.innerGet(uri, queries);
+		return resp.getEntity().getContent();
+	}
+
+	private String[] packQueries(List<String> queries) {
 		String[] s;
 		if(queries != null) {
 			s = new String[queries.size()];
 			queries.toArray(s);
 		} else
 			s = new String[0];
-		return this.getJson(uri, s);
+		return s;
 	}
 	
 	private HttpResponse checkResponse(HttpResponse response)

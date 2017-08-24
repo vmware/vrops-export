@@ -32,7 +32,6 @@ import org.apache.http.HttpException;
 import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.DataProvider;
 import com.vmware.vropsexport.ExporterException;
-import com.vmware.vropsexport.ProgressMonitor;
 import com.vmware.vropsexport.Row;
 import com.vmware.vropsexport.RowMetadata;
 import com.vmware.vropsexport.Rowset;
@@ -41,6 +40,7 @@ import com.vmware.vropsexport.RowsetProcessorFacotry;
 import com.vmware.vropsexport.SQLConfig;
 import com.vmware.vropsexport.sql.NamedParameterStatement;
 
+@SuppressWarnings("WeakerAccess")
 public class SQLDumper implements RowsetProcessor {
 	private static final int DEFAULT_BATCH_SIZE = 1000;
 	
@@ -59,7 +59,7 @@ public class SQLDumper implements RowsetProcessor {
 		private BasicDataSource ds;
 				
 		@Override
-		public synchronized RowsetProcessor makeFromConfig(BufferedWriter w, Config config, DataProvider dp, ProgressMonitor pm)
+		public synchronized RowsetProcessor makeFromConfig(BufferedWriter w, Config config, DataProvider dp)
 				throws ExporterException {
 			SQLConfig sqlc = config.getSqlConfig();
 			if(sqlc == null)
@@ -107,7 +107,7 @@ public class SQLDumper implements RowsetProcessor {
 			}
 			if(sqlc.getSql() == null)
 				throw new ExporterException("SQL statement must be specified");
-			return new SQLDumper(ds, dp, sqlc.getSql(), pm, batchSize);
+			return new SQLDumper(ds, dp, sqlc.getSql(), batchSize);
 		}
 	}
 	private final DataSource ds;
@@ -115,15 +115,12 @@ public class SQLDumper implements RowsetProcessor {
 	private final DataProvider dp;
 	
 	private final String sql;
-	
-	private ProgressMonitor pm;
 
-	public SQLDumper(DataSource ds, DataProvider dp, String sql, ProgressMonitor pm, int batchSize) {
+	public SQLDumper(DataSource ds, DataProvider dp, String sql, int batchSize) {
 		super();
 		this.ds = ds;
 		this.dp = dp;
 		this.sql = sql;
-		this.pm = pm;
 		this.batchSize = batchSize;
 	}
 	
@@ -135,52 +132,49 @@ public class SQLDumper implements RowsetProcessor {
 	@Override
 	public void process(Rowset rowset, RowMetadata meta) throws ExporterException {
 		try {
-			Connection conn = ds.getConnection();
 			NamedParameterStatement stmt = null;
-			try {
+			try (Connection conn = ds.getConnection()) {
 				stmt = new NamedParameterStatement(conn, sql);
 				int rowsInBatch = 0;
-				for(Row row : rowset.getRows().values()) {
-					for(String fld : stmt.getParameterNames()) {
+				for (Row row : rowset.getRows().values()) {
+					for (String fld : stmt.getParameterNames()) {
 						// Deal with special cases
 						//
-						if("timestamp".equals(fld))
+						if ("timestamp".equals(fld))
 							stmt.setObject("timestamp", new java.sql.Timestamp(row.getTimestamp()));
-						else if("resName".equals(fld)) {
+						else if ("resName".equals(fld)) {
 							stmt.setString("resName", dp.getResourceName(rowset.getResourceId()));
 						} else {
 							// Does the name refer to a metric?
 							//
 							int p = meta.getMetricIndexByAlias(fld);
-							if(p != -1) 
+							if (p != -1)
 								stmt.setObject(fld, row.getMetric(p));
 							else {
 								// Not a metric, so it must be a property then.
 								//
 								p = meta.getPropertyIndexByAlias(fld);
-								if(p == -1)
+								if (p == -1)
 									throw new ExporterException("Field " + fld + " is not defined");
 								stmt.setString(fld, row.getProp(p));
 							}
 						}
 					}
 					stmt.addBatch();
-					if(++rowsInBatch > batchSize) {
+					if (++rowsInBatch > batchSize) {
 						stmt.executeBatch();
 						rowsInBatch = 0;
-					} 
+					}
 				}
 				// Push dangling batch
 				//
-				if(rowsInBatch > 0 && stmt != null) 
+				if (rowsInBatch > 0 && stmt != null)
 					stmt.executeBatch();
 				conn.commit();
-				if(this.pm != null)
-					this.pm.reportProgress(1);
 			} finally {
-				if(stmt != null)
+				if (stmt != null)
 					stmt.close();
-				conn.close();
+
 			}
 		} catch(SQLException|HttpException|IOException e) {
 			throw new ExporterException(e);

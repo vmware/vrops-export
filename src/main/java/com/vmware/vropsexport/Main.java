@@ -38,7 +38,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 
 import com.vmware.vropsexport.security.CertUtils;
@@ -97,11 +96,11 @@ public class Main {
 			//
 			String resourceKind = commandLine.getOptionValue('F');
 			if(resourceKind != null) {
-				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, trustStore, trustPass);
+				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, 1000, trustStore, trustPass);
 				exporter.printResourceMetadata(resourceKind, System.out);
 			} else if(commandLine.hasOption('R')) {
 				String adapterKind = commandLine.getOptionValue('R');
-				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, trustStore, trustPass);
+				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, 1000, trustStore, trustPass);
 				exporter.printResourceKinds(adapterKind, System.out);
 			} else {	
 				String defFile = commandLine.getOptionValue('d');
@@ -135,18 +134,29 @@ public class Main {
 						throw new ExporterException("Number of threads must be a valid integer");
 					}
 				}
+				int maxRes = maxRows; // Always default to maxrows. Going below that wouldn't make sense.
+				tmp = commandLine.getOptionValue("resfetch");
+				if(tmp != null) {
+					try {
+						maxRes = Integer.parseInt(tmp);
+						if(threads < 1 || threads > 50000) {
+							throw new ExporterException("Resource fetch must greater than 0 and smaller than 50000");
+						}
+					} catch(NumberFormatException e) {
+						throw new ExporterException("Resource fetch must be a valid integer");
+					}
+				}
 
 				// Read definition and run it!
 				//
-				FileReader fr = new FileReader(defFile);
-				try {
+				try (FileReader fr = new FileReader(defFile)) {
 					Config conf = ConfigLoader.parse(fr);
 
 					// Output to stdout implies quiet mode. Also, verbose would mess up the progress counter, so turn it off.
 					// If we're outputting to a textual format that can dump to stdout, we supress the progress counter, but
 					// if we're dumping to e.g. SQL, we keep it on. This is a bit kludgy.. TODO: Revisit
 					//
-					if(output == null && "csv".equals(conf.getOutputFormat()) || verbose)
+					if (output == null && "csv".equals(conf.getOutputFormat()) || verbose)
 						quiet = true;
 
 					// Deal with start and end dates
@@ -154,23 +164,21 @@ public class Main {
 					long end = System.currentTimeMillis();
 					long lbMs = lb != null ? parseLookback(lb) : 1000L * 60L * 60L * 24L;
 					long begin = end - lbMs;
-					if(startS != null) {
-						if(conf.getDateFormat() == null)
+					if (startS != null) {
+						if (conf.getDateFormat() == null)
 							throw new ExporterException("Date format must be specified in config file if -e and -s are used");
 						DateFormat df = new SimpleDateFormat(conf.getDateFormat());
 						try {
 							end = df.parse(endS).getTime();
 							begin = df.parse(startS).getTime();
-						} catch(java.text.ParseException e) {
+						} catch (java.text.ParseException e) {
 							throw new ExporterException(e.getMessage());
 						}
 					}
-					Exporter exporter = createExporter(host, username, password, threads, conf, verbose, useTmpFile, maxRows, trustStore, trustPass);
+					Exporter exporter = createExporter(host, username, password, threads, conf, verbose, useTmpFile, maxRows, maxRes, trustStore, trustPass);
 					Writer wrt = output != null ? new FileWriter(output) : new OutputStreamWriter(System.out);
 					exporter.exportTo(wrt, begin, end, namePattern, parentSpec, quiet);
 
-				} finally {
-					fr.close();
 				}
 			}
 		} catch(RecoverableCertificateException e) {
@@ -182,20 +190,18 @@ public class Main {
 		}
 	}
 
-	private static Exporter createExporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows, String trustStore, String trustPass) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, KeyManagementException, HttpException, ExporterException
+	private static Exporter createExporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows, int maxRes, String trustStore, String trustPass) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, KeyManagementException, HttpException, ExporterException
 	{
-		boolean retry = false;
-		do {
+		for(;;) {
 			KeyStore ks = CertUtils.loadExtendedTrust(trustStore, trustPass);
 			try {
-				return new Exporter(urlBase, username, password, threads, conf, verbose, useTempFile, maxRows, ks);
+				return new Exporter(urlBase, username, password, threads, conf, verbose, useTempFile, maxRows, maxRes, ks);
 			} catch(RecoverableCertificateException e) {
-				retry = promptForTrust(e.getCapturedCerts()[0], trustStore, trustPass);
+				boolean retry = promptForTrust(e.getCapturedCerts()[0], trustStore, trustPass);
 				if(!retry)
 					throw e;
 			}
-		} while(retry);
-		throw new RuntimeException("Should never get here!");
+		}
 	}
 
 	private static boolean promptForTrust(X509Certificate serverCert, String trustStore, String trustPass) throws NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
@@ -236,6 +242,7 @@ public class Main {
 		opts.addOption("m", "max-rows", true, "Maximum number of rows to fetch from API (default=unlimited)");
 		opts.addOption("T", "truststore", true, "Truststore filename");
 		opts.addOption(null, "trustpass", true, "Truststore password (default=changeit)");
+		opts.addOption(null, "resfetch", true, "Resource fetch count (default=1000)");
 		opts.addOption("h", "help", false, "Print a short help text");
 		return opts;
 	}		

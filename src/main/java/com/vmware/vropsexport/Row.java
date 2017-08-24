@@ -21,6 +21,8 @@ import java.util.BitSet;
 import java.util.NoSuchElementException;
 
 public class Row {
+	public int FIRST_METRIC_OFFSET = 2;
+
 	private final long timestamp;
 	
 	private final BitSet definedMetrics;
@@ -75,7 +77,7 @@ public class Row {
 		
 		private int pc;
 				
-		private RowMetadata meta;
+		private final RowMetadata meta;
 		
 		public Iterator(RowMetadata meta) {
 			this.meta = meta;
@@ -93,6 +95,34 @@ public class Row {
 			if(pc < props.length && meta.getPropInsertionPoints()[pc] == mc)
 				return getProp(pc++);
 			return getMetric(mc++);
+		}
+	}
+
+	public Object[] flatten(RowMetadata meta) {
+		Object[] answer = new Object[FIRST_METRIC_OFFSET + metrics.length + props.length];
+		int i = 0;
+		answer[0] = timestamp;
+		i = FIRST_METRIC_OFFSET;
+		for(java.util.Iterator<Object> itor = this.iterator(meta); itor.hasNext();)
+			answer[i++] = itor.next();
+		return answer;
+	}
+
+	public void merge(Row r) {
+		// Merge metrics
+		//
+		for(int i = 0; i < r.getNumMetrics(); ++i) {
+			Double d = r.getMetric(i);
+			if(d != null)
+				this.setMetric(i, d); // Don't be tempted to just set metrics[i]! Won't update the bitmap.
+		}
+
+		// Merge properties
+		//
+		for(int i = 0; i < r.getNumProps(); ++i) {
+			String p = r.getProp(i);
+			if(p != null)
+				props[i] = p;
 		}
 	}
 }

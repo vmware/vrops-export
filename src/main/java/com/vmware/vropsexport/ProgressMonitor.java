@@ -18,5 +18,5 @@
 package com.vmware.vropsexport;
 
 public interface ProgressMonitor {
-	public void reportProgress(int n);
+	void reportProgress(int n);
 }

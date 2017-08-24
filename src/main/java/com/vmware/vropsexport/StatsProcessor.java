@@ -31,11 +31,16 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
+@SuppressWarnings("SameParameterValue")
 public class StatsProcessor {
+    private class NullProgress implements ProgressMonitor {
+        @Override
+        public void reportProgress(int n) {
+        }
+    }
 	private final Config conf;
 	
 	private final RowMetadata rowMetadata;
@@ -45,25 +50,30 @@ public class StatsProcessor {
 	private final LRUCache<String, Rowset> rowsetCache;
 	
 	private final boolean verbose;
+
+	private ProgressMonitor pm;
 	
-	public StatsProcessor(Config conf, DataProvider propertyProvider, LRUCache<String, Rowset> rowsetCache, boolean verbose) throws ExporterException {
+	public StatsProcessor(Config conf, DataProvider propertyProvider, LRUCache<String, Rowset> rowsetCache, ProgressMonitor pm, boolean verbose) throws ExporterException {
 		this.conf = conf;
 		this.rowMetadata = new RowMetadata(conf);
 		this.dataProvider = propertyProvider;
 		this.rowsetCache = rowsetCache;
 		this.verbose = verbose;
-	}
-	
-	private StatsProcessor(Config conf, RowMetadata rowMetadata, DataProvider propertyProvider, LRUCache<String, Rowset> rowsetCache, boolean verbose) {
-		this.conf = conf;
-		this.rowMetadata = rowMetadata;
-		this.dataProvider = propertyProvider;
-		this.rowsetCache = rowsetCache;
-		this.verbose = verbose;
+		this.pm = pm;
 	}
 
-	public void process(InputStream is, RowsetProcessor proc, long begin, long end) throws ExporterException, JsonParseException, IOException, HttpException {
+    private StatsProcessor(Config conf, RowMetadata rowMetadata, DataProvider propertyProvider, LRUCache<String, Rowset> rowsetCache, boolean verbose) {
+        this.conf = conf;
+        this.rowMetadata = rowMetadata;
+        this.dataProvider = propertyProvider;
+        this.rowsetCache = rowsetCache;
+        this.verbose = verbose;
+        this.pm = new NullProgress();
+    }
+
+    public int process(InputStream is, RowsetProcessor proc, long begin, long end) throws ExporterException, IOException, HttpException {
 		JsonParser p = new JsonFactory().createParser(is);
+		int processedObjects = 0;
 		
 		// Process values { [ ...
 		//
@@ -99,13 +109,15 @@ public class StatsProcessor {
 	 			this.expect(p,  "key");
 	 			String statKey = p.nextTextValue();
 	 			this.expect(p, JsonToken.END_OBJECT);
-	 			this.expect(p, "rollUpType");
-	 			p.nextTextValue(); // Ignore value for now...
-	 			this.skipStruct(p, "intervalUnit");
+
+	 			// Keep skipping members until we've found the data node
+				//
+				while(!expectMaybe(p, "data")) {
+					this.skipMember(p, null);
+				}
 	 			
 	 			// Process data[ ...
 	 			//
-	 			this.expect(p, "data");
 	 			this.expect(p, JsonToken.START_ARRAY);
 	 			int metricIdx = rowMetadata.getMetricIndex(statKey);
 	 			int i = 0;
@@ -113,12 +125,8 @@ public class StatsProcessor {
 					double d = p.getDoubleValue();
 					if(metricIdx != -1) {
 						long ts = timestamps.get(i++);
-						Row r = rows.get(ts);
-						if(r == null) {
-							r = rowMetadata.newRow(ts);
-							rows.put(ts, r);
-						}
-						r.setMetric(metricIdx, d);
+                        Row r = rows.computeIfAbsent(ts, k -> rowMetadata.newRow(ts));
+                        r.setMetric(metricIdx, d);
 					}
 				}
 				this.expect(p, JsonToken.END_OBJECT);
@@ -129,8 +137,8 @@ public class StatsProcessor {
 			this.expect(p, JsonToken.END_OBJECT);
 			this.expect(p, JsonToken.END_OBJECT);
 			Rowset rs = new Rowset(resourceId, rows);
-			rows = null;
-			
+			rows = null; // Make the GC release this a bit earlier
+
 			// Splice in properties
 			//
 			if(dataProvider != null) {
@@ -154,12 +162,14 @@ public class StatsProcessor {
 					
 					// Splice in properties
 					//
-					Map<String, String> props = dataProvider.fetchProps(resourceId);
-					for(Map.Entry<String, String> e : props.entrySet()) {
-						int idx = rowMetadata.getPropertyIndex(e.getKey());
-						if(idx != -1) {
-							for(Row row : rs.getRows().values()) {
-								row.setProp(idx, e.getValue());
+					if(rowMetadata.needsPropertyLoad()) {
+						Map<String, String> props = dataProvider.fetchProps(resourceId);
+						for (Map.Entry<String, String> e : props.entrySet()) {
+							int idx = rowMetadata.getPropertyIndex(e.getKey());
+							if (idx != -1) {
+								for (Row row : rs.getRows().values()) {
+									row.setProp(idx, e.getValue());
+								}
 							}
 						}
 					}
@@ -167,12 +177,12 @@ public class StatsProcessor {
 				
 				// Splice in data from parent
 				//
-				RowMetadata pm = rowMetadata.forParent();
-				if(pm.isValid()) {
+				RowMetadata pMeta = rowMetadata.forParent();
+				if(pMeta.isValid()) {
 					long now = System.currentTimeMillis();
-					JSONObject parent = dataProvider.getParentOf(resourceId, pm.getResourceKind());
+					JSONObject parent = dataProvider.getParentOf(resourceId, pMeta.getResourceKind());
 					if(parent != null) {
-						Rowset cached = null;
+						Rowset cached ;
 						String cacheKey = parent.getString("identifier") + "|" + begin + "|" + end;
 						synchronized(this.rowsetCache) {
 							cached = this.rowsetCache.get(cacheKey);
@@ -180,18 +190,18 @@ public class StatsProcessor {
 						// Try cache first! Chances are we've seen this parent many times.
 						//
 						if(cached != null) {
+                            if(verbose)
+                                System.err.println("Cache hit for parent " + cacheKey + " " + parent.getJSONObject("resourceKey").getString("name"));
 							ParentSplicer.spliceRows(rs, cached);
 						} else {
 							// Not in cache. Fetch it the hard (and slow) way!
 							//
 							if(verbose)
-								System.err.println("Cache miss for parent " + parent.getJSONObject("resourceKey").getString("name"));
-							StatsProcessor parentProcessor = new StatsProcessor(this.conf, pm, this.dataProvider, this.rowsetCache, verbose);
-							InputStream pIs = this.dataProvider.fetchMetricStream(Collections.singletonList(parent), pm, begin, end);
-							try {
+								System.err.println("Cache miss for parent " + cacheKey + " " + parent.getJSONObject("resourceKey").getString("name"));
+							StatsProcessor parentProcessor = new StatsProcessor(this.conf, pMeta, this.dataProvider, this.rowsetCache,  verbose);
+							try (InputStream pIs = this.dataProvider.fetchMetricStream(Collections.singletonList(parent), pMeta, begin, end))
+                            {
 								parentProcessor.process(pIs, new ParentSplicer(rs, this.rowsetCache, cacheKey), begin, end);
-							} finally {
-								pIs.close();
 							}
 						}
 					}
@@ -202,9 +212,69 @@ public class StatsProcessor {
 			if(verbose)
 				System.err.println("Processed " + rs.getRows().size() + " rows. Memory used: " + 
 						Runtime.getRuntime().totalMemory() + " max=" + Runtime.getRuntime().maxMemory());
+
+			// Compactify if needed
+			//
+			if(conf.isCompact())
+				rs = this.compactify(rs);
 			proc.process(rs, rowMetadata);
+			++processedObjects;
+			if(pm != null)
+			    pm.reportProgress(1);
 		}
 		this.expect(p, JsonToken.END_OBJECT);
+		return processedObjects;
+	}
+
+	private Rowset compactify(Rowset rs) throws ExporterException {
+		// No need to process empty rowsets
+		//
+		if(rs.getRows().size() == 0)
+			return rs;
+
+		// Calculate range according to compactification algorithm.
+		//
+        long startTime = System.currentTimeMillis();
+		TreeMap<Long, Row> rows = rs.getRows();
+		long start;
+		long end;
+		long ts;
+		String alg = conf.getCompactifyAlg();
+		if(alg == null || alg.equalsIgnoreCase("LATEST")) { // "LATEST" is the default
+			end = rows.lastKey();
+			start = end - conf.getRollupMinutes() * 60000;
+			ts = end;
+		} else if(alg.equalsIgnoreCase("MEDIAN")) {
+			long median = 0;
+			long half = rows.size() / 2;
+			int i = 0;
+			for(long t : rows.keySet()) {
+				median = t;
+				if(i++ > half)
+					break;
+			}
+			start = median - conf.getRollupMinutes() * 30000;
+			end = median + conf.getRollupMinutes() * 30000;
+			ts = median;
+		} else if(alg.equalsIgnoreCase("LOCAL")) {
+			end = System.currentTimeMillis();
+			start = end - conf.getRollupMinutes() * 60000;
+			ts = end;
+		} else
+			throw new ExporterException("Unknown compactification algorithm: " + alg);
+
+		// Compactify everything that fits within the timerange into a single row
+		//
+		Row target = rowMetadata.newRow(ts);
+		for(Row r : rows.values()) {
+			if(r.getTimestamp() <= end && r.getTimestamp() >= start)
+				target.merge(r);
+		}
+		TreeMap<Long, Row> result = new TreeMap<>();
+		result.put(ts, target);
+		if(verbose)
+		    System.err.println("Compactifying " + rs.getRows().size() + " rows took " + (System.currentTimeMillis() - startTime) + " ms");
+		return new Rowset(rs.getResourceId(), result);
 	}
 	
 	private void expect(JsonParser p, JsonToken token) throws ExporterException, IOException {
@@ -214,7 +284,7 @@ public class StatsProcessor {
 		}
 	}
 	
-	private void expectCurrent(JsonParser p, JsonToken token) throws ExporterException, IOException {
+	private void expectCurrent(JsonParser p, @SuppressWarnings("SameParameterValue") JsonToken token) throws ExporterException {
 		JsonToken t = p.currentToken();
 		if(t != token) {
 			throw new ExporterException("Expected token " + token.asString() + ", got " + t.asString());
@@ -222,22 +292,54 @@ public class StatsProcessor {
 	}
 	
 	private void expect(JsonParser p, String fieldname) throws ExporterException, IOException {
-		p.nextToken();
-		if(!fieldname.equals(p.getCurrentName())) {
+		if(!expectMaybe(p, fieldname)) {
 			throw new ExporterException("Expected field name " + fieldname + ", got " + p.getCurrentName());
 		}
 	}
-	
+
+	private boolean expectMaybe(JsonParser p, String fieldname) throws IOException {
+		p.nextToken();
+		return fieldname == null || fieldname.equals(p.getCurrentName());
+	}
+
 	private void expectCurrent(JsonParser p, String fieldname) throws ExporterException, IOException {
 		if(!fieldname.equals(p.getCurrentName())) {
 			throw new ExporterException("Expected field name " + fieldname + ", got " + p.getCurrentName());
 		}
 	}
-	
-	private void skipStruct(JsonParser p, String fieldname) throws ExporterException, IOException {
-		this.expect(p, fieldname);
-		this.expect(p, JsonToken.START_OBJECT);
-		while(p.nextToken() != JsonToken.END_OBJECT)
-			;
+
+	private boolean expectCurrentMaybe(JsonParser p, String fieldname) throws IOException {
+		return fieldname.equals(p.getCurrentName());
+	}
+
+	private boolean skipMemberMaybe(JsonParser p, String fieldName) throws ExporterException, IOException {
+		if(fieldName != null && !expectCurrentMaybe(p, fieldName))
+			return false;
+		expect(p, fieldName); // Advance past the field name
+		JsonToken t = p.nextToken();
+		if(t == JsonToken.START_ARRAY)
+			skipComplex(p, 0, 1);
+		else if(t == JsonToken.START_OBJECT)
+			skipComplex(p, 1, 0);
+		return true;
+	}
+
+	private void skipMember(JsonParser p, @SuppressWarnings("SameParameterValue") String fieldName) throws ExporterException, IOException {
+		if(!skipMemberMaybe(p, fieldName))
+			throw new ExporterException("Expected field name " + fieldName + ", got " + p.getCurrentName());
+	}
+
+	private void skipComplex(JsonParser p, int structLevel, int arrayLevel) throws IOException {
+		while(structLevel > 0 && arrayLevel > 0) {
+			JsonToken t = p.nextToken();
+			if(t == JsonToken.START_ARRAY)
+				++arrayLevel;
+			else if(t == JsonToken.END_ARRAY)
+				--arrayLevel;
+			else if(t == JsonToken.START_OBJECT)
+				++structLevel;
+			else if(t == JsonToken.END_OBJECT)
+				--structLevel;
+		}
 	}
 }

@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class RowMetadata {
 	private final String resourceKind;
@@ -32,15 +31,17 @@ public class RowMetadata {
 	private final Map<String, Integer> metricMap = new HashMap<>();
 	
 	private final Map<String, Integer> propMap = new HashMap<>();
+
+	private final Map<String, String> propNameToAlias = new HashMap<>();
 	
 	private final Map<String, Integer> metricAliasMap = new HashMap<>();
+
+	private final Map<String, String> metricNameToAlias = new HashMap<>();
 	
 	private final Map<String, Integer> propAliasMap = new HashMap<>();
 	
 	private int[] propInsertionPoints;
-	
-	private Pattern parentPattern = Pattern.compile("^\\$parent\\:([_A-Za-z][_A-Za-z0-9]*)\\.(.+)$");
-	
+
 	public RowMetadata(Config conf) throws ExporterException {
 		this.resourceKind = conf.getResourceKind();
 		this.adapterKind = conf.getAdapterKind();
@@ -54,6 +55,7 @@ public class RowMetadata {
 					throw new ExporterException("Repeated metrics are not supported. Offending metric: " + metricKey);
 				metricMap.put(metricKey, mp);
 				metricAliasMap.put(fld.getAlias(), mp++);
+				metricNameToAlias.put(fld.getMetric(), fld.getAlias());
 			} else {
 				if(fld.hasProp()) {
 					String propKey = fld.getProp();
@@ -61,6 +63,7 @@ public class RowMetadata {
 						throw new ExporterException("Repeated properties are not supported. Offending property: " + propKey);
 					propMap.put(fld.getProp(), pp);
 					propAliasMap.put(fld.getAlias(), pp++);
+					propNameToAlias.put(fld.getProp(), fld.getAlias());
 					pip.add(mp);
 				}
 			}
@@ -75,7 +78,7 @@ public class RowMetadata {
 		String t = null;
 		for(Map.Entry<String, Integer> e : child.propMap.entrySet()) {
 			String p = e.getKey();
-			Matcher m = parentPattern.matcher(p);
+			Matcher m = Patterns.parentPattern.matcher(p);
 			if(m.matches())  {
 				if(t == null)
 					t = m.group(1);
@@ -89,7 +92,7 @@ public class RowMetadata {
 		}
 		for(Map.Entry<String, Integer> e : child.metricMap.entrySet()) {
 			String mt = e.getKey();
-			Matcher m = parentPattern.matcher(mt);
+			Matcher m = Patterns.parentPattern.matcher(mt);
 			if(m.matches()) {
 				if(t == null)
 					t = m.group(1);
@@ -136,6 +139,10 @@ public class RowMetadata {
 	public int getPropertyIndexByAlias(String property) {
 		return propAliasMap.containsKey(property) ? propAliasMap.get(property) : -1;
 	}
+
+	public String getAliasForProp(String name) { return propNameToAlias.get(name); }
+
+	public String getAliasForMetric(String name) { return metricNameToAlias.get(name); }
 	
 	public Row newRow(long timestamp) {
 		return new Row(timestamp, metricMap.size(), propMap.size());
@@ -151,6 +158,16 @@ public class RowMetadata {
 
 	public boolean hasProperties() {
 		return propMap.size() > 0;
+	}
+
+	public boolean needsPropertyLoad() {
+		if(!hasProperties())
+			return false;
+		for(String key : propMap.keySet()) {
+			if(!(key.equals("$resId") || key.equals("$resName")))
+				return true;
+		}
+		return false;
 	}
 	
 	public boolean isValid() {

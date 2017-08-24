@@ -29,7 +29,7 @@ public class SelfDeletingFileInputStream extends InputStream {
 	
 	private FileInputStream backer;
 	
-	private File file;
+	private final File file;
 	
 	public SelfDeletingFileInputStream(String filename) throws FileNotFoundException {
 		this.file = new File(filename);

@@ -21,7 +21,6 @@ import com.vmware.vropsexport.CSVConfig;
 import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.DataProvider;
 import com.vmware.vropsexport.ExporterException;
-import com.vmware.vropsexport.ProgressMonitor;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -41,12 +40,13 @@ import com.vmware.vropsexport.Rowset;
 import com.vmware.vropsexport.RowsetProcessor;
 import com.vmware.vropsexport.RowsetProcessorFacotry;
 
+@SuppressWarnings("WeakerAccess")
 public class CSVPrinter implements RowsetProcessor {
 
 	public static class Factory implements RowsetProcessorFacotry {
 		@Override
-		public RowsetProcessor makeFromConfig(BufferedWriter bw, Config config, DataProvider dp, ProgressMonitor pm) {
-			return new CSVPrinter(bw, new SimpleDateFormat(config.getDateFormat()), config.getCsvConfig(), dp, pm);
+		public RowsetProcessor makeFromConfig(BufferedWriter bw, Config config, DataProvider dp) {
+			return new CSVPrinter(bw, new SimpleDateFormat(config.getDateFormat()), config.getCsvConfig(), dp);
 		}
 	}
 
@@ -56,16 +56,13 @@ public class CSVPrinter implements RowsetProcessor {
 
 	private final DataProvider dp;
 
-	private final ProgressMonitor pm;
-	
 	private final CSVConfig csvConfig;
 
-	public CSVPrinter(BufferedWriter bw, DateFormat df, CSVConfig csvConfig, DataProvider dp, ProgressMonitor pm) {
+	public CSVPrinter(BufferedWriter bw, DateFormat df, CSVConfig csvConfig, DataProvider dp) {
 		this.bw = bw;
 		this.df = df;
 		this.dp = dp;
-		this.pm = pm;
-		
+
 		// Create a default CSVConfig if none was specified.
 		//
 		this.csvConfig = csvConfig != null ? csvConfig : new CSVConfig(); 
@@ -117,8 +114,6 @@ public class CSVPrinter implements RowsetProcessor {
 					bw.flush();
 				}
 			}
-			if (pm != null)
-				pm.reportProgress(1);
 		} catch (IOException | HttpException e) {
 			throw new ExporterException(e);
 		}

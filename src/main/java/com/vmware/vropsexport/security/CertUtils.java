@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.KeyStore;
-import java.security.KeyStore.LoadStoreParameter;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -39,12 +38,9 @@ public class CertUtils {
 			password = "changeit";
 		try {
 			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-			InputStream is = new FileInputStream(getActualTruststoreFilename(filename));
-			try {
+			try (InputStream is = new FileInputStream(getActualTruststoreFilename(filename))) {
 				ks.load(is, password.toCharArray());
 				return ks;
-			} finally {
-				is.close();
 			}
 		} catch(FileNotFoundException e) {
 			return null;
@@ -74,11 +70,8 @@ public class CertUtils {
 		File dir = f.getParentFile();
 		if(dir !=null && !dir.exists())
 			dir.mkdirs();
-		OutputStream os = new FileOutputStream(filename);
-		try {
+		try (OutputStream os = new FileOutputStream(filename)) {
 			ks.store(os, password.toCharArray());
-		} finally {
-			os.close();
 		}
 	}
 
@@ -90,7 +83,7 @@ public class CertUtils {
 	private static String hexify (byte bytes[], boolean space) {
 		char[] hexDigits = {'0', '1', '2', '3', '4', '5', '6', '7', 
 				'8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-		StringBuffer buf = new StringBuffer(bytes.length * 2 + (space ? bytes.length - 1 : 0));
+		StringBuilder buf = new StringBuilder(bytes.length * 2 + (space ? bytes.length - 1 : 0));
 		for (int i = 0; i < bytes.length; ++i) {
 			if(space && i > 0)
 				buf.append(' ');
