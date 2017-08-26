@@ -9,8 +9,8 @@ import java.util.Map;
 
 public class WavefrontSender implements RowsetProcessor {
     public static class Factory implements RowsetProcessorFacotry {
-        public RowsetProcessor makeFromConfig(BufferedWriter bw, Config config, DataProvider dp, ProgressMonitor pm) {
-            return new WavefrontSender(bw, config, dp, pm);
+        public RowsetProcessor makeFromConfig(BufferedWriter bw, Config config, DataProvider dp) {
+            return new WavefrontSender(bw, config, dp);
         }
     }
     private final DataProvider dp;
@@ -19,13 +19,11 @@ public class WavefrontSender implements RowsetProcessor {
 
     private final Config config;
 
-    private final ProgressMonitor pm;
 
-    public WavefrontSender(BufferedWriter bw, Config config, DataProvider dp, ProgressMonitor pm) {
+    public WavefrontSender(BufferedWriter bw, Config config, DataProvider dp) {
         this.dp = dp;
         this.bw = bw;
         this.config = config;
-        this.pm = pm;
     }
 
     @Override
@@ -70,8 +68,6 @@ public class WavefrontSender implements RowsetProcessor {
                 }
             }
             bw.flush();
-            if (pm != null)
-                pm.reportProgress(1);
         } catch (IOException | HttpException e) {
             throw new ExporterException(e);
         }
