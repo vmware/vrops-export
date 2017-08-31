@@ -102,7 +102,7 @@ public class Exporter implements DataProvider {
 
 	public static boolean isProducingOutput(Config conf)  {
 		RowsetProcessorFacotry rsp = rspFactories.get(conf.getOutputFormat());
-		return rsp != null ? rsp.isProducingOutput() : false;
+		return rsp != null && rsp.isProducingOutput();
 	}
 
 	public Exporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows,

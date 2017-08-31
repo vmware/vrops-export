@@ -8,12 +8,13 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("WeakerAccess")
 public class WavefrontSender implements RowsetProcessor {
-    static Pattern allowedMetricChars = Pattern.compile("[^A-Za-z0-9_\\.\\-/$]");
+    static final Pattern allowedMetricChars = Pattern.compile("[^A-Za-z0-9_.\\-/$]");
 
     public static class Factory implements RowsetProcessorFacotry {
         public RowsetProcessor makeFromConfig(BufferedWriter bw, Config config, DataProvider dp) {
-            return new WavefrontSender(bw, config, dp);
+            return new WavefrontSender(bw, dp);
         }
 
         @Override
@@ -25,12 +26,9 @@ public class WavefrontSender implements RowsetProcessor {
 
     private final BufferedWriter bw;
 
-    private final Config config;
-
-    public WavefrontSender(BufferedWriter bw, Config config, DataProvider dp) {
+    public WavefrontSender(BufferedWriter bw, DataProvider dp) {
         this.dp = dp;
         this.bw = bw;
-        this.config = config;
     }
 
     @Override
@@ -45,7 +43,7 @@ public class WavefrontSender implements RowsetProcessor {
                 long ts = r.getTimestamp();
                 String resourceName = dp.getResourceName(rowset.getResourceId());
                 resourceName = allowedMetricChars.matcher(resourceName).replaceAll("_");
-                StringBuffer sb = new StringBuffer();
+                StringBuilder sb = new StringBuilder();
                 for (Map.Entry<String, Integer> metric : meta.getMetricMap().entrySet()) {
 
                     // Build string on the format <metricName> <metricValue> [<timestamp>] source=<source> [pointTags]
