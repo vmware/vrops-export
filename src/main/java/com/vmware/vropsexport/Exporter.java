@@ -100,6 +100,11 @@ public class Exporter implements DataProvider {
 		rspFactories.put("wavefront", new WavefrontSender.Factory());
 	}
 
+	public static boolean isProducingOutput(Config conf)  {
+		RowsetProcessorFacotry rsp = rspFactories.get(conf.getOutputFormat());
+		return rsp != null ? rsp.isProducingOutput() : false;
+	}
+
 	public Exporter(String urlBase, String username, String password, int threads, Config conf, boolean verbose, boolean useTempFile, int maxRows,
 			int maxResourceFetch, KeyStore extendedTrust)
 			throws IOException, HttpException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException, ExporterException {

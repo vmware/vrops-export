@@ -21,4 +21,5 @@ import java.io.BufferedWriter;
 
 public interface RowsetProcessorFacotry {
 	RowsetProcessor makeFromConfig(BufferedWriter w, Config config, DataProvider dp) throws ExporterException;
+	boolean isProducingOutput();
 }

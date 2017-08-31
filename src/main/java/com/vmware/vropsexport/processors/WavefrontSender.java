@@ -6,11 +6,19 @@ import org.apache.http.HttpException;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class WavefrontSender implements RowsetProcessor {
+    static Pattern allowedMetricChars = Pattern.compile("[^A-Za-z0-9_\\.\\-/$]");
+
     public static class Factory implements RowsetProcessorFacotry {
         public RowsetProcessor makeFromConfig(BufferedWriter bw, Config config, DataProvider dp) {
             return new WavefrontSender(bw, config, dp);
+        }
+
+        @Override
+        public boolean isProducingOutput() {
+            return true;
         }
     }
     private final DataProvider dp;
@@ -18,7 +26,6 @@ public class WavefrontSender implements RowsetProcessor {
     private final BufferedWriter bw;
 
     private final Config config;
-
 
     public WavefrontSender(BufferedWriter bw, Config config, DataProvider dp) {
         this.dp = dp;
@@ -37,7 +44,7 @@ public class WavefrontSender implements RowsetProcessor {
             for (Row r : rowset.getRows().values()) {
                 long ts = r.getTimestamp();
                 String resourceName = dp.getResourceName(rowset.getResourceId());
-                resourceName = resourceName.replace(' ', '_');
+                resourceName = allowedMetricChars.matcher(resourceName).replaceAll("_");
                 StringBuffer sb = new StringBuffer();
                 for (Map.Entry<String, Integer> metric : meta.getMetricMap().entrySet()) {
 
