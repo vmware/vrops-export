@@ -102,6 +102,13 @@ public class StatsProcessor {
  				List<Long> timestamps = new ArrayList<>();
  				while(p.nextToken() != JsonToken.END_ARRAY) {
  					long ts = p.getLongValue();
+
+ 					// Align timestamp if needed
+					//
+					int align = conf.getAlign() * 1000;
+					if(align != 0) {
+						ts = ((ts + align / 2) / align) * align;
+					}
  					timestamps.add(ts);
  				}
 	 			this.expect(p, "statKey");

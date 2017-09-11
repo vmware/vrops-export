@@ -83,11 +83,20 @@ public class Config {
 	private boolean compact;
 	private String compactifyAlg = "LATEST";
 	private CSVConfig csvConfig;
+	private int align = 0;
 
 	public Config() {
 	}
 
-	public Field[] getFields() {
+    public int getAlign() {
+        return align;
+    }
+
+    public void setAlign(int align) {
+        this.align = align;
+    }
+
+    public Field[] getFields() {
 		return fields;
 	}
 
