@@ -154,7 +154,12 @@ fields:                                          # A list of fields
   - alias: hostCPUType
     prop: $parent:HostSystem.cpu|cpuModel		# Reference to a metric in a parent
 ```
-
+### Global directives
+* resourceType: Name of the resource type (e.g. VirtualMachine)
+* rollupType: Type of data aggregation. Valid values are MAX, MIN, AVG, SUM, LATEST. 
+* rollupMinutes: Number of minutes in each bucket for rollup. E.g. ```rollupType: "AVG"``` and ```rollupMinutes: 5``` generates 5 minute averages.
+* dateFormat: Format to use when specifying and displaying dates. See http://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html for a description of the format.
+* align: Aligns the timestamps to a specified granularity (in seconds). For example, if an align value of 300 is specified, all timestamps will be aligned to the nearest 5 mintes. Note that only the time stamps are changed. Interpolation is not yet supported.
 ### Special properties in the definition file
 There are a number of special properties that are always available for use in a properties file for getting things like parent resources and resource names.
 
@@ -177,7 +182,10 @@ $parent:HostSystem.$parent:ClusterComputeResource.cpu|demandmhz
 ```
 
 ## Exporting to SQL
-The tool now supports exporting to a SQL database. For details, please refer to [this document](SQL.md)
+The tool supports exporting to a SQL database. For details, please refer to [this document](SQL.md)
+
+## Exporting to Wavefront
+For experimental support for exporting to Wavefront, please refer to [this document](WAVEFRONT.md)
     
 # Known issues
 * Very long time ranges in combination with small interval sizes can cause the server to prematurely close the connection, resulting in NoHttpResponseExceptions to be thrown. If this happens, consider shortening the time range. This seems to happen mostly when exporting over a slow connection.
