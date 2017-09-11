@@ -11,6 +11,7 @@ Here is an example of a simple definition file:
     resourceType: VirtualMachine
     rollupType: AVG
     rollupMinutes: 5
+    align: 300
     outputFormat: wavefront
     dateFormat: "yyyy-MM-dd HH:mm:ss"
     fields:
