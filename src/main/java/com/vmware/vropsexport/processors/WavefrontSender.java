@@ -6,24 +6,29 @@ import org.apache.http.HttpException;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+@SuppressWarnings("WeakerAccess")
 public class WavefrontSender implements RowsetProcessor {
+    static final Pattern allowedMetricChars = Pattern.compile("[^A-Za-z0-9_.\\-/$]");
+
     public static class Factory implements RowsetProcessorFacotry {
         public RowsetProcessor makeFromConfig(BufferedWriter bw, Config config, DataProvider dp) {
-            return new WavefrontSender(bw, config, dp);
+            return new WavefrontSender(bw, dp);
+        }
+
+        @Override
+        public boolean isProducingOutput() {
+            return true;
         }
     }
     private final DataProvider dp;
 
     private final BufferedWriter bw;
 
-    private final Config config;
-
-
-    public WavefrontSender(BufferedWriter bw, Config config, DataProvider dp) {
+    public WavefrontSender(BufferedWriter bw, DataProvider dp) {
         this.dp = dp;
         this.bw = bw;
-        this.config = config;
     }
 
     @Override
@@ -37,8 +42,8 @@ public class WavefrontSender implements RowsetProcessor {
             for (Row r : rowset.getRows().values()) {
                 long ts = r.getTimestamp();
                 String resourceName = dp.getResourceName(rowset.getResourceId());
-                resourceName = resourceName.replace(' ', '_');
-                StringBuffer sb = new StringBuffer();
+                resourceName = allowedMetricChars.matcher(resourceName).replaceAll("_");
+                StringBuilder sb = new StringBuilder();
                 for (Map.Entry<String, Integer> metric : meta.getMetricMap().entrySet()) {
 
                     // Build string on the format <metricName> <metricValue> [<timestamp>] source=<source> [pointTags]

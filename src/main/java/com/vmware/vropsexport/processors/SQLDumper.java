@@ -109,6 +109,11 @@ public class SQLDumper implements RowsetProcessor {
 				throw new ExporterException("SQL statement must be specified");
 			return new SQLDumper(ds, dp, sqlc.getSql(), batchSize);
 		}
+
+		@Override
+		public boolean isProducingOutput() {
+			return false;
+		}
 	}
 	private final DataSource ds;
 	

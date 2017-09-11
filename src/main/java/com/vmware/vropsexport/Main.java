@@ -156,7 +156,7 @@ public class Main {
 					// If we're outputting to a textual format that can dump to stdout, we supress the progress counter, but
 					// if we're dumping to e.g. SQL, we keep it on. This is a bit kludgy.. TODO: Revisit
 					//
-					if (output == null && "csv".equals(conf.getOutputFormat()) || verbose)
+					if (output == null && Exporter.isProducingOutput(conf) || verbose)
 						quiet = true;
 
 					// Deal with start and end dates

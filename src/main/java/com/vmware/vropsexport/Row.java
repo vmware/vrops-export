@@ -20,8 +20,9 @@ package com.vmware.vropsexport;
 import java.util.BitSet;
 import java.util.NoSuchElementException;
 
+@SuppressWarnings("WeakerAccess")
 public class Row {
-	public int FIRST_METRIC_OFFSET = 2;
+	public final int FIRST_METRIC_OFFSET = 2;
 
 	private final long timestamp;
 	
