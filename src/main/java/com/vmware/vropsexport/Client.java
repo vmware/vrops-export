@@ -98,6 +98,20 @@ public class Client {
 		//
 		try {
 			JSONObject rq = new JSONObject();
+
+			// User may be in a non-local auth source.
+			//
+			int p = username.indexOf('\\');
+			if(p != -1) {
+				rq.put("authSource", username.substring(0, p));
+				username = username.substring(p + 1);
+			} else {
+				p = username.indexOf('@');
+				if (p != -1) {
+					rq.put("authSource", username.substring(p + 1));
+					username = username.substring(0, p);
+				}
+			}
 			rq.put("username", username);
 			rq.put("password", password);
 			try (InputStream is = this.postJsonReturnStream("/suite-api/api/auth/token/acquire", rq)) {
