@@ -48,6 +48,11 @@ public class CSVPrinter implements RowsetProcessor {
 		public RowsetProcessor makeFromConfig(BufferedWriter bw, Config config, DataProvider dp) {
 			return new CSVPrinter(bw, new SimpleDateFormat(config.getDateFormat()), config.getCsvConfig(), dp);
 		}
+
+		@Override
+		public boolean isProducingOutput() {
+			return true;
+		}
 	}
 
 	private final BufferedWriter bw;
