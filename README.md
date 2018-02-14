@@ -12,7 +12,7 @@ The tool can be installed from pre-built binaries or built from source. If you'r
 * Java JDK 1.8 installed on the machine where you plan to run the tool
 * vRealize Operations 6.3 or higher
 ### Installation on Linux, Mac or other UNIX-like OS
-1. Download the binaries from here: https://github.com/prydin/vrops-export/releases
+1. Download the binaries from here: https://github.com/vmware/vrops-export/releases
 2. Unzip the files:
 ```
 mkdir ~/vrops-export
@@ -30,7 +30,7 @@ chmod +x exporttool.sh
 ```
 
 ### Installation on Windows
-1. Download the binaries from here: https://github.com/prydin/vrops-export/releases
+1. Download the binaries from here: https://github.com/vmware/vrops-export/releases
 2. Unzip the files into a directory of your choice, e.g. c:\\vropsexport
 3. Open a command window and cd into the directory you created, e.g.
 ```
@@ -55,7 +55,7 @@ exporttool.bat -d ..\samples\vmfields.yaml -u admin -p password -H https://my.vr
 1. Get from git
 ```
 git init # Only needed of you haven't already initialized a git repo in the directory 
-git clone https://github.com/prydin/vrops-export.git
+git clone https://github.com/vmware/vrops-export.git
 ```
 2. Build the code
 ```
