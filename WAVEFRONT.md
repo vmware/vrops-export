@@ -4,7 +4,7 @@ This experimental formatter generates output that can be sent to a Wavefront pro
 
 The usage is very simple: All metrics exported become metrics in Wavefront and any properties become tags in Wavefront. This behaviour is 
 experimental and subject to change! Take care when exporting properties, since the Wavefront tags become part of the unique identity of an
-object. Thus, if you export a property that changes frequently, you will created multiple object, which is probably not what you want.
+object. Thus, if you export a property that changes frequently, you will create multiple objects, which is probably not what you want.
 
 It is highly recommended to use the "align" directive to round to the nearest five minutes. Otherwise, overlapping export of the same time range may show up as multiple data points.
 
