@@ -17,6 +17,9 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.sql.SQLConfig;
+import com.vmware.vropsexport.wavefront.WavefrontConfig;
+
 import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
@@ -78,6 +81,7 @@ public class Config {
 	private String dateFormat;
 	private String outputFormat;
 	private SQLConfig sqlConfig;
+	private WavefrontConfig wavefrontConfig;
 	private String resourceKind;
 	private String adapterKind;
 	private boolean compact;
@@ -151,6 +155,14 @@ public class Config {
 
 	public void setSqlConfig(SQLConfig sqlConfig) {
 		this.sqlConfig = sqlConfig;
+	}
+
+	public WavefrontConfig getWavefrontConfig() {
+		return wavefrontConfig;
+	}
+
+	public void setWavefrontConfig(WavefrontConfig wavefrontConfig) {
+		this.wavefrontConfig = wavefrontConfig;
 	}
 
 	public boolean hasProps() {

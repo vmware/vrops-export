@@ -52,7 +52,12 @@ public class ParentSplicer implements RowsetProcessor {
 			this.rowsetCache.put(cacheKey, rowset);
 		}
 	}
-	
+
+	@Override
+	public void close() {
+		// Nothing to do
+	}
+
 	public static void spliceRows(Rowset child, Rowset parent) {
 		for(Row pRow : parent.getRows().values()) {
 			Row cRow = child.getRows().get(pRow.getTimestamp());

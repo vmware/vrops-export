@@ -37,7 +37,7 @@ import com.vmware.vropsexport.RowMetadata;
 import com.vmware.vropsexport.Rowset;
 import com.vmware.vropsexport.RowsetProcessor;
 import com.vmware.vropsexport.RowsetProcessorFacotry;
-import com.vmware.vropsexport.SQLConfig;
+import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.sql.NamedParameterStatement;
 
 @SuppressWarnings("WeakerAccess")
@@ -184,5 +184,10 @@ public class SQLDumper implements RowsetProcessor {
 		} catch(SQLException|HttpException|IOException e) {
 			throw new ExporterException(e);
 		}
+	}
+
+	@Override
+	public void close() throws ExporterException {
+		// Nothing to do
 	}
 }

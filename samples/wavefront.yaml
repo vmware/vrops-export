@@ -19,6 +19,9 @@ rollupType: AVG
 rollupMinutes: 5
 align: 300
 outputFormat: wavefront
+wavefrontConfig:
+  proxyHost: localhost
+  proxyPort: 2878
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
 # CPU fields

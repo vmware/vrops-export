@@ -19,7 +19,7 @@ package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.SQLDumper;
-import com.vmware.vropsexport.processors.WavefrontSender;
+import com.vmware.vropsexport.processors.WavefrontPusher;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -97,7 +97,7 @@ public class Exporter implements DataProvider {
 	static {
 		rspFactories.put("sql", new SQLDumper.Factory());
 		rspFactories.put("csv", new CSVPrinter.Factory());
-		rspFactories.put("wavefront", new WavefrontSender.Factory());
+		rspFactories.put("wavefront", new WavefrontPusher.Factory());
 	}
 
 	public static boolean isProducingOutput(Config conf)  {
@@ -214,6 +214,7 @@ public class Exporter implements DataProvider {
 			return;
 		}
 		bw.flush();
+		rsp.close();
 		if(!quiet)
 			System.err.println("100% done");
 	}
