@@ -445,7 +445,7 @@ public class Exporter implements DataProvider {
 			}
 			long start = System.currentTimeMillis();
 			StatsProcessor sp = new StatsProcessor(conf, this, rowsetCache, progress, verbose);
-			int processed = sp.process(content,  rspFactory.makeFromConfig(bw, conf, this), begin, end);
+			int processed = sp.process(content,  rsp, begin, end);
 
 			// Some resources may not have returned metrics and would not have been counted. Update the progress counter
 			// to make sure we're still in synch.

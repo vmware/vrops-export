@@ -64,13 +64,13 @@ public class SQLDumper implements RowsetProcessor {
 			SQLConfig sqlc = config.getSqlConfig();
 			if(sqlc == null)
 				throw new ExporterException("SQL section must be present in the definition file");
-			
-			// Determine batchsize 
-			// 
+
+			// Determine batchsize
+			//
 			int batchSize = sqlc.getBatchSize();
-			if(batchSize == 0) 
+			if(batchSize == 0)
 				batchSize = DEFAULT_BATCH_SIZE;
-			
+
 			// The driver can be either read directly or derived from the database type
 			//
 			String driver = sqlc.getDriver();
@@ -81,7 +81,7 @@ public class SQLDumper implements RowsetProcessor {
 				driver = drivers.get(dbType);
 				if(driver == null)
 					throw new ExporterException("Database type " + dbType + " is not recognized. Check spelling or try to specifying the driver class instead!");
-				
+
 				// Make sure we can load the driver
 				//
 				try {
@@ -92,15 +92,15 @@ public class SQLDumper implements RowsetProcessor {
 			}
 			if(ds == null) {
 				ds = new BasicDataSource();
-				if(sqlc.getConnectionString() == null) 
+				if(sqlc.getConnectionString() == null)
 					throw new ExporterException("SQL connection URL must be specified");
-				
+
 				// Use either database type or driver.
 				//
 				ds.setDefaultAutoCommit(false);
 				ds.setDriverClassName(driver);
 				ds.setUrl(sqlc.getConnectionString());
-				if(sqlc.getUsername() != null) 
+				if(sqlc.getUsername() != null)
 					ds.setUsername(sqlc.getUsername());
 				if(sqlc.getPassword() != null)
 					ds.setPassword(sqlc.getPassword());
@@ -138,7 +138,8 @@ public class SQLDumper implements RowsetProcessor {
 	public void process(Rowset rowset, RowMetadata meta) throws ExporterException {
 		try {
 			NamedParameterStatement stmt = null;
-			try (Connection conn = ds.getConnection()) {
+			Connection conn = ds.getConnection();
+			try {
 				stmt = new NamedParameterStatement(conn, sql);
 				int rowsInBatch = 0;
 				for (Row row : rowset.getRows().values()) {
@@ -179,7 +180,7 @@ public class SQLDumper implements RowsetProcessor {
 			} finally {
 				if (stmt != null)
 					stmt.close();
-
+				conn.close();
 			}
 		} catch(SQLException|HttpException|IOException e) {
 			throw new ExporterException(e);

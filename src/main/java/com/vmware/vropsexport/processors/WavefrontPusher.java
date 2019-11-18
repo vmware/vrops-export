@@ -11,7 +11,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 @SuppressWarnings("WeakerAccess")
 public class WavefrontPusher implements RowsetProcessor {

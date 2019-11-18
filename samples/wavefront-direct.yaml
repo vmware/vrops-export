@@ -1,0 +1,54 @@
+# Copyright 2017 VMware, Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+resourceType: VirtualMachine
+rollupType: AVG
+rollupMinutes: 5
+align: 300
+outputFormat: wavefront
+wavefrontConfig:
+  wavefrontURL: "https://try.wavefront.com"
+  token: "4599a766-9a06-468b-b08f-d8bf168cc5d1"
+dateFormat: "yyyy-MM-dd HH:mm:ss"
+fields:
+# CPU fields
+  - alias: vrops.cpu.demand
+    metric: cpu|demandPct
+  - alias: vrops.cpu.ready
+    metric: cpu|readyPct
+  - alias: vrops.cpu.costop
+    metric: cpu|costopPct
+# Memory fields
+  - alias: vrops.mem.demand
+    metric: mem|guest_demand
+  - alias: vrops.mem.swapOut
+    metric: mem|swapoutRate_average
+  - alias: vrops.mem.swapIn
+    metric: mem|swapinRate_average
+ # Storage fields
+  - alias: vrops.storage.demandKbps
+    metric: storage|demandKBps
+ # Network fields
+  - alias: vrops.net.bytesRx
+    metric: net|bytesRx_average
+  - alias: vrops.net.bytesTx
+    metric: net|bytesTx_average
+ # Host CPU
+  - alias: vrops.host.cpu.demand
+    metric: $parent:HostSystem.cpu|demandmhz
+# Host name
+  - alias: esxiHost
+    prop: summary|parentHost
