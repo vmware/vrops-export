@@ -28,14 +28,14 @@ import org.apache.http.NoHttpResponseException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.Writer;
+import java.io.*;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -377,6 +377,50 @@ public class Exporter implements DataProvider {
 			out.println("Name : " + stat.getString("name"));
 			out.println();
 		}
+	}
+
+	public void generateExportDefinition(String adapterAndResourceKind, PrintStream out) throws IOException, HttpException {
+		String resourceKind = adapterAndResourceKind;
+		String adapterKind = "VMWARE";
+		Matcher m = Patterns.adapterAndResourceKindPattern.matcher(adapterAndResourceKind);
+		if(m.matches()) {
+			adapterKind = m.group(1);
+			resourceKind = m.group(2);
+		}
+		JSONObject response = client.getJson("/suite-api/api/adapterkinds/" + adapterKind + "/resourcekinds/" + resourceKind + "/statkeys");
+		JSONArray stats = response.getJSONArray("resourceTypeAttributes");
+		Config config = new Config();
+		config.setAdapterKind(adapterKind);
+		config.setResourceKind(resourceKind);
+		List<Config.Field> fields = new ArrayList<>(stats.length());
+		for(int i = 0; i < stats.length(); ++i) {
+			JSONObject stat = stats.getJSONObject(i);
+			Config.Field f = new Config.Field();
+			f.setAlias(stat.getString("key"));
+			f.setMetric(stat.getString("key"));
+			fields.add(f);
+		}
+		Config.Field[] fieldArr = new Config.Field[fields.size()];
+		fields.toArray(fieldArr);
+		config.setFields(fieldArr);
+		DumperOptions dumperOptions = new DumperOptions();
+		dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+		dumperOptions.setPrettyFlow(true);
+
+		Representer representer = new Representer() {
+			@Override
+			protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
+				// if value of property is null, ignore it.
+				if (propertyValue == null) {
+					return null;
+				}
+				else {
+					return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
+				}
+			}
+		};
+		Yaml y = new Yaml(representer, dumperOptions);
+		y.dump(config, new OutputStreamWriter(out));
 	}
 	
 	public void printResourceKinds(String adapterKind, PrintStream out) throws IOException, HttpException {
