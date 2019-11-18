@@ -102,7 +102,11 @@ public class Main {
 				String adapterKind = commandLine.getOptionValue('R');
 				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, 1000, trustStore, trustPass);
 				exporter.printResourceKinds(adapterKind, System.out);
-			} else {	
+			} else if(commandLine.hasOption('G')) {
+				String rk = commandLine.getOptionValue('G');
+				Exporter exporter = createExporter(host, username, password, threads, null, verbose, useTmpFile, 5000, 1000, trustStore, trustPass);
+				exporter.generateExportDefinition(rk, System.out);
+			} else {
 				String defFile = commandLine.getOptionValue('d');
 				if(defFile == null) 
 					throw new ExporterException("Definition file must be specified");
@@ -241,6 +245,7 @@ public class Main {
 		opts.addOption("R", "resource-kinds", true, "List resource kinds");
 		opts.addOption("m", "max-rows", true, "Maximum number of rows to fetch from API (default=unlimited)");
 		opts.addOption("T", "truststore", true, "Truststore filename");
+		opts.addOption("G", "generate", true, "Generate template definition for resource type");
 		opts.addOption(null, "trustpass", true, "Truststore password (default=changeit)");
 		opts.addOption(null, "resfetch", true, "Resource fetch count (default=1000)");
 		opts.addOption("h", "help", false, "Print a short help text");
