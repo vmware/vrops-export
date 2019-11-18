@@ -19,7 +19,7 @@ package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.SQLDumper;
-import com.vmware.vropsexport.processors.WavefrontSender;
+import com.vmware.vropsexport.processors.WavefrontPusher;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -97,7 +97,7 @@ public class Exporter implements DataProvider {
 	static {
 		rspFactories.put("sql", new SQLDumper.Factory());
 		rspFactories.put("csv", new CSVPrinter.Factory());
-		rspFactories.put("wavefront", new WavefrontSender.Factory());
+		rspFactories.put("wavefront", new WavefrontPusher.Factory());
 	}
 
 	public static boolean isProducingOutput(Config conf)  {
@@ -214,6 +214,7 @@ public class Exporter implements DataProvider {
 			return;
 		}
 		bw.flush();
+		rsp.close();
 		if(!quiet)
 			System.err.println("100% done");
 	}
@@ -444,7 +445,7 @@ public class Exporter implements DataProvider {
 			}
 			long start = System.currentTimeMillis();
 			StatsProcessor sp = new StatsProcessor(conf, this, rowsetCache, progress, verbose);
-			int processed = sp.process(content,  rspFactory.makeFromConfig(bw, conf, this), begin, end);
+			int processed = sp.process(content,  rsp, begin, end);
 
 			// Some resources may not have returned metrics and would not have been counted. Update the progress counter
 			// to make sure we're still in synch.

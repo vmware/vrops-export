@@ -74,6 +74,11 @@ public class CSVPrinter implements RowsetProcessor {
 	}
 
 	@Override
+	public void close() {
+		// Nothing to do
+	}
+
+	@Override
 	public void preamble(RowMetadata meta, Config conf) throws ExporterException {
 		// If header is suppressed, do nothing...
 		//

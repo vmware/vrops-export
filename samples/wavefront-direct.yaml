@@ -20,8 +20,8 @@ rollupMinutes: 5
 align: 300
 outputFormat: wavefront
 wavefrontConfig:
-  proxyHost: localhost
-  proxyPort: 2878
+  wavefrontURL: "https://try.wavefront.com"
+  token: "4599a766-9a06-468b-b08f-d8bf168cc5d1"
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
 # CPU fields
