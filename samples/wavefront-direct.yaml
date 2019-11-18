@@ -21,7 +21,7 @@ align: 300
 outputFormat: wavefront
 wavefrontConfig:
   wavefrontURL: "https://try.wavefront.com"
-  token: "very-secret-token"
+  token: "your token"
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
 # CPU fields
