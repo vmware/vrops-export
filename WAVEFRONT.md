@@ -51,15 +51,15 @@ Here is an example of a simple definition file for direct ingest:
         
   Another example, this time featuring proxy-based ingest:
   
-  ```
-  resourceType: VirtualMachine
+```
+resourceType: VirtualMachine
 rollupType: AVG
 rollupMinutes: 5
 align: 300
 outputFormat: wavefront
 wavefrontConfig:
-  proxyHost: localhost
-  proxyPort: 2878
+   proxyHost: localhost
+   proxyPort: 2878
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
 # CPU fields
