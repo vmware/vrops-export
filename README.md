@@ -185,7 +185,7 @@ $parent:HostSystem.$parent:ClusterComputeResource.cpu|demandmhz
 The tool supports exporting to a SQL database. For details, please refer to [this document](SQL.md)
 
 ## Exporting to Wavefront
-For experimental support for exporting to Wavefront, please refer to [this document](WAVEFRONT.md)
+For information on exporting to Wavefront, please refer to [this document](WAVEFRONT.md)
     
 # Known issues
 * Very long time ranges in combination with small interval sizes can cause the server to prematurely close the connection, resulting in NoHttpResponseExceptions to be thrown. If this happens, consider shortening the time range. This seems to happen mostly when exporting over a slow connection.
