@@ -107,7 +107,7 @@ usage: exporttool [-d <arg>] [-e <arg>] [-F <arg>] [-H <arg>] [-h] [-i]
  As of version 2.1.0, the -i option has been deprecated for security reasons. Instead, the tool will prompt the user when it encounters an untrusted certificate. If the user chooses to trust the certificate, it is stored in a personal truststore and reused next time the tool is executed against that host. By default, the trusted certs are stored in $HOME/.vropsexport/truststore, but the location can be overridden using the -T flag.
  
  ### Authentication
- The vrops-export tool uses the local authentication source. Other sources can be specified by using the "username@source" syntax. Be aware that in the case of e.g. Active Directory, the string after the @-sign should be the name of the *authentication source* and not that of the Active Directory domain. 
+ The vrops-export tool uses the local authentication source by default. Other sources can be specified by using the "username@source" syntax. Be aware that in the case of e.g. Active Directory, the string after the @-sign should be the name of the *authentication source* and not that of the Active Directory domain. 
  
  ### Notes:
  * Start and end dates will use the date format specified in the definition file. Since dates tend to contain spaces and special characters, you probably want to put dates within double quotes (").
