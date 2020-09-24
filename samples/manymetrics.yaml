@@ -1,0 +1,116 @@
+resourceType: VMWARE:VirtualMachine
+rollupType: LATEST
+#rollupMinutes: 5
+compact: true
+dateFormat: "yyyy-MM-dd HH:mm:ssZ"
+fields:
+  - alias: CPU_Util_Resources|CPU_Active_1min_avg
+    metric: rescpu|actav1_latest
+  - alias: CPU|Contention
+    metric: cpu|capacity_contentionPct
+  - alias: CPU|Demand_mhz
+    metric: cpu|demandmhz
+  - alias: CPU|Demand_pct
+    metric: cpu|demandPct
+  - alias: CPU|Eftv_limit
+    metric: cpu|effective_limit
+  - alias: CPU|IOWait_pct
+    metric: cpu|iowaitPct
+  - alias: CPU|Overlap
+    metric: cpu|overlap_summation
+  - alias: CPU|Provisioned_vCPU
+    metric: cpu|corecount_provisioned
+  - alias: CPU|Ready_pct
+    metric: cpu|readyPct
+  - alias: CPU|Run
+    metric: cpu|run_summation
+  - alias: CPU|Total_pvsnd
+    metric: cpu|vm_capacity_provisioned
+  - alias: CPU|Usage_avg
+    metric: cpu|usage_average
+  - alias: CPU|Use_mhzavg
+    metric: cpu|usagemhz_average
+  - alias: CPU|Used
+    metric: cpu|used_summation
+  - alias: CPU|Workload
+    metric: cpu|workload
+  - alias: Configuration|Hardware|Disk_Space
+    metric: config|hardware|disk_Space
+  - alias: Configuration|Hardware|Number_CPUs
+    metric: config|hardware|num_Cpu
+  - alias: Datastore|Outstanding_IO_reqs
+    metric: datastore|demand_oio
+  - alias: Datastore|Read_IOPS
+    metric: datastore|numberReadAveraged_average
+  - alias: Datastore|Read_Throughput
+    metric: datastore|read_average
+  - alias: Datastore|Write_IOPS
+    metric: datastore|numberWriteAveraged_average
+  - alias: Datastore|Write_Throughput
+    metric: datastore|write_average
+  - alias: DiskSpace|VM_used
+    metric: diskspace|used
+  - alias: Disk_Space|Active_not_shared
+    metric: diskspace|activeNotShared
+  - alias: Disk_Space|Not_Shared
+    metric: diskspace|notshared
+  - alias: Guest_FS|Total_Capacity
+    metric: guestfilesystem|capacity_total
+  - alias: Guest_FS|Utlztn_pctttl
+    metric: guestfilesystem|percentage_total
+  - alias: Guest_FS|Utlztn_ttl
+    metric: guestfilesystem|usage_total
+  - alias: Memory|Consumed_pct
+    metric: mem|consumedPct
+  - alias: Memory|Guest Demand
+    metric: mem|guest_demand
+  - alias: Memory|Guest Usage
+    metric: mem|guest_usage
+  - alias: Memory|Host_Demand
+    metric: mem|host_demand
+  - alias: Memory|SwapOut_Rate
+    metric: mem|swapoutRate_average
+  - alias: Memory|Swap_In_Rate
+    metric: mem|swapinRate_average
+  - alias: Memory|Swapped
+    metric: mem|swapped_average
+  - alias: Memory|Total_pvsnd
+    metric: mem|guest_provisioned
+  - alias: Memory|Usage
+    metric: mem|usage_average
+  - alias: Memory|Utilization
+    metric: mem|vmMemoryDemand
+  - alias: Network|Broadcast_Transm
+    metric: net|broadcastTx_summation
+  - alias: Network|Data_Rec_Rate
+    metric: net|received_average
+  - alias: Network|Data_Trans_Rate
+    metric: net|transmitted_average
+  - alias: Network|Multicast_Pkts_Transmitted
+    metric: net|multicastTx_summation
+  - alias: Network|Trans_Packets_Dropped
+    metric: net|droppedTx_summation
+  - alias: Network|Usage_Rate
+    metric: net|usage_average
+  - alias: Phys_Disk|Read_Throughput
+    metric: disk|read_average
+  - alias: Phys_Disk|Write_Throughput
+    metric: disk|write_average
+  - alias: Physical_Disk|Total_Throughput
+    metric: disk|usage_average
+  - alias: Storage|Read_Latency
+    metric: storage|totalReadLatency_average
+  - alias: Storage|Write_Latency
+    metric: storage|totalWriteLatency_average
+  - alias: Summary|Number_Datastores
+    metric: summary|number_datastore
+  - alias: Summary|Running
+    metric: summary|running
+  - alias: System|OS_Uptime
+    metric: sys|osUptime_latest
+  - alias: System|Powered_ON
+    metric: sys|poweredOn
+  - alias: Virtual Disk|Write Throughput
+    metric: virtualDisk|write_average
+  - alias: Virtual_Disk|Read_Throughput
+    metric: virtualDisk|read_average

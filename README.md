@@ -84,8 +84,8 @@ usage: exporttool [-d <arg>] [-e <arg>] [-F <arg>] [-H <arg>] [-h] [-i]
  -h,--help                   Print a short help text
  -i,--ignore-cert            Trust any cert (DEPRECATED!)
  -l,--lookback <arg>         Lookback time
- -m,--max-rows <arg>         Maximum number of rows to fetch from API
-                             (default=unlimited)
+ -m,--max-rows <arg>         Maximum number of rows to fetch 
+                             (default=1000*thread count)
  -n,--namequery <arg>        Name query
  -o,--output <arg>           Output file
  -P,--parent <arg>           Parent resource (ResourceKind:resourceName)

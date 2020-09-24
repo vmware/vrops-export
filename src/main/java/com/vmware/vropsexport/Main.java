@@ -44,6 +44,7 @@ import com.vmware.vropsexport.security.CertUtils;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
 
 public class Main {
+	private static final int DEFAULT_ROWS_PER_THREAD = 1000;
 	public static void main(String[] args) throws Exception {
 		// Parse command line
 		//
@@ -137,6 +138,10 @@ public class Main {
 					} catch(NumberFormatException e) {
 						throw new ExporterException("Number of threads must be a valid integer");
 					}
+				}
+				// If maxrows isn't specified, default to threads*1000
+				if(maxRows == 0) {
+					maxRows = threads * DEFAULT_ROWS_PER_THREAD;
 				}
 				int maxRes = maxRows; // Always default to maxrows. Going below that wouldn't make sense.
 				tmp = commandLine.getOptionValue("resfetch");
@@ -243,7 +248,7 @@ public class Main {
 		opts.addOption("t", "threads", true, "Number of parallel processing threads (default=10)");
 		opts.addOption("S", "streaming", false, "True streaming processing. Faster but less reliable");
 		opts.addOption("R", "resource-kinds", true, "List resource kinds");
-		opts.addOption("m", "max-rows", true, "Maximum number of rows to fetch from API (default=unlimited)");
+		opts.addOption("m", "max-rows", true, "Maximum number of rows to fetch (default=1000*thread count)");
 		opts.addOption("T", "truststore", true, "Truststore filename");
 		opts.addOption("G", "generate", true, "Generate template definition for resource type");
 		opts.addOption(null, "trustpass", true, "Truststore password (default=changeit)");

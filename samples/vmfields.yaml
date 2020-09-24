@@ -36,6 +36,9 @@ fields:
  # Storage fields
   - alias: storageDemandKbps
     metric: storage|demandKBps
+ # Diskspace fields
+  - alias: vmUsed
+    metric: diskspace|used
  # Network fields
   - alias: netBytesRx
     metric: net|bytesRx_average
