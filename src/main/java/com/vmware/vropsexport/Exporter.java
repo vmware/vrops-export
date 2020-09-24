@@ -178,13 +178,17 @@ public class Exporter implements DataProvider {
 				progress.reportProgress(0);
 			}
 			int chunkSize = Math.min(MAX_RESPONSE_ROWS, this.maxRows);
+			if(verbose) {
+				System.err.println("Raw chunk size is " + chunkSize + " resources");
+			}
 
 			// We don't want to make the chunks so big that not all threads will have work to do.
 			// Make sure that doesn't happen.
 			//
 			chunkSize = Math.min(chunkSize, 1 + (resources.length() / this.executor.getMaximumPoolSize()));
-			if(verbose)
-				System.err.println("Processing chunks of " + chunkSize + " resources");
+			if(verbose) {
+				System.err.println("Adjusted chunk size is " + chunkSize + " resources");
+			}
 			ArrayList<JSONObject> chunk = new ArrayList<>(chunkSize);
 			for (int i = 0; i < resources.length(); ++i) {
 				JSONObject res = resources.getJSONObject(i);
