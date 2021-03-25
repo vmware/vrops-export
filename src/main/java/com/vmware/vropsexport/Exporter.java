@@ -18,17 +18,17 @@
 package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.processors.CSVPrinter;
+import com.vmware.vropsexport.processors.JsonPrinter;
 import com.vmware.vropsexport.processors.SQLDumper;
 import com.vmware.vropsexport.processors.WavefrontPusher;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -110,6 +110,7 @@ public class Exporter implements DataProvider {
         rspFactories.put("sql", new SQLDumper.Factory());
         rspFactories.put("csv", new CSVPrinter.Factory());
         rspFactories.put("wavefront", new WavefrontPusher.Factory());
+        rspFactories.put("json", new JsonPrinter.Factory());
     }
 
     public static boolean isProducingOutput(final Config conf) {
@@ -139,14 +140,13 @@ public class Exporter implements DataProvider {
                 new ArrayBlockingQueue<>(20), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
-    public void exportTo(final Writer out, final long begin, final long end, final String namePattern, final String parentSpec, final boolean quiet) throws IOException, HttpException, ExporterException {
-        final BufferedWriter bw = new BufferedWriter(out);
+    public void exportTo(final OutputStream out, final long begin, final long end, final String namePattern, final String parentSpec, final boolean quiet) throws IOException, HttpException, ExporterException {
         Progress progress = null;
 
         // Create RowsetProcessor
         //
         final RowMetadata meta = new RowMetadata(conf);
-        final RowsetProcessor rsp = rspFactory.makeFromConfig(bw, conf, this);
+        final RowsetProcessor rsp = rspFactory.makeFromConfig(out, conf, this);
         rsp.preamble(meta, conf);
         JSONArray resources;
         String parentId = null;
@@ -223,7 +223,7 @@ public class Exporter implements DataProvider {
                     if (conf.getAdapterKind() != null && !rKey.getString("adapterKindKey").equals(conf.getAdapterKind())) {
                         continue;
                     }
-                    startChunkJob(bw, chunk, rsp, meta, begin, end, progress);
+                    startChunkJob(out, chunk, rsp, meta, begin, end, progress);
                     chunk = new ArrayList<>(chunkSize);
                 }
             }
@@ -237,18 +237,18 @@ public class Exporter implements DataProvider {
             e.printStackTrace();
             return;
         }
-        bw.flush();
+        out.flush();
         rsp.close();
         if (!quiet) {
             System.err.println("100% done");
         }
     }
 
-    private void startChunkJob(final BufferedWriter bw, final List<JSONObject> chunk, final RowsetProcessor rsp, final RowMetadata meta, final long begin, final long end, final ProgressMonitor progress) {
+    private void startChunkJob(final OutputStream out, final List<JSONObject> chunk, final RowsetProcessor rsp, final RowMetadata meta, final long begin, final long end, final ProgressMonitor progress) {
         executor.execute(() -> {
             try {
                 preloadCache(chunk);
-                handleResources(bw, chunk, rsp, meta, begin, end, progress);
+                handleResources(chunk, rsp, meta, begin, end, progress);
             } catch (final Exception e) {
                 log.error("Error while processing resource", e);
             }
@@ -475,7 +475,7 @@ public class Exporter implements DataProvider {
         }
     }
 
-    private void handleResources(final BufferedWriter bw, final List<JSONObject> resList, final RowsetProcessor rsp, final RowMetadata meta, final long begin, final long end, final ProgressMonitor progress) throws IOException, HttpException, ExporterException {
+    private void handleResources(final List<JSONObject> resList, final RowsetProcessor rsp, final RowMetadata meta, final long begin, final long end, final ProgressMonitor progress) throws IOException, HttpException, ExporterException {
         InputStream content;
         try {
             final long start = System.currentTimeMillis();
@@ -506,8 +506,8 @@ public class Exporter implements DataProvider {
             while (i < sz) {
                 right.add(resList.get(i++));
             }
-            handleResources(bw, left, rsp, meta, begin, end, progress);
-            handleResources(bw, right, rsp, meta, begin, end, progress);
+            handleResources(left, rsp, meta, begin, end, progress);
+            handleResources(right, rsp, meta, begin, end, progress);
             return;
         }
         try {
