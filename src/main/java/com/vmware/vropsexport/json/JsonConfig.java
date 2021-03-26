@@ -20,7 +20,8 @@ package com.vmware.vropsexport.json;
 public class JsonConfig {
   public enum JsonFormat {
     chatty,
-    compact
+    compact,
+    elastic,
   }
 
   private JsonFormat format = JsonFormat.compact;

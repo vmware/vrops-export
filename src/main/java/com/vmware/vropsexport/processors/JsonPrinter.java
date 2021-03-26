@@ -97,6 +97,9 @@ public class JsonPrinter implements RowsetProcessor {
             break;
           case chatty:
             printChatty(rowset, meta);
+          case elastic:
+            printElastic(rowset, meta);
+            break;
         }
       } catch (final IOException | HttpException e) {
         throw new ExporterException(e);
@@ -168,6 +171,24 @@ public class JsonPrinter implements RowsetProcessor {
         generator.writeNumberField("v", v);
         generator.writeEndObject();
       }
+    }
+  }
+
+  private void printElastic(final Rowset rowset, final RowMetadata meta)
+      throws IOException, HttpException {
+    for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
+      generator.writeStartObject();
+      generator.writeStringField("resourceName", dp.getResourceName(rowset.getResourceId()));
+      for (final String metricName : meta.getMetricMap().keySet()) {
+        final int metricIndex = meta.getMetricIndex(metricName);
+        final Double v = row.getValue().getMetric(metricIndex);
+        if (v == null) {
+          continue;
+        }
+        generator.writeNumberField("t", row.getKey());
+        generator.writeNumberField(meta.getAliasForMetric(metricName), v);
+      }
+      generator.writeEndObject();
     }
   }
 
