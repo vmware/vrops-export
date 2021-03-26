@@ -147,5 +147,5 @@ as a key-value pair.
       "System Attributes|alert_count_critical": 0.0,
       "System Attributes|alert_count_immediate": 0.0,
       "System Attributes|alert_count_info": 0.0,
-
+      ...
 ```
