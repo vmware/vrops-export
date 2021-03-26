@@ -19,15 +19,17 @@ package com.vmware.vropsexport;
 
 public class ExporterException extends Exception {
 
-  public ExporterException(String message, Throwable cause) {
+  private static final long serialVersionUID = -5847302957038136704L;
+
+  public ExporterException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  public ExporterException(String message) {
+  public ExporterException(final String message) {
     super(message);
   }
 
-  public ExporterException(Throwable cause) {
+  public ExporterException(final Throwable cause) {
     super(cause);
   }
 }

@@ -27,18 +27,18 @@ import java.nio.channels.FileChannel;
 
 public class SelfDeletingFileInputStream extends InputStream {
 
-  private FileInputStream backer;
+  private final FileInputStream backer;
 
   private final File file;
 
-  public SelfDeletingFileInputStream(String filename) throws FileNotFoundException {
-    this.file = new File(filename);
-    this.backer = new FileInputStream(this.file);
+  public SelfDeletingFileInputStream(final String filename) throws FileNotFoundException {
+    file = new File(filename);
+    backer = new FileInputStream(file);
   }
 
-  public SelfDeletingFileInputStream(File file) throws FileNotFoundException {
+  public SelfDeletingFileInputStream(final File file) throws FileNotFoundException {
     this.file = file;
-    this.backer = new FileInputStream(this.file);
+    backer = new FileInputStream(this.file);
   }
 
   @Override
@@ -52,17 +52,17 @@ public class SelfDeletingFileInputStream extends InputStream {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(final Object obj) {
     return backer.equals(obj);
   }
 
   @Override
-  public int read(byte[] b) throws IOException {
+  public int read(final byte[] b) throws IOException {
     return backer.read(b);
   }
 
   @Override
-  public int read(byte[] b, int off, int len) throws IOException {
+  public int read(final byte[] b, final int off, final int len) throws IOException {
     return backer.read(b, off, len);
   }
 
@@ -72,7 +72,7 @@ public class SelfDeletingFileInputStream extends InputStream {
   }
 
   @Override
-  public long skip(long n) throws IOException {
+  public long skip(final long n) throws IOException {
     return backer.skip(n);
   }
 
@@ -82,7 +82,7 @@ public class SelfDeletingFileInputStream extends InputStream {
   }
 
   @Override
-  public void mark(int readlimit) {
+  public void mark(final int readlimit) {
     backer.mark(readlimit);
   }
 
@@ -113,8 +113,8 @@ public class SelfDeletingFileInputStream extends InputStream {
   @Override
   public void finalize() {
     try {
-      this.close();
-    } catch (IOException e) {
+      close();
+    } catch (final IOException e) {
       // Do nothing. It's probably just already closed.
     }
   }

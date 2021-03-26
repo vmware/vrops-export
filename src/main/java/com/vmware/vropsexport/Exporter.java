@@ -60,7 +60,7 @@ import org.yaml.snakeyaml.representer.Representer;
 
 @SuppressWarnings("SameParameterValue")
 public class Exporter implements DataProvider {
-  private class Progress implements ProgressMonitor {
+  private static class Progress implements ProgressMonitor {
     private final int totalRows;
 
     private int rowsProcessed = 0;
@@ -177,8 +177,8 @@ public class Exporter implements DataProvider {
     JSONArray resources;
     String parentId = null;
     if (parentSpec != null) {
+
       // Lookup parent
-      //
       final Matcher m = Patterns.parentSpecPattern.matcher(parentSpec);
       if (!m.matches()) {
         throw new ExporterException(
@@ -187,7 +187,6 @@ public class Exporter implements DataProvider {
                 + ". should be on the form ResourceKind:resourceName");
       }
       // TODO: No way of specifying adapter type here. Should there be?
-      //
       final JSONArray pResources =
           fetchResources(m.group(1), null, m.group(2), 0).getJSONArray("resourceList");
       if (pResources.length() == 0) {
@@ -204,7 +203,6 @@ public class Exporter implements DataProvider {
       final JSONObject resObj;
 
       // Fetch resources
-      //
       if (parentId != null) {
         final String url = "/suite-api/api/resources/" + parentId + "/relationships";
         resObj = client.getJson(url, "relationshipType=CHILD", "page=" + page++);
@@ -214,13 +212,11 @@ public class Exporter implements DataProvider {
       resources = resObj.getJSONArray("resourceList");
 
       // If we got an empty set back, we ran out of pages.
-      //
       if (resources.length() == 0) {
         break;
       }
 
       // Initialize progress reporting
-      //
       if (!quiet && progress == null) {
         progress = new Progress(resObj.getJSONObject("pageInfo").getInt("totalCount"));
         progress.reportProgress(0);
@@ -232,7 +228,6 @@ public class Exporter implements DataProvider {
 
       // We don't want to make the chunks so big that not all threads will have work to do.
       // Make sure that doesn't happen.
-      //
       chunkSize = Math.min(chunkSize, 1 + (resources.length() / executor.getMaximumPoolSize()));
       if (verbose) {
         System.err.println("Adjusted chunk size is " + chunkSize + " resources");
@@ -245,7 +240,6 @@ public class Exporter implements DataProvider {
 
           // Child relationships may return objects of the wrong type, so we have
           // to check the type here.
-          //
           final JSONObject rKey = res.getJSONObject("resourceKey");
           if (!rKey.getString("resourceKindKey").equals(conf.getResourceKind())) {
             continue;
@@ -254,7 +248,7 @@ public class Exporter implements DataProvider {
               && !rKey.getString("adapterKindKey").equals(conf.getAdapterKind())) {
             continue;
           }
-          startChunkJob(out, chunk, rsp, meta, begin, end, progress);
+          startChunkJob(chunk, rsp, meta, begin, end, progress);
           chunk = new ArrayList<>(chunkSize);
         }
       }
@@ -264,7 +258,6 @@ public class Exporter implements DataProvider {
       executor.awaitTermination(2, TimeUnit.MINUTES);
     } catch (final InterruptedException e) {
       // Shouldn't happen...
-      //
       e.printStackTrace();
       return;
     }
@@ -276,7 +269,6 @@ public class Exporter implements DataProvider {
   }
 
   private void startChunkJob(
-      final OutputStream out,
       final List<JSONObject> chunk,
       final RowsetProcessor rsp,
       final RowMetadata meta,
@@ -439,7 +431,6 @@ public class Exporter implements DataProvider {
       final JSONObject r = rl.getJSONObject(i);
 
       // If there's more than one we only return the first one.
-      //
       if (r.getJSONObject("resourceKey").getString("resourceKindKey").equals(parentType)) {
         synchronized (parentCache) {
           parentCache.put(id + parentType, r);
@@ -581,17 +572,15 @@ public class Exporter implements DataProvider {
             "Metric request call took " + (System.currentTimeMillis() - start) + " ms");
       }
     } catch (final NoHttpResponseException e) {
+
       // This seems to happen when we're giving the server too much work to do in one call.
       // Try again, but split the chunk into two and run them separately.
-      //
       final int sz = resList.size();
       if (sz <= 1) {
         // Already down to one item? We're out of luck!
-        //
         throw new ExporterException(e);
       }
       // Split lists and try them separately
-      //
       final int half = sz / 2;
       log.warn("Server closed connection. Trying smaller chunk (current=" + sz + ")");
       final List<JSONObject> left = new ArrayList<>(half);
@@ -610,7 +599,6 @@ public class Exporter implements DataProvider {
     try {
       if (useTempFile) {
         // Dump to temp file
-        //
         File tmpFile;
         final long start = System.currentTimeMillis();
         try {
@@ -636,7 +624,6 @@ public class Exporter implements DataProvider {
       // Some resources may not have returned metrics and would not have been counted. Update the
       // progress counter
       // to make sure we're still in synch.
-      //
       if (progress != null) {
         progress.reportProgress(resList.size() - processed);
       }

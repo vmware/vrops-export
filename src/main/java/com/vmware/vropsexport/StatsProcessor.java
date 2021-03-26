@@ -33,7 +33,7 @@ import org.json.JSONObject;
 
 @SuppressWarnings("SameParameterValue")
 public class StatsProcessor {
-  private class NullProgress implements ProgressMonitor {
+  private static class NullProgress implements ProgressMonitor {
     @Override
     public void reportProgress(final int n) {}
   }
@@ -56,8 +56,7 @@ public class StatsProcessor {
       final DataProvider propertyProvider,
       final LRUCache<String, Rowset> rowsetCache,
       final ProgressMonitor pm,
-      final boolean verbose)
-      throws ExporterException {
+      final boolean verbose) {
     this.conf = conf;
     this.rowMetadata = rowMetadata;
     dataProvider = propertyProvider;

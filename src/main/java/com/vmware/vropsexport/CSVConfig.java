@@ -27,7 +27,7 @@ public class CSVConfig {
     return header;
   }
 
-  public void setHeader(boolean header) {
+  public void setHeader(final boolean header) {
     this.header = header;
   }
 
@@ -35,7 +35,7 @@ public class CSVConfig {
     return delimiter;
   }
 
-  public void setDelimiter(String delimiter) {
+  public void setDelimiter(final String delimiter) {
     this.delimiter = delimiter;
   }
 }

@@ -17,14 +17,14 @@
  */
 package com.vmware.vropsexport.security;
 
+import com.vmware.vropsexport.ExporterException;
 import java.security.cert.X509Certificate;
 
-import com.vmware.vropsexport.ExporterException;
-
 public class RecoverableCertificateException extends ExporterException {
+  private static final long serialVersionUID = 6702660675940528780L;
   private final X509Certificate[] capturedCerts;
 
-  public RecoverableCertificateException(X509Certificate[] capturedCerts, Throwable cause) {
+  public RecoverableCertificateException(final X509Certificate[] capturedCerts, final Throwable cause) {
     super(cause);
     this.capturedCerts = capturedCerts;
   }

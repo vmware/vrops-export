@@ -33,7 +33,7 @@ public class ParentSplicer implements RowsetProcessor {
 
   private final String cacheKey;
 
-  public ParentSplicer(Rowset childRowset, LRUCache<String, Rowset> rowsetCache, String cacheKey) {
+  public ParentSplicer(final Rowset childRowset, final LRUCache<String, Rowset> rowsetCache, final String cacheKey) {
     super();
     this.childRowset = childRowset;
     this.rowsetCache = rowsetCache;
@@ -41,15 +41,15 @@ public class ParentSplicer implements RowsetProcessor {
   }
 
   @Override
-  public void preamble(RowMetadata meta, Config conf) throws ExporterException {
+  public void preamble(final RowMetadata meta, final Config conf) {
     // Nothing to do...
   }
 
   @Override
-  public void process(Rowset rowset, RowMetadata meta) throws ExporterException {
+  public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {
     spliceRows(childRowset, rowset);
-    synchronized (this.rowsetCache) {
-      this.rowsetCache.put(cacheKey, rowset);
+    synchronized (rowsetCache) {
+      rowsetCache.put(cacheKey, rowset);
     }
   }
 
@@ -58,17 +58,21 @@ public class ParentSplicer implements RowsetProcessor {
     // Nothing to do
   }
 
-  public static void spliceRows(Rowset child, Rowset parent) {
-    for (Row pRow : parent.getRows().values()) {
-      Row cRow = child.getRows().get(pRow.getTimestamp());
+  public static void spliceRows(final Rowset child, final Rowset parent) {
+    for (final Row pRow : parent.getRows().values()) {
+      final Row cRow = child.getRows().get(pRow.getTimestamp());
       if (cRow != null) {
         for (int j = 0; j < pRow.getNumMetrics(); ++j) {
-          Double d = pRow.getMetric(j);
-          if (d != null) cRow.setMetric(j, d);
+          final Double d = pRow.getMetric(j);
+          if (d != null) {
+            cRow.setMetric(j, d);
+          }
         }
         for (int j = 0; j < pRow.getNumProps(); ++j) {
-          String s = pRow.getProp(j);
-          if (s != null) cRow.setProp(j, s);
+          final String s = pRow.getProp(j);
+          if (s != null) {
+            cRow.setProp(j, s);
+          }
         }
       }
     }

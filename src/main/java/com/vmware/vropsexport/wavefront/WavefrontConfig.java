@@ -13,7 +13,7 @@ public class WavefrontConfig {
     return proxyHost;
   }
 
-  public void setProxyHost(String proxyHost) {
+  public void setProxyHost(final String proxyHost) {
     this.proxyHost = proxyHost;
   }
 
@@ -21,7 +21,7 @@ public class WavefrontConfig {
     return proxyPort;
   }
 
-  public void setProxyPort(int proxyPort) {
+  public void setProxyPort(final int proxyPort) {
     this.proxyPort = proxyPort;
   }
 
@@ -29,7 +29,7 @@ public class WavefrontConfig {
     return wavefrontURL;
   }
 
-  public void setWavefrontURL(String wavefrontURL) {
+  public void setWavefrontURL(final String wavefrontURL) {
     this.wavefrontURL = wavefrontURL;
   }
 
@@ -37,7 +37,7 @@ public class WavefrontConfig {
     return token;
   }
 
-  public void setToken(String token) {
+  public void setToken(final String token) {
     this.token = token;
   }
 }

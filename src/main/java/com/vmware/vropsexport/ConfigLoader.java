@@ -18,15 +18,16 @@
 package com.vmware.vropsexport;
 
 import java.io.Reader;
-
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 public class ConfigLoader {
-  public static Config parse(Reader rdr) {
-    Yaml yaml = new Yaml(new Constructor(Config.class));
-    Config conf = (Config) yaml.load(rdr);
-    if (conf.getOutputFormat() == null) conf.setOutputFormat("csv");
+  public static Config parse(final Reader rdr) {
+    final Yaml yaml = new Yaml(new Constructor(Config.class));
+    final Config conf = (Config) yaml.load(rdr);
+    if (conf.getOutputFormat() == null) {
+      conf.setOutputFormat("csv");
+    }
     return conf;
   }
 }

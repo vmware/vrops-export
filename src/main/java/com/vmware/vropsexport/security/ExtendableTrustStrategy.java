@@ -22,11 +22,9 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-
 import org.apache.http.conn.ssl.TrustStrategy;
 
 public class ExtendableTrustStrategy implements TrustStrategy, org.apache.http.ssl.TrustStrategy {
@@ -34,25 +32,29 @@ public class ExtendableTrustStrategy implements TrustStrategy, org.apache.http.s
 
   private X509Certificate[] capturedCerts;
 
-  public ExtendableTrustStrategy(KeyStore extendedTrust)
+  public ExtendableTrustStrategy(final KeyStore extendedTrust)
       throws NoSuchAlgorithmException, KeyStoreException {
     if (extendedTrust != null) {
-      TrustManagerFactory tmf =
+      final TrustManagerFactory tmf =
           TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
       tmf.init(extendedTrust);
-      this.trustManagers = tmf.getTrustManagers();
-    } else this.trustManagers = null;
+      trustManagers = tmf.getTrustManagers();
+    } else {
+      trustManagers = null;
+    }
   }
 
   @Override
-  public boolean isTrusted(X509Certificate[] certs, String authType) throws CertificateException {
-    this.capturedCerts = certs;
-    if (trustManagers == null) return false;
+  public boolean isTrusted(final X509Certificate[] certs, final String authType) throws CertificateException {
+    capturedCerts = certs;
+    if (trustManagers == null) {
+      return false;
+    }
     try {
-      for (TrustManager trustManager : trustManagers) {
+      for (final TrustManager trustManager : trustManagers) {
         ((X509TrustManager) trustManager).checkServerTrusted(certs, authType);
       }
-    } catch (CertificateException e) {
+    } catch (final CertificateException e) {
       return false;
     }
     return true;

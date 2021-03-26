@@ -24,7 +24,7 @@ public class Rowset {
 
   private final TreeMap<Long, Row> rows;
 
-  public Rowset(String resourceId, TreeMap<Long, Row> rows) {
+  public Rowset(final String resourceId, final TreeMap<Long, Row> rows) {
     super();
     this.resourceId = resourceId;
     this.rows = rows;
