@@ -17,13 +17,8 @@
 resourceType: VMWARE:VirtualMachine
 rollupType: AVG
 rollupMinutes: 5
-compact: true
-outputFormat: csv
+outputFormat: json
 dateFormat: "yyyy-MM-dd HH:mm:ss"
-fields:
-  - alias: resourceId
-    prop: $resId
-  # CPU fields
-  - alias: cpuDemand
-    metric: cpu|demandPct
- 
+allMetrics: true
+jsonConfig:
+  format: elastic

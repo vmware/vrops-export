@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 VMware, Inc. All Rights Reserved.
+ * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -19,23 +19,23 @@ package com.vmware.vropsexport;
 
 @SuppressWarnings("unused")
 public class CSVConfig {
-	private boolean header = true;
-	
-	private String delimiter = ",";
+  private boolean header = true;
 
-	public boolean isHeader() {
-		return header;
-	}
+  private String delimiter = ",";
 
-	public void setHeader(boolean header) {
-		this.header = header;
-	}
+  public boolean isHeader() {
+    return header;
+  }
 
-	public String getDelimiter() {
-		return delimiter;
-	}
+  public void setHeader(final boolean header) {
+    this.header = header;
+  }
 
-	public void setDelimiter(String delimiter) {
-		this.delimiter = delimiter;
-	}
+  public String getDelimiter() {
+    return delimiter;
+  }
+
+  public void setDelimiter(final String delimiter) {
+    this.delimiter = delimiter;
+  }
 }

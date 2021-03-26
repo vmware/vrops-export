@@ -1,4 +1,4 @@
-# Copyright 2017 VMware, Inc. All Rights Reserved.
+# Copyright 2017-2021 VMware, Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 # 
@@ -24,16 +24,16 @@ sqlConfig:
   connectionString: jdbc:postgresql:prydin
   databaseType: postgres
 fields:
-# Resource ID
+  # Resource ID
   - alias: resId
     prop: $resId
-# CPU fields
+  # CPU fields
   - alias: cpuDemand
     metric: cpu|demandPct
-# Memory fields
+  # Memory fields
   - alias: memDemand
     metric: mem|guest_demand
- # Host CPU
+  # Host CPU
   - alias: hostCPUDemand
     metric: $parent:HostSystem.cpu|demandmhz
    

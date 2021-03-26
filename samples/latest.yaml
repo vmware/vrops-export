@@ -1,4 +1,4 @@
-# Copyright 2017 VMware, Inc. All Rights Reserved.
+# Copyright 2017-2021 VMware, Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 # 
@@ -23,7 +23,7 @@ dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
   - alias: resourceId
     prop: $resId
-# CPU fields
+  # CPU fields
   - alias: cpuDemand
     metric: cpu|demandPct
  

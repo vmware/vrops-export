@@ -1,5 +1,5 @@
-/* 
- * Copyright 2017 VMware, Inc. All Rights Reserved.
+/*
+ * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -17,211 +17,232 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.json.JsonConfig;
 import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
-
 import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
 public class Config {
-	@SuppressWarnings("unused")
-    public static class Field {
-		private String alias;
-		private String metric;
-		private String prop;
-		
-		public Field() {
-		}
-	
-		public Field(String alias, String name, boolean isMetric) {
-			super();
-			this.alias = alias;
-			if(isMetric)
-				this.metric = name;
-			else 
-				this.prop = name;
-		}
+  @SuppressWarnings("unused")
+  public static class Field {
+    private String alias;
+    private String metric;
+    private String prop;
 
-		public String getAlias() {
-			return alias;
-		}
+    public Field() {}
 
-		public void setAlias(String alias) {
-			this.alias = alias;
-		}
-
-		public String getMetric() {
-			return metric;
-		}
-		
-		public boolean hasMetric() {
-			return metric != null;
-		}
-
-		public void setMetric(String metric) {
-			this.metric = metric;
-		}
-
-		public String getProp() {
-			return prop;
-		}
-
-		public void setProp(String prop) {
-			this.prop = prop;
-		}
-		
-		public boolean hasProp() {
-			return this.prop != null;
-		}
-	}
-	private Field[] fields;
-	private String resourceType;
-	private String rollupType;
-	private long rollupMinutes;
-	private String dateFormat;
-	private String outputFormat;
-	private SQLConfig sqlConfig;
-	private WavefrontConfig wavefrontConfig;
-	private String resourceKind;
-	private String adapterKind;
-	private boolean compact;
-	private String compactifyAlg = "LATEST";
-	private CSVConfig csvConfig;
-	private int align = 0;
-
-	public Config() {
-	}
-
-    public int getAlign() {
-        return align;
+    public Field(final String alias, final String name, final boolean isMetric) {
+      super();
+      this.alias = alias;
+      if (isMetric) {
+        metric = name;
+      } else {
+        prop = name;
+      }
     }
 
-    public void setAlign(int align) {
-        this.align = align;
+    public String getAlias() {
+      return alias;
     }
 
-    public Field[] getFields() {
-		return fields;
-	}
+    public void setAlias(final String alias) {
+      this.alias = alias;
+    }
 
-	public void setFields(Field[] fields) {
-		this.fields = fields;
-	}
+    public String getMetric() {
+      return metric;
+    }
 
-	public void setResourceType(String resourceType) {
-		Matcher m = Patterns.adapterAndResourceKindPattern.matcher(resourceType);
-		if(m.matches()) {
-			this.adapterKind = m.group(1);
-			this.resourceKind = m.group(2);
-		} else
-			this.resourceKind = resourceType;
-	}
+    public boolean hasMetric() {
+      return metric != null;
+    }
 
-	public String getRollupType() {
-		return rollupType;
-	}
+    public void setMetric(final String metric) {
+      this.metric = metric;
+    }
 
-	public void setRollupType(String rollupType) {
-		this.rollupType = rollupType;
-	}
+    public String getProp() {
+      return prop;
+    }
 
-	public long getRollupMinutes() {
-		return rollupMinutes;
-	}
+    public void setProp(final String prop) {
+      this.prop = prop;
+    }
 
-	public void setRollupMinutes(long rollup) {
-		this.rollupMinutes = rollup;
-	}
-	
-	public String getDateFormat() {
-		return dateFormat;
-	}
+    public boolean hasProp() {
+      return prop != null;
+    }
+  }
 
-	public void setDateFormat(String dateFormat) {
-		this.dateFormat = dateFormat;
-	}
+  private Field[] fields;
+  private String resourceType;
+  private String rollupType;
+  private long rollupMinutes;
+  private String dateFormat;
+  private String outputFormat;
+  private SQLConfig sqlConfig;
+  private WavefrontConfig wavefrontConfig;
+  private String resourceKind;
+  private String adapterKind;
+  private boolean compact;
+  private String compactifyAlg = "LATEST";
+  private CSVConfig csvConfig;
+  private JsonConfig jsonConfig;
+  private int align = 0;
+  private boolean allMetrics = false;
 
-	public String getOutputFormat() {
-		return outputFormat;
-	}
+  public Config() {}
 
-	public void setOutputFormat(String outputFormat) {
-		this.outputFormat = outputFormat;
-	}
+  public JsonConfig getJsonConfig() {
+    return jsonConfig;
+  }
 
-	public SQLConfig getSqlConfig() {
-		return sqlConfig;
-	}
+  public void setJsonConfig(final JsonConfig jsonConfig) {
+    this.jsonConfig = jsonConfig;
+  }
 
-	public void setSqlConfig(SQLConfig sqlConfig) {
-		this.sqlConfig = sqlConfig;
-	}
+  public boolean isAllMetrics() {
+    return allMetrics;
+  }
 
-	public WavefrontConfig getWavefrontConfig() {
-		return wavefrontConfig;
-	}
+  public void setAllMetrics(final boolean allMetrics) {
+    this.allMetrics = allMetrics;
+  }
 
-	public void setWavefrontConfig(WavefrontConfig wavefrontConfig) {
-		this.wavefrontConfig = wavefrontConfig;
-	}
+  public int getAlign() {
+    return align;
+  }
 
-	public boolean hasProps() {
-		for(Field f : fields) {
-			if(f.hasProp())
-				return true;
-		}
-		return false;
-	}
-	
-	public String getResourceKind() {
-		return resourceKind;
-	}
+  public void setAlign(final int align) {
+    this.align = align;
+  }
 
-	public void setResourceKind(String resourceKind) {
-		this.resourceKind = resourceKind;
-	}
+  public Field[] getFields() {
+    return fields;
+  }
 
-	public String getAdapterKind() {
-		return adapterKind;
-	}
+  public void setFields(final Field[] fields) {
+    this.fields = fields;
+  }
 
-	public void setAdapterKind(String adapterKind) {
-		this.adapterKind = adapterKind;
-	}
+  public void setResourceType(final String resourceType) {
+    final Matcher m = Patterns.adapterAndResourceKindPattern.matcher(resourceType);
+    if (m.matches()) {
+      adapterKind = m.group(1);
+      resourceKind = m.group(2);
+    } else {
+      resourceKind = resourceType;
+    }
+  }
 
-	public boolean hasMetrics() {
-		for(Field f : fields) {
-			if(f.hasMetric())
-				return true;
-		}
-		return false;
-	}
-	
-	public CSVConfig getCsvConfig() {
-		return csvConfig;
-	}
+  public String getRollupType() {
+    return rollupType;
+  }
 
-	public void setCsvConfig(CSVConfig csvConfig) {
-		this.csvConfig = csvConfig;
-	}
+  public void setRollupType(final String rollupType) {
+    this.rollupType = rollupType;
+  }
 
-	public String getResourceType() {
-		return resourceType;
-	}
+  public long getRollupMinutes() {
+    return rollupMinutes;
+  }
 
-	public boolean isCompact() {
-		return compact;
-	}
+  public void setRollupMinutes(final long rollup) {
+    rollupMinutes = rollup;
+  }
 
-	public void setCompact(boolean compact) {
-		this.compact = compact;
-	}
+  public String getDateFormat() {
+    return dateFormat;
+  }
 
-	public String getCompactifyAlg() {
-		return compactifyAlg;
-	}
+  public void setDateFormat(final String dateFormat) {
+    this.dateFormat = dateFormat;
+  }
 
-	public void setCompactifyAlg(String compactifyAlg) {
-		this.compactifyAlg = compactifyAlg;
-	}
+  public String getOutputFormat() {
+    return outputFormat;
+  }
+
+  public void setOutputFormat(final String outputFormat) {
+    this.outputFormat = outputFormat;
+  }
+
+  public SQLConfig getSqlConfig() {
+    return sqlConfig;
+  }
+
+  public void setSqlConfig(final SQLConfig sqlConfig) {
+    this.sqlConfig = sqlConfig;
+  }
+
+  public WavefrontConfig getWavefrontConfig() {
+    return wavefrontConfig;
+  }
+
+  public void setWavefrontConfig(final WavefrontConfig wavefrontConfig) {
+    this.wavefrontConfig = wavefrontConfig;
+  }
+
+  public boolean hasProps() {
+    for (final Field f : fields) {
+      if (f.hasProp()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public String getResourceKind() {
+    return resourceKind;
+  }
+
+  public void setResourceKind(final String resourceKind) {
+    this.resourceKind = resourceKind;
+  }
+
+  public String getAdapterKind() {
+    return adapterKind;
+  }
+
+  public void setAdapterKind(final String adapterKind) {
+    this.adapterKind = adapterKind;
+  }
+
+  public boolean hasMetrics() {
+    for (final Field f : fields) {
+      if (f.hasMetric()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public CSVConfig getCsvConfig() {
+    return csvConfig;
+  }
+
+  public void setCsvConfig(final CSVConfig csvConfig) {
+    this.csvConfig = csvConfig;
+  }
+
+  public String getResourceType() {
+    return resourceType;
+  }
+
+  public boolean isCompact() {
+    return compact;
+  }
+
+  public void setCompact(final boolean compact) {
+    this.compact = compact;
+  }
+
+  public String getCompactifyAlg() {
+    return compactifyAlg;
+  }
+
+  public void setCompactifyAlg(final String compactifyAlg) {
+    this.compactifyAlg = compactifyAlg;
+  }
 }

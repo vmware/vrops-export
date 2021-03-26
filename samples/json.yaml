@@ -14,12 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-resourceType: VirtualMachine
+resourceType: VMWARE:VirtualMachine
 rollupType: AVG
 rollupMinutes: 5
+outputFormat: json
 dateFormat: "yyyy-MM-dd HH:mm:ss"
+jsonConfig:
+  format: elastic
 fields:
-  # CPU fields
+  - alias: resourceId
+    prop: $resId
+    # CPU fields
   - alias: cpuDemand
     metric: cpu|demandPct
   - alias: cpuReady
@@ -59,4 +64,3 @@ fields:
   # Host name a different way
   - alias: hostName2
     prop: $parent:HostSystem.$resName
- 

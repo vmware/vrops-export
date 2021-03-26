@@ -15,19 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.vmware.vropsexport;
+package com.vmware.vropsexport.json;
 
-import java.io.Reader;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
+public class JsonConfig {
+  public enum JsonFormat {
+    chatty,
+    compact,
+    elastic,
+  }
 
-public class ConfigLoader {
-  public static Config parse(final Reader rdr) {
-    final Yaml yaml = new Yaml(new Constructor(Config.class));
-    final Config conf = (Config) yaml.load(rdr);
-    if (conf.getOutputFormat() == null) {
-      conf.setOutputFormat("csv");
-    }
-    return conf;
+  private JsonFormat format = JsonFormat.compact;
+
+  public JsonFormat getFormat() {
+    return format;
+  }
+
+  public void setFormat(final JsonFormat format) {
+    this.format = format;
   }
 }

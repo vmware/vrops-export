@@ -1,5 +1,5 @@
-/* 
- * Copyright 2017 VMware, Inc. All Rights Reserved.
+/*
+ * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -19,15 +19,17 @@ package com.vmware.vropsexport;
 
 public class ExporterException extends Exception {
 
-	public ExporterException(String message, Throwable cause) {
-		super(message, cause);
-	}
+  private static final long serialVersionUID = -5847302957038136704L;
 
-	public ExporterException(String message) {
-		super(message);
-	}
+  public ExporterException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 
-	public ExporterException(Throwable cause) {
-		super(cause);
-	}
+  public ExporterException(final String message) {
+    super(message);
+  }
+
+  public ExporterException(final Throwable cause) {
+    super(cause);
+  }
 }
