@@ -1,5 +1,5 @@
-/* 
- * Copyright 2017 VMware, Inc. All Rights Reserved.
+/*
+ * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -22,43 +22,46 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-
 import org.apache.http.conn.ssl.TrustStrategy;
 
-public class ExtendableTrustStrategy implements TrustStrategy, org.apache.http.ssl.TrustStrategy {	
-	private final TrustManager[] trustManagers;
-	
-	private X509Certificate[] capturedCerts;
-	
-	public ExtendableTrustStrategy(KeyStore extendedTrust) throws NoSuchAlgorithmException, KeyStoreException {
-		if(extendedTrust != null) {
-			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-			tmf.init(extendedTrust);
-			this.trustManagers = tmf.getTrustManagers();
-		} else
-			this.trustManagers = null;
-	}
+public class ExtendableTrustStrategy implements TrustStrategy, org.apache.http.ssl.TrustStrategy {
+  private final TrustManager[] trustManagers;
 
-	@Override
-	public boolean isTrusted(X509Certificate[] certs, String authType) throws CertificateException {
-		this.capturedCerts = certs;
-		if(trustManagers == null)
-			return false;
-		try {
-            for (TrustManager trustManager : trustManagers) {
-                ((X509TrustManager) trustManager).checkServerTrusted(certs, authType);
-            }
-		} catch(CertificateException e) {
-			return false;
-		}
-		return true;
-	}
+  private X509Certificate[] capturedCerts;
 
-	public X509Certificate[] getCapturedCerts() {
-		return capturedCerts;
-	}
+  public ExtendableTrustStrategy(final KeyStore extendedTrust)
+      throws NoSuchAlgorithmException, KeyStoreException {
+    if (extendedTrust != null) {
+      final TrustManagerFactory tmf =
+          TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      tmf.init(extendedTrust);
+      trustManagers = tmf.getTrustManagers();
+    } else {
+      trustManagers = null;
+    }
+  }
+
+  @Override
+  public boolean isTrusted(final X509Certificate[] certs, final String authType)
+      throws CertificateException {
+    capturedCerts = certs;
+    if (trustManagers == null) {
+      return false;
+    }
+    try {
+      for (final TrustManager trustManager : trustManagers) {
+        ((X509TrustManager) trustManager).checkServerTrusted(certs, authType);
+      }
+    } catch (final CertificateException e) {
+      return false;
+    }
+    return true;
+  }
+
+  public X509Certificate[] getCapturedCerts() {
+    return capturedCerts;
+  }
 }

@@ -1,5 +1,5 @@
-/* 
- * Copyright 2017 VMware, Inc. All Rights Reserved.
+/*
+ * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -18,76 +18,75 @@
 package com.vmware.vropsexport.sql;
 
 public class SQLConfig {
-	private String connectionString;
-	
-	private String username;
-	
-	private String password;
-	
-	private String databaseType;
-	
-	private String driver;
-	
-	private String sql;
-	
-	private int batchSize;
-	
-	public SQLConfig() {
-	}
+  private String connectionString;
 
-	public String getConnectionString() {
-		return connectionString;
-	}
+  private String username;
 
-	public void setConnectionString(String connectionString) {
-		this.connectionString = connectionString;
-	}
+  private String password;
 
-	public String getUsername() {
-		return username;
-	}
+  private String databaseType;
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+  private String driver;
 
-	public String getPassword() {
-		return password;
-	}
+  private String sql;
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+  private int batchSize;
 
-	public String getDriver() {
-		return driver;
-	}
+  public SQLConfig() {}
 
-	public void setDriver(String driver) {
-		this.driver = driver;
-	}
+  public String getConnectionString() {
+    return connectionString;
+  }
 
-	public String getDatabaseType() {
-		return databaseType;
-	}
+  public void setConnectionString(final String connectionString) {
+    this.connectionString = connectionString;
+  }
 
-	public void setDatabaseType(String databaseType) {
-		this.databaseType = databaseType;
-	}
+  public String getUsername() {
+    return username;
+  }
 
-	public String getSql() {
-		return sql;
-	}
+  public void setUsername(final String username) {
+    this.username = username;
+  }
 
-	public void setSql(String sql) {
-		this.sql = sql;
-	}
+  public String getPassword() {
+    return password;
+  }
 
-	public int getBatchSize() {
-		return batchSize;
-	}
+  public void setPassword(final String password) {
+    this.password = password;
+  }
 
-	public void setBatchSize(int batchSize) {
-		this.batchSize = batchSize;
-	}
+  public String getDriver() {
+    return driver;
+  }
+
+  public void setDriver(final String driver) {
+    this.driver = driver;
+  }
+
+  public String getDatabaseType() {
+    return databaseType;
+  }
+
+  public void setDatabaseType(final String databaseType) {
+    this.databaseType = databaseType;
+  }
+
+  public String getSql() {
+    return sql;
+  }
+
+  public void setSql(final String sql) {
+    this.sql = sql;
+  }
+
+  public int getBatchSize() {
+    return batchSize;
+  }
+
+  public void setBatchSize(final int batchSize) {
+    this.batchSize = batchSize;
+  }
 }
