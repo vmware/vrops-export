@@ -15,22 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.vmware.vropsexport.security;
+package com.vmware.vropsexport.json;
 
-import com.vmware.vropsexport.ExporterException;
-import java.security.cert.X509Certificate;
-
-public class RecoverableCertificateException extends ExporterException {
-  private static final long serialVersionUID = 6702660675940528780L;
-  private final X509Certificate[] capturedCerts;
-
-  public RecoverableCertificateException(
-      final X509Certificate[] capturedCerts, final Throwable cause) {
-    super(cause);
-    this.capturedCerts = capturedCerts;
+public class JsonConfig {
+  public enum JsonFormat {
+    chatty,
+    compact
   }
 
-  public X509Certificate[] getCapturedCerts() {
-    return capturedCerts;
+  private JsonFormat format = JsonFormat.compact;
+
+  public JsonFormat getFormat() {
+    return format;
+  }
+
+  public void setFormat(final JsonFormat format) {
+    this.format = format;
   }
 }

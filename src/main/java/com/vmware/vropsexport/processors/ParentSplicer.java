@@ -33,7 +33,8 @@ public class ParentSplicer implements RowsetProcessor {
 
   private final String cacheKey;
 
-  public ParentSplicer(final Rowset childRowset, final LRUCache<String, Rowset> rowsetCache, final String cacheKey) {
+  public ParentSplicer(
+      final Rowset childRowset, final LRUCache<String, Rowset> rowsetCache, final String cacheKey) {
     super();
     this.childRowset = childRowset;
     this.rowsetCache = rowsetCache;

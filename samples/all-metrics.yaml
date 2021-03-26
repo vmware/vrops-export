@@ -20,3 +20,5 @@ rollupMinutes: 5
 outputFormat: json
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 allMetrics: true
+jsonConfig:
+  format: chatty

@@ -66,7 +66,8 @@ public class NamedParameterStatement {
    * @param query the parameterized query
    * @throws SQLException if the statement could not be created
    */
-  public NamedParameterStatement(final Connection connection, final String query) throws SQLException {
+  public NamedParameterStatement(final Connection connection, final String query)
+      throws SQLException {
     indexMap = new HashMap();
     final String parsedQuery = parse(query, indexMap);
     statement = connection.prepareStatement(parsedQuery);

@@ -17,6 +17,7 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.json.JsonConfig;
 import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
 import java.util.regex.Matcher;
@@ -87,10 +88,19 @@ public class Config {
   private boolean compact;
   private String compactifyAlg = "LATEST";
   private CSVConfig csvConfig;
+  private JsonConfig jsonConfig;
   private int align = 0;
   private boolean allMetrics = false;
 
   public Config() {}
+
+  public JsonConfig getJsonConfig() {
+    return jsonConfig;
+  }
+
+  public void setJsonConfig(final JsonConfig jsonConfig) {
+    this.jsonConfig = jsonConfig;
+  }
 
   public boolean isAllMetrics() {
     return allMetrics;
