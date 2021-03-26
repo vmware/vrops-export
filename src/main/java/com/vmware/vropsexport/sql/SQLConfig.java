@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 VMware, Inc. All Rights Reserved.
+ * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -38,7 +38,7 @@ public class SQLConfig {
     return connectionString;
   }
 
-  public void setConnectionString(String connectionString) {
+  public void setConnectionString(final String connectionString) {
     this.connectionString = connectionString;
   }
 
@@ -46,7 +46,7 @@ public class SQLConfig {
     return username;
   }
 
-  public void setUsername(String username) {
+  public void setUsername(final String username) {
     this.username = username;
   }
 
@@ -54,7 +54,7 @@ public class SQLConfig {
     return password;
   }
 
-  public void setPassword(String password) {
+  public void setPassword(final String password) {
     this.password = password;
   }
 
@@ -62,7 +62,7 @@ public class SQLConfig {
     return driver;
   }
 
-  public void setDriver(String driver) {
+  public void setDriver(final String driver) {
     this.driver = driver;
   }
 
@@ -70,7 +70,7 @@ public class SQLConfig {
     return databaseType;
   }
 
-  public void setDatabaseType(String databaseType) {
+  public void setDatabaseType(final String databaseType) {
     this.databaseType = databaseType;
   }
 
@@ -78,7 +78,7 @@ public class SQLConfig {
     return sql;
   }
 
-  public void setSql(String sql) {
+  public void setSql(final String sql) {
     this.sql = sql;
   }
 
@@ -86,7 +86,7 @@ public class SQLConfig {
     return batchSize;
   }
 
-  public void setBatchSize(int batchSize) {
+  public void setBatchSize(final int batchSize) {
     this.batchSize = batchSize;
   }
 }

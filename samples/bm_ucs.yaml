@@ -1,4 +1,4 @@
-# Copyright 2017 VMware, Inc. All Rights Reserved.
+# Copyright 2017-2021 VMware, Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 # 
@@ -25,11 +25,11 @@ fields:
   - alias: cpuDemand
     metric: cpu|demandPct
   - alias: hostCpu
-    metric: $parent:HostSystem.cpu|demandmhz   
+    metric: $parent:HostSystem.cpu|demandmhz
   - alias: bladeMemorySpeed
     metric: $parent:HostSystem.$parent:bm_ucs_blade.compute_blade|memorySpeed
   - alias: bladeName
-    prop: $parent:HostSystem.$parent:bm_ucs_blade.$resName   
+    prop: $parent:HostSystem.$parent:bm_ucs_blade.$resName
   - alias: chassisPower
     metric: $parent:HostSystem.$parent:bm_ucs_blade.$parent:bm_ucs_chassis.equipment_chassis|powerState
   - alias: chassisName

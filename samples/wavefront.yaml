@@ -1,4 +1,4 @@
-# Copyright 2017 VMware, Inc. All Rights Reserved.
+# Copyright 2017-2021 VMware, Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 # 
@@ -24,31 +24,31 @@ wavefrontConfig:
   proxyPort: 2878
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
-# CPU fields
+  # CPU fields
   - alias: vrops.cpu.demand
     metric: cpu|demandPct
   - alias: vrops.cpu.ready
     metric: cpu|readyPct
   - alias: vrops.cpu.costop
     metric: cpu|costopPct
-# Memory fields
+  # Memory fields
   - alias: vrops.mem.demand
     metric: mem|guest_demand
   - alias: vrops.mem.swapOut
     metric: mem|swapoutRate_average
   - alias: vrops.mem.swapIn
     metric: mem|swapinRate_average
- # Storage fields
+  # Storage fields
   - alias: vrops.storage.demandKbps
     metric: storage|demandKBps
- # Network fields
+  # Network fields
   - alias: vrops.net.bytesRx
     metric: net|bytesRx_average
   - alias: vrops.net.bytesTx
     metric: net|bytesTx_average
- # Host CPU
+  # Host CPU
   - alias: vrops.host.cpu.demand
     metric: $parent:HostSystem.cpu|demandmhz
-# Host name
+  # Host name
   - alias: esxiHost
     prop: summary|parentHost

@@ -1,4 +1,4 @@
-# Copyright 2017 VMware, Inc. All Rights Reserved.
+# Copyright 2017-2021 VMware, Inc. All Rights Reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
 # 
@@ -19,52 +19,52 @@ rollupType: AVG
 rollupMinutes: 5
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
-# CPU fields
+  # CPU fields
   - alias: cpuDemand
     metric: cpu|demandPct
   - alias: cpuReady
     metric: cpu|readyPct
   - alias: cpuCostop
     metric: cpu|costopPct
-# Memory fields
+  # Memory fields
   - alias: memDemand
     metric: mem|guest_demand
   - alias: memSwapOut
     metric: mem|swapoutRate_average
   - alias: memSwapIn
     metric: mem|swapinRate_average
- # Storage fields
+  # Storage fields
   - alias: storageDemandKbps
     metric: storage|demandKBps
- # Network fields
+  # Network fields
   - alias: netBytesRx
     metric: net|bytesRx_average
   - alias: netBytesTx
     metric: net|bytesTx_average
- # Host CPU
+  # Host CPU
   - alias: hostCPUDemand
     metric: $parent:HostSystem.cpu|demandmhz
- # Guest OS
+  # Guest OS
   - alias: guestOS
     prop: config|guestFullName
- # Host CPU type
+  # Host CPU type
   - alias: hostCPUType
     prop: $parent:HostSystem.cpu|cpuModel
- # Host name (parent)
+  # Host name (parent)
   - alias: hostName
     prop: summary|parentHost
- # Host name a different way
+  # Host name a different way
   - alias: hostName2
     prop: $parent:HostSystem.$resName
   # Cluster Name (grandparent)
   - alias: clusterCPU
     prop: $parent:HostSystem.$parent:ClusterComputeResource.$resName
- # Cluster CPU
+  # Cluster CPU
   - alias: clusterCPU
     metric: $parent:HostSystem.$parent:ClusterComputeResource.cpu|demandmhz
- # Datacenter cpu (great grandparent)
+  # Datacenter cpu (great grandparent)
   - alias: dcCpu
     metric: $parent:HostSystem.$parent:ClusterComputeResource.$parent:Datacenter.cpu|demandPct
- # Datacenter name
+  # Datacenter name
   - alias: dcName
     prop: $parent:HostSystem.$parent:ClusterComputeResource.$parent:Datacenter.$resName
