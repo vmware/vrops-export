@@ -1,68 +1,97 @@
 # vrops-export
+
 Simple utility for exporting data from vRealize Operations.
 
 ## Description
-A simple command-line data export tool for vRealize Operations. Currently supports CVS and SQL, but additional output formats are planned.
+
+A simple command-line data export tool for vRealize Operations. Currently supports CVS and SQL, but additional output
+formats are planned.
 
 # Installation
-The tool can be installed from pre-built binaries or built from source. If you're unclear what "building from source" means, you probably want to use the binaries. Building from source is mainly for people who like to change the code and contribute to the project.
+
+The tool can be installed from pre-built binaries or built from source. If you're unclear what "building from source"
+means, you probably want to use the binaries. Building from source is mainly for people who like to change the code and
+contribute to the project.
 
 ## Installing the binaries
+
 ### Prerequisites
+
 * Java JDK 1.8 installed on the machine where you plan to run the tool
 * vRealize Operations 6.3 or higher
+
 ### Installation on Linux, Mac or other UNIX-like OS
+
 1. Download the binaries from here: https://github.com/vmware/vrops-export/releases
 2. Unzip the files:
+
 ```
 mkdir ~/vrops-export
 cd ~/vrops-export
 unzip vrops-export-<version>-bin.zip
 cd vrops-export-<version>/bin
 ```
+
 3. Make the start script runnable
+
 ```
 chmod +x exporttool.sh
 ```
+
 4. Run it!
+
 ```
 ./exporttool.sh -d ../samples/vmfields.yaml -u admin -p password -H https://my.vrops.host
 ```
 
 ### Installation on Windows
+
 1. Download the binaries from here: https://github.com/vmware/vrops-export/releases
 2. Unzip the files into a directory of your choice, e.g. c:\\vropsexport
 3. Open a command window and cd into the directory you created, e.g.
+
 ```
 cd c:\vropsexport
 ```
+
 4. Cd into the bin directory
+
 ```
 cd bin
 ```
+
 5. Runt the tool
+
 ```
 exporttool.bat -d ..\samples\vmfields.yaml -u admin -p password -H https://my.vrops.host
 ```
 
 ## Building from source
+
 ### Prerequisites
+
 * Java JDK 1.8 installed on the machine where you plan to run the tool
 * vRealize Operations 6.3 or higher
 * Maven 3.3.3 or higher
 
 ### Build
+
 1. Get from git
+
 ```
 git init # Only needed of you haven't already initialized a git repo in the directory 
 git clone https://github.com/vmware/vrops-export.git
 ```
+
 2. Build the code
+
 ```
 cd vrops-export
 mvn package
 ```
+
 3. Run it!
+
 ```
 cd target
 chmod +x exporttool.sh
@@ -70,6 +99,7 @@ chmod +x exporttool.sh
 ```
 
 ## Command syntax
+
 ```
 usage: exporttool [-d <arg>] [-e <arg>] [-F <arg>] [-H <arg>] [-h] [-i]
        [-l <arg>] [-m <arg>] [-n <arg>] [-o <arg>] [-P <arg>] [-p <arg>]
@@ -103,22 +133,37 @@ usage: exporttool [-d <arg>] [-e <arg>] [-F <arg>] [-H <arg>] [-h] [-i]
  -u,--username <arg>         Username
  -v,--verbose                Print debug and timing information
  ```
- ### Certificate and trust management
- As of version 2.1.0, the -i option has been deprecated for security reasons. Instead, the tool will prompt the user when it encounters an untrusted certificate. If the user chooses to trust the certificate, it is stored in a personal truststore and reused next time the tool is executed against that host. By default, the trusted certs are stored in $HOME/.vropsexport/truststore, but the location can be overridden using the -T flag.
- 
- ### Authentication
- The vrops-export tool uses the local authentication source by default. Other sources can be specified by using the "username@source" syntax. Be aware that in the case of e.g. Active Directory, the string after the @-sign should be the name of the *authentication source* and not that of the Active Directory domain. 
- 
- ### Notes:
- * Start and end dates will use the date format specified in the definition file. Since dates tend to contain spaces and special characters, you probably want to put dates within double quotes (").
- * If you're unsure of what the metric names are, use the -F option to print the metric names and keys for a specific resource type, e.g. -F VirtualMachine
- * The -l (lookback) parameter is an alternative to the start and end dates. It sets the end date to the current time and goes back as far as you specify. You specify it as a number and a unit, e.g. 24h for 24 hours back. Valid unit are d=days, h=hours, m=minutes, s=seconds.
- * The -P flag restricts the export to objects sharing a specified parent. Parents must be specified as resource kind and resource name, for example HostSystem:esxi-01 if you want to export only VMs on the host named "esxi-01".
- 
- ## Definition file
- The details on what fields to export and how to treat them is expressed in the definition file. This file follows the YAML format. 
- Here is an example of a definition file:
- 
+
+### Certificate and trust management
+
+As of version 2.1.0, the -i option has been deprecated for security reasons. Instead, the tool will prompt the user when
+it encounters an untrusted certificate. If the user chooses to trust the certificate, it is stored in a personal
+truststore and reused next time the tool is executed against that host. By default, the trusted certs are stored in
+$HOME/.vropsexport/truststore, but the location can be overridden using the -T flag.
+
+### Authentication
+
+The vrops-export tool uses the local authentication source by default. Other sources can be specified by using the "
+username@source" syntax. Be aware that in the case of e.g. Active Directory, the string after the @-sign should be the
+name of the *authentication source* and not that of the Active Directory domain.
+
+### Notes:
+
+* Start and end dates will use the date format specified in the definition file. Since dates tend to contain spaces and
+  special characters, you probably want to put dates within double quotes (").
+* If you're unsure of what the metric names are, use the -F option to print the metric names and keys for a specific
+  resource type, e.g. -F VirtualMachine
+* The -l (lookback) parameter is an alternative to the start and end dates. It sets the end date to the current time and
+  goes back as far as you specify. You specify it as a number and a unit, e.g. 24h for 24 hours back. Valid unit are
+  d=days, h=hours, m=minutes, s=seconds.
+* The -P flag restricts the export to objects sharing a specified parent. Parents must be specified as resource kind and
+  resource name, for example HostSystem:esxi-01 if you want to export only VMs on the host named "esxi-01".
+
+## Definition file
+
+The details on what fields to export and how to treat them is expressed in the definition file. This file follows the
+YAML format. Here is an example of a definition file:
+
  ```
 resourceType: VirtualMachine                     # The resource type we're exporting
 rollupType: AVG                                  # Rollup type: AVG, MAX, MIN, SUM, LATEST, COUNT
@@ -157,45 +202,76 @@ fields:                                          # A list of fields
   - alias: hostCPUType
     prop: $parent:HostSystem.cpu|cpuModel		# Reference to a metric in a parent
 ```
+
 ### Global directives
+
 * resourceType: Name of the resource type (e.g. VirtualMachine)
-* rollupType: Type of data aggregation. Valid values are MAX, MIN, AVG, SUM, LATEST. 
-* rollupMinutes: Number of minutes in each bucket for rollup. E.g. ```rollupType: "AVG"``` and ```rollupMinutes: 5``` generates 5 minute averages.
-* dateFormat: Format to use when specifying and displaying dates. See http://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html for a description of the format.
-* align: Aligns the timestamps to a specified granularity (in seconds). For example, if an align value of 300 is specified, all timestamps will be aligned to the nearest 5 mintes. Note that only the time stamps are changed. Interpolation is not yet supported.
+* rollupType: Type of data aggregation. Valid values are MAX, MIN, AVG, SUM, LATEST.
+* rollupMinutes: Number of minutes in each bucket for rollup. E.g. ```rollupType: "AVG"``` and ```rollupMinutes: 5```
+  generates 5 minute averages.
+* dateFormat: Format to use when specifying and displaying dates.
+  See http://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html for a description of the format.
+* outputFormat: Specifies the output format. Valid values are ```csv```, ```json```, ```wavefront``` and ```sql```.
+* align: Aligns the timestamps to a specified granularity (in seconds). For example, if an align value of 300 is
+  specified, all timestamps will be aligned to the nearest 5 mintes. Note that only the time stamps are changed.
+  Interpolation is not yet supported.
+* allMetrics: Exports all metrics for every resource. This option is indended mainly for the JSON output format and will
+  most likely not work for table-oriented outputs, such as CSV and SQL. If specified, the ```fields``` attribute is
+  ignored.
+
 ### Special properties in the definition file
-There are a number of special properties that are always available for use in a properties file for getting things like parent resources and resource names.
+
+There are a number of special properties that are always available for use in a properties file for getting things like
+parent resources and resource names.
 
 * $resdId - Internal ID of the current resource.
 * $resName - Resource name of the current resource
-* $parent - Reference to a parent resource. 
+* $parent - Reference to a parent resource.
 
 ### Referencing parent resources
-The syntax for referencing parent resources is as follows: 
+
+The syntax for referencing parent resources is as follows:
+
 ```
 $parent:<Parent Kind>.<metric or property>
 ``` 
+
 For example:
+
 ```
 $parent:HostSystem.cpu|demandmhz
 ``` 
-Notice that you can stack several $parent keywords. For example, this gets the total CPU demand of a parent cluster based on a VM:
+
+Notice that you can stack several $parent keywords. For example, this gets the total CPU demand of a parent cluster
+based on a VM:
+
 ```
 $parent:HostSystem.$parent:ClusterComputeResource.cpu|demandmhz
 ```
 
 ## Exporting to SQL
+
 The tool supports exporting to a SQL database. For details, please refer to [this document](SQL.md)
 
 ## Exporting to Wavefront
+
 For information on exporting to Wavefront, please refer to [this document](WAVEFRONT.md)
-    
+
+## Exporting to JSON
+
+For information on exporting to JSON, please refer to [this document](JSON.md)
+
 # Known issues
-* Very long time ranges in combination with small interval sizes can cause the server to prematurely close the connection, resulting in NoHttpResponseExceptions to be thrown. If this happens, consider shortening the time range. This seems to happen mostly when exporting over a slow connection.
+
+* Very long time ranges in combination with small interval sizes can cause the server to prematurely close the
+  connection, resulting in NoHttpResponseExceptions to be thrown. If this happens, consider shortening the time range.
+  This seems to happen mostly when exporting over a slow connection.
 * Only one parent resource type is supported. This will be fixed in a future release.
 
 # Contributing to the code
-Contributing with code and new ideas is encouraged! If you have a great idea for a new or improved feature, please file a feature request under the "issues" tab in Github. 
+
+Contributing with code and new ideas is encouraged! If you have a great idea for a new or improved feature, please file
+a feature request under the "issues" tab in Github. 
  
 
 
