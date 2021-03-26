@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2017 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
@@ -21,17 +21,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.http.HttpException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public interface DataProvider {
-	Map<String, String> fetchProps(String id) throws IOException, HttpException;
-	
-	JSONObject getParentOf(String id, String parentType) throws JSONException, IOException, HttpException;
-	
-	InputStream fetchMetricStream(List<JSONObject> resList, RowMetadata meta, long begin, long end) throws IOException, HttpException;
-	
-	String getResourceName(String resourceId) throws JSONException, IOException, HttpException;
+    Map<String, String> fetchProps(String id) throws IOException, HttpException;
+
+    JSONObject getParentOf(String id, String parentType) throws JSONException, IOException, HttpException;
+
+    InputStream fetchMetricStream(List<JSONObject> resList, RowMetadata meta, long begin, long end) throws IOException, HttpException;
+
+    String getResourceName(String resourceId) throws JSONException, IOException, HttpException;
+
+    List<String> getStatKeysForResource(final String resourceId) throws IOException, HttpException;
 }

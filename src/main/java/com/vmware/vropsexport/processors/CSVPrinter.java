@@ -77,10 +77,11 @@ public class CSVPrinter implements RowsetProcessor {
     @Override
     public void preamble(final RowMetadata meta, final Config conf) throws ExporterException {
         // If header is suppressed, do nothing...
+        // If all metrics are exported, header is pointless.
         //
-        if (!csvConfig.isHeader()) {
-			return;
-		}
+        if (!csvConfig.isHeader() || conf.isAllMetrics()) {
+            return;
+        }
         try {
             // Output table header
             //
@@ -104,8 +105,8 @@ public class CSVPrinter implements RowsetProcessor {
                     if (df != null) {
                         bw.write("\"" + df.format(new Date(t)) + "\"");
                     } else {
-						bw.write("\"" + t + "\"");
-					}
+                        bw.write("\"" + t + "\"");
+                    }
                     bw.write(csvConfig.getDelimiter());
                     bw.write("\"");
                     bw.write(dp.getResourceName(rowset.getResourceId()));

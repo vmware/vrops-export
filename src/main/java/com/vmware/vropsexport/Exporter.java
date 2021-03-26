@@ -42,6 +42,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -143,9 +144,9 @@ public class Exporter implements DataProvider {
     public void exportTo(final OutputStream out, final long begin, final long end, final String namePattern, final String parentSpec, final boolean quiet) throws IOException, HttpException, ExporterException {
         Progress progress = null;
 
-        // Create RowsetProcessor
-        //
-        final RowMetadata meta = new RowMetadata(conf);
+        final RowMetadata meta = conf.isAllMetrics()
+                ? new RowMetadata(conf, getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind()))
+                : new RowMetadata(conf);
         final RowsetProcessor rsp = rspFactory.makeFromConfig(out, conf, this);
         rsp.preamble(meta, conf);
         JSONArray resources;
@@ -417,6 +418,31 @@ public class Exporter implements DataProvider {
         }
     }
 
+    public List<String> getStatKeysForResourceKind(final String adapterKind, final String resourceKind) throws IOException, HttpException {
+        final JSONObject response = client.getJson("/suite-api/api/adapterkinds/" +
+                urlencode(adapterKind) + "/resourcekinds/" + urlencode(resourceKind) + "/statkeys");
+        final JSONArray stats = response.getJSONArray("resourceTypeAttributes");
+        final List<String> metrics = new ArrayList<>(stats.length());
+        for (int i = 0; i < stats.length(); ++i) {
+            final JSONObject stat = stats.getJSONObject(i);
+            metrics.add(stat.getString("key"));
+        }
+        return metrics;
+    }
+
+
+    @Override
+    public List<String> getStatKeysForResource(final String resourceId) throws IOException, HttpException {
+        final JSONObject response = client.getJson("/suite-api/api/resources/" + resourceId + "/statkeys");
+        final JSONArray stats = response.getJSONArray("stat-key");
+        final List<String> metrics = new ArrayList<>(stats.length());
+        for (int i = 0; i < stats.length(); ++i) {
+            final JSONObject stat = stats.getJSONObject(i);
+            metrics.add(stat.getString("key"));
+        }
+        return metrics;
+    }
+
     public void generateExportDefinition(final String adapterAndResourceKind, final PrintStream out) throws IOException, HttpException {
         String resourceKind = adapterAndResourceKind;
         String adapterKind = "VMWARE";
@@ -425,20 +451,10 @@ public class Exporter implements DataProvider {
             adapterKind = m.group(1);
             resourceKind = m.group(2);
         }
-        final JSONObject response = client.getJson("/suite-api/api/adapterkinds/" +
-                urlencode(adapterKind) + "/resourcekinds/" + urlencode(resourceKind) + "/statkeys");
-        final JSONArray stats = response.getJSONArray("resourceTypeAttributes");
+
+        final List<String> metrics = getStatKeysForResourceKind(adapterKind, resourceKind);
+        final List<Config.Field> fields = metrics.stream().map(s -> new Config.Field(s, s, true)).collect(Collectors.toList());
         final Config config = new Config();
-        config.setAdapterKind(adapterKind);
-        config.setResourceKind(resourceKind);
-        final List<Config.Field> fields = new ArrayList<>(stats.length());
-        for (int i = 0; i < stats.length(); ++i) {
-            final JSONObject stat = stats.getJSONObject(i);
-            final Config.Field f = new Config.Field();
-            f.setAlias(stat.getString("key"));
-            f.setMetric(stat.getString("key"));
-            fields.add(f);
-        }
         final Config.Field[] fieldArr = new Config.Field[fields.size()];
         fields.toArray(fieldArr);
         config.setFields(fieldArr);
@@ -531,7 +547,7 @@ public class Exporter implements DataProvider {
                 }
             }
             final long start = System.currentTimeMillis();
-            final StatsProcessor sp = new StatsProcessor(conf, this, rowsetCache, progress, verbose);
+            final StatsProcessor sp = new StatsProcessor(conf, meta, this, rowsetCache, progress, verbose);
             final int processed = sp.process(content, rsp, begin, end);
 
             // Some resources may not have returned metrics and would not have been counted. Update the progress counter
