@@ -39,165 +39,173 @@ import org.apache.http.HttpException;
 
 @SuppressWarnings("WeakerAccess")
 public class SQLDumper implements RowsetProcessor {
-    private static final int DEFAULT_BATCH_SIZE = 1000;
+  private static final int DEFAULT_BATCH_SIZE = 1000;
 
-    private static final Map<String, String> drivers = new HashMap<>();
+  private static final Map<String, String> drivers = new HashMap<>();
 
-    private final int batchSize;
+  private final int batchSize;
 
-    static {
-        drivers.put("postgres", "org.postgresql.Driver");
-        drivers.put("mssql", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        drivers.put("mysql", "com.mysql.jdbc.Driver");
-        drivers.put("oracle", "oracle.jdbc.driver.OracleDriver");
-    }
+  static {
+    drivers.put("postgres", "org.postgresql.Driver");
+    drivers.put("mssql", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    drivers.put("mysql", "com.mysql.jdbc.Driver");
+    drivers.put("oracle", "oracle.jdbc.driver.OracleDriver");
+  }
 
-    public static class Factory implements RowsetProcessorFacotry {
-        private BasicDataSource ds;
-
-        @Override
-        public synchronized RowsetProcessor makeFromConfig(final OutputStream out, final Config config, final DataProvider dp)
-                throws ExporterException {
-            final SQLConfig sqlc = config.getSqlConfig();
-            if (sqlc == null) {
-                throw new ExporterException("SQL section must be present in the definition file");
-            }
-
-            // Determine batchsize
-            //
-            int batchSize = sqlc.getBatchSize();
-            if (batchSize == 0) {
-                batchSize = DEFAULT_BATCH_SIZE;
-            }
-
-            // The driver can be either read directly or derived from the database type
-            //
-            String driver = sqlc.getDriver();
-            if (driver == null) {
-                final String dbType = sqlc.getDatabaseType();
-                if (dbType == null) {
-                    throw new ExporterException("Database type or driver name must be specified");
-                }
-                driver = drivers.get(dbType);
-                if (driver == null) {
-                    throw new ExporterException("Database type " + dbType + " is not recognized. Check spelling or try to specifying the driver class instead!");
-                }
-
-                // Make sure we can load the driver
-                //
-                try {
-                    Class.forName(driver);
-                } catch (final ClassNotFoundException e) {
-                    throw new ExporterException("Could not load JDBC driver " + driver + ". Make sure you have set the JDBC_JAR env variable correctly");
-                }
-            }
-            if (ds == null) {
-                ds = new BasicDataSource();
-                if (sqlc.getConnectionString() == null) {
-                    throw new ExporterException("SQL connection URL must be specified");
-                }
-
-                // Use either database type or driver.
-                //
-                ds.setDefaultAutoCommit(false);
-                ds.setDriverClassName(driver);
-                ds.setUrl(sqlc.getConnectionString());
-                if (sqlc.getUsername() != null) {
-                    ds.setUsername(sqlc.getUsername());
-                }
-                if (sqlc.getPassword() != null) {
-                    ds.setPassword(sqlc.getPassword());
-                }
-            }
-            if (sqlc.getSql() == null) {
-                throw new ExporterException("SQL statement must be specified");
-            }
-            return new SQLDumper(ds, dp, sqlc.getSql(), batchSize);
-        }
-
-        @Override
-        public boolean isProducingOutput() {
-            return false;
-        }
-    }
-
-    private final DataSource ds;
-
-    private final DataProvider dp;
-
-    private final String sql;
-
-    public SQLDumper(final DataSource ds, final DataProvider dp, final String sql, final int batchSize) {
-        super();
-        this.ds = ds;
-        this.dp = dp;
-        this.sql = sql;
-        this.batchSize = batchSize;
-    }
+  public static class Factory implements RowsetProcessorFacotry {
+    private BasicDataSource ds;
 
     @Override
-    public void preamble(final RowMetadata meta, final Config conf) throws ExporterException {
-        // Nothing to do...
-    }
+    public synchronized RowsetProcessor makeFromConfig(
+        final OutputStream out, final Config config, final DataProvider dp)
+        throws ExporterException {
+      final SQLConfig sqlc = config.getSqlConfig();
+      if (sqlc == null) {
+        throw new ExporterException("SQL section must be present in the definition file");
+      }
 
-    @Override
-    public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {
+      // Determine batchsize
+      //
+      int batchSize = sqlc.getBatchSize();
+      if (batchSize == 0) {
+        batchSize = DEFAULT_BATCH_SIZE;
+      }
+
+      // The driver can be either read directly or derived from the database type
+      //
+      String driver = sqlc.getDriver();
+      if (driver == null) {
+        final String dbType = sqlc.getDatabaseType();
+        if (dbType == null) {
+          throw new ExporterException("Database type or driver name must be specified");
+        }
+        driver = drivers.get(dbType);
+        if (driver == null) {
+          throw new ExporterException(
+              "Database type "
+                  + dbType
+                  + " is not recognized. Check spelling or try to specifying the driver class instead!");
+        }
+
+        // Make sure we can load the driver
+        //
         try {
-            NamedParameterStatement stmt = null;
-            final Connection conn = ds.getConnection();
-            try {
-                stmt = new NamedParameterStatement(conn, sql);
-                int rowsInBatch = 0;
-                for (final Row row : rowset.getRows().values()) {
-                    for (final String fld : stmt.getParameterNames()) {
-                        // Deal with special cases
-                        //
-                        if ("timestamp".equals(fld)) {
-                            stmt.setObject("timestamp", new java.sql.Timestamp(row.getTimestamp()));
-                        } else if ("resName".equals(fld)) {
-                            stmt.setString("resName", dp.getResourceName(rowset.getResourceId()));
-                        } else {
-                            // Does the name refer to a metric?
-                            //
-                            int p = meta.getMetricIndexByAlias(fld);
-                            if (p != -1) {
-                                stmt.setObject(fld, row.getMetric(p));
-                            } else {
-                                // Not a metric, so it must be a property then.
-                                //
-                                p = meta.getPropertyIndexByAlias(fld);
-                                if (p == -1) {
-                                    throw new ExporterException("Field " + fld + " is not defined");
-                                }
-                                stmt.setString(fld, row.getProp(p));
-                            }
-                        }
-                    }
-                    stmt.addBatch();
-                    if (++rowsInBatch > batchSize) {
-                        stmt.executeBatch();
-                        rowsInBatch = 0;
-                    }
-                }
-                // Push dangling batch
-                //
-                if (rowsInBatch > 0 && stmt != null) {
-                    stmt.executeBatch();
-                }
-                conn.commit();
-            } finally {
-                if (stmt != null) {
-                    stmt.close();
-                }
-                conn.close();
-            }
-        } catch (final SQLException | HttpException | IOException e) {
-            throw new ExporterException(e);
+          Class.forName(driver);
+        } catch (final ClassNotFoundException e) {
+          throw new ExporterException(
+              "Could not load JDBC driver "
+                  + driver
+                  + ". Make sure you have set the JDBC_JAR env variable correctly");
         }
+      }
+      if (ds == null) {
+        ds = new BasicDataSource();
+        if (sqlc.getConnectionString() == null) {
+          throw new ExporterException("SQL connection URL must be specified");
+        }
+
+        // Use either database type or driver.
+        //
+        ds.setDefaultAutoCommit(false);
+        ds.setDriverClassName(driver);
+        ds.setUrl(sqlc.getConnectionString());
+        if (sqlc.getUsername() != null) {
+          ds.setUsername(sqlc.getUsername());
+        }
+        if (sqlc.getPassword() != null) {
+          ds.setPassword(sqlc.getPassword());
+        }
+      }
+      if (sqlc.getSql() == null) {
+        throw new ExporterException("SQL statement must be specified");
+      }
+      return new SQLDumper(ds, dp, sqlc.getSql(), batchSize);
     }
 
     @Override
-    public void close() throws ExporterException {
-        // Nothing to do
+    public boolean isProducingOutput() {
+      return false;
     }
+  }
+
+  private final DataSource ds;
+
+  private final DataProvider dp;
+
+  private final String sql;
+
+  public SQLDumper(
+      final DataSource ds, final DataProvider dp, final String sql, final int batchSize) {
+    super();
+    this.ds = ds;
+    this.dp = dp;
+    this.sql = sql;
+    this.batchSize = batchSize;
+  }
+
+  @Override
+  public void preamble(final RowMetadata meta, final Config conf) throws ExporterException {
+    // Nothing to do...
+  }
+
+  @Override
+  public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {
+    try {
+      NamedParameterStatement stmt = null;
+      final Connection conn = ds.getConnection();
+      try {
+        stmt = new NamedParameterStatement(conn, sql);
+        int rowsInBatch = 0;
+        for (final Row row : rowset.getRows().values()) {
+          for (final String fld : stmt.getParameterNames()) {
+            // Deal with special cases
+            //
+            if ("timestamp".equals(fld)) {
+              stmt.setObject("timestamp", new java.sql.Timestamp(row.getTimestamp()));
+            } else if ("resName".equals(fld)) {
+              stmt.setString("resName", dp.getResourceName(rowset.getResourceId()));
+            } else {
+              // Does the name refer to a metric?
+              //
+              int p = meta.getMetricIndexByAlias(fld);
+              if (p != -1) {
+                stmt.setObject(fld, row.getMetric(p));
+              } else {
+                // Not a metric, so it must be a property then.
+                //
+                p = meta.getPropertyIndexByAlias(fld);
+                if (p == -1) {
+                  throw new ExporterException("Field " + fld + " is not defined");
+                }
+                stmt.setString(fld, row.getProp(p));
+              }
+            }
+          }
+          stmt.addBatch();
+          if (++rowsInBatch > batchSize) {
+            stmt.executeBatch();
+            rowsInBatch = 0;
+          }
+        }
+        // Push dangling batch
+        //
+        if (rowsInBatch > 0 && stmt != null) {
+          stmt.executeBatch();
+        }
+        conn.commit();
+      } finally {
+        if (stmt != null) {
+          stmt.close();
+        }
+        conn.close();
+      }
+    } catch (final SQLException | HttpException | IOException e) {
+      throw new ExporterException(e);
+    }
+  }
+
+  @Override
+  public void close() throws ExporterException {
+    // Nothing to do
+  }
 }

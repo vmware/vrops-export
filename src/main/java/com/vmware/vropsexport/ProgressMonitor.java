@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2017 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
@@ -18,5 +18,5 @@
 package com.vmware.vropsexport;
 
 public interface ProgressMonitor {
-	void reportProgress(int n);
+  void reportProgress(int n);
 }

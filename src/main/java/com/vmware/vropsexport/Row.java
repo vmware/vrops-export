@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2017 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
@@ -22,108 +22,105 @@ import java.util.NoSuchElementException;
 
 @SuppressWarnings("WeakerAccess")
 public class Row {
-	public final int FIRST_METRIC_OFFSET = 2;
+  public final int FIRST_METRIC_OFFSET = 2;
 
-	private final long timestamp;
-	
-	private final BitSet definedMetrics;
-		
-	private final double[] metrics;
-		
-	private final String[] props;
+  private final long timestamp;
 
-	public Row(long timestamp, int nMetrics, int nProps) {
-		super();
-		this.timestamp = timestamp;
-		this.metrics = new double[nMetrics];
-		this.props = new String[nProps];
-		this.definedMetrics = new BitSet(nMetrics);
-	}
+  private final BitSet definedMetrics;
 
-	public long getTimestamp() {
-		return timestamp;
-	}
+  private final double[] metrics;
 
-	public Double getMetric(int i) {
-		return definedMetrics.get(i) ? metrics[i] : null;
-	}
-	
-	public String getProp(int i) {
-		return props[i];
-	}
-	
-	public void setMetric(int i, double m) {
-		metrics[i] = m;
-		definedMetrics.set(i);
-	}
-	
-	public void setProp(int i, String prop) {
-		props[i] = prop;
-	}
-	
-	public java.util.Iterator<Object> iterator(RowMetadata meta) {
-		return new Iterator(meta);
-	}
-	
-	public int getNumProps() {
-		return props.length;
-	}
-	
-	public int getNumMetrics() {
-		return metrics.length;
-	}
-	
-	private class Iterator implements java.util.Iterator<Object> {
-		private int mc;
-		
-		private int pc;
-				
-		private final RowMetadata meta;
-		
-		public Iterator(RowMetadata meta) {
-			this.meta = meta;
-		}
+  private final String[] props;
 
-		@Override
-		public boolean hasNext() {
-			return pc < props.length || mc < metrics.length;
-		}
+  public Row(long timestamp, int nMetrics, int nProps) {
+    super();
+    this.timestamp = timestamp;
+    this.metrics = new double[nMetrics];
+    this.props = new String[nProps];
+    this.definedMetrics = new BitSet(nMetrics);
+  }
 
-		@Override
-		public Object next() {
-			if(!this.hasNext()) 
-				throw new NoSuchElementException();
-			if(pc < props.length && meta.getPropInsertionPoints()[pc] == mc)
-				return getProp(pc++);
-			return getMetric(mc++);
-		}
-	}
+  public long getTimestamp() {
+    return timestamp;
+  }
 
-	public Object[] flatten(RowMetadata meta) {
-		Object[] answer = new Object[FIRST_METRIC_OFFSET + metrics.length + props.length];
-		int i = 0;
-		answer[0] = timestamp;
-		i = FIRST_METRIC_OFFSET;
-		for(java.util.Iterator<Object> itor = this.iterator(meta); itor.hasNext();)
-			answer[i++] = itor.next();
-		return answer;
-	}
+  public Double getMetric(int i) {
+    return definedMetrics.get(i) ? metrics[i] : null;
+  }
 
-	public void merge(Row r) {
-		// Merge metrics
-		//
-		for(int i = 0; i < r.getNumMetrics(); ++i) {
-			Double d = r.getMetric(i);
-			if(d != null)
-				this.setMetric(i, d); // Don't be tempted to just set metrics[i]! Won't update the bitmap.
-		}
+  public String getProp(int i) {
+    return props[i];
+  }
 
-		// Merge properties
-		//
-		for(int i = 0; i < r.getNumProps(); ++i) {
-			String p = r.getProp(i);
-			if(p != null)
-				props[i] = p;
-		}
-	}
+  public void setMetric(int i, double m) {
+    metrics[i] = m;
+    definedMetrics.set(i);
+  }
+
+  public void setProp(int i, String prop) {
+    props[i] = prop;
+  }
+
+  public java.util.Iterator<Object> iterator(RowMetadata meta) {
+    return new Iterator(meta);
+  }
+
+  public int getNumProps() {
+    return props.length;
+  }
+
+  public int getNumMetrics() {
+    return metrics.length;
+  }
+
+  private class Iterator implements java.util.Iterator<Object> {
+    private int mc;
+
+    private int pc;
+
+    private final RowMetadata meta;
+
+    public Iterator(RowMetadata meta) {
+      this.meta = meta;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return pc < props.length || mc < metrics.length;
+    }
+
+    @Override
+    public Object next() {
+      if (!this.hasNext()) throw new NoSuchElementException();
+      if (pc < props.length && meta.getPropInsertionPoints()[pc] == mc) return getProp(pc++);
+      return getMetric(mc++);
+    }
+  }
+
+  public Object[] flatten(RowMetadata meta) {
+    Object[] answer = new Object[FIRST_METRIC_OFFSET + metrics.length + props.length];
+    int i = 0;
+    answer[0] = timestamp;
+    i = FIRST_METRIC_OFFSET;
+    for (java.util.Iterator<Object> itor = this.iterator(meta); itor.hasNext(); )
+      answer[i++] = itor.next();
+    return answer;
+  }
+
+  public void merge(Row r) {
+    // Merge metrics
+    //
+    for (int i = 0; i < r.getNumMetrics(); ++i) {
+      Double d = r.getMetric(i);
+      if (d != null)
+        this.setMetric(i, d); // Don't be tempted to just set metrics[i]! Won't update the bitmap.
+    }
+
+    // Merge properties
+    //
+    for (int i = 0; i < r.getNumProps(); ++i) {
+      String p = r.getProp(i);
+      if (p != null) props[i] = p;
+    }
+  }
 }

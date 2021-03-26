@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2017 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
@@ -23,11 +23,10 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 public class ConfigLoader {
-	static public Config parse(Reader rdr) {
-		Yaml yaml = new Yaml(new Constructor(Config.class));
-		Config conf = (Config) yaml.load(rdr);
-		if(conf.getOutputFormat() == null) 
-			conf.setOutputFormat("csv");
-		return conf;
-	}
+  public static Config parse(Reader rdr) {
+    Yaml yaml = new Yaml(new Constructor(Config.class));
+    Config conf = (Config) yaml.load(rdr);
+    if (conf.getOutputFormat() == null) conf.setOutputFormat("csv");
+    return conf;
+  }
 }

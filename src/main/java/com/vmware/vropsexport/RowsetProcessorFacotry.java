@@ -20,7 +20,8 @@ package com.vmware.vropsexport;
 import java.io.OutputStream;
 
 public interface RowsetProcessorFacotry {
-    RowsetProcessor makeFromConfig(OutputStream out, Config config, DataProvider dp) throws ExporterException;
+  RowsetProcessor makeFromConfig(OutputStream out, Config config, DataProvider dp)
+      throws ExporterException;
 
-    boolean isProducingOutput();
+  boolean isProducingOutput();
 }

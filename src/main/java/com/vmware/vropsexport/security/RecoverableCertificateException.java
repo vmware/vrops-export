@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2017 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
@@ -22,14 +22,14 @@ import java.security.cert.X509Certificate;
 import com.vmware.vropsexport.ExporterException;
 
 public class RecoverableCertificateException extends ExporterException {
-	private final X509Certificate[] capturedCerts;
+  private final X509Certificate[] capturedCerts;
 
-	public RecoverableCertificateException(X509Certificate[] capturedCerts, Throwable cause) {
-		super(cause);
-		this.capturedCerts = capturedCerts;
-	}
+  public RecoverableCertificateException(X509Certificate[] capturedCerts, Throwable cause) {
+    super(cause);
+    this.capturedCerts = capturedCerts;
+  }
 
-	public X509Certificate[] getCapturedCerts() {
-		return capturedCerts;
-	}
+  public X509Certificate[] getCapturedCerts() {
+    return capturedCerts;
+  }
 }

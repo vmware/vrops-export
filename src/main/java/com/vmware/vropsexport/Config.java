@@ -23,218 +23,216 @@ import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
 public class Config {
-    @SuppressWarnings("unused")
-    public static class Field {
-        private String alias;
-        private String metric;
-        private String prop;
+  @SuppressWarnings("unused")
+  public static class Field {
+    private String alias;
+    private String metric;
+    private String prop;
 
-        public Field() {
-        }
+    public Field() {}
 
-        public Field(final String alias, final String name, final boolean isMetric) {
-            super();
-            this.alias = alias;
-            if (isMetric) {
-				metric = name;
-			} else {
-				prop = name;
-			}
-        }
-
-        public String getAlias() {
-            return alias;
-        }
-
-        public void setAlias(final String alias) {
-            this.alias = alias;
-        }
-
-        public String getMetric() {
-            return metric;
-        }
-
-        public boolean hasMetric() {
-            return metric != null;
-        }
-
-        public void setMetric(final String metric) {
-            this.metric = metric;
-        }
-
-        public String getProp() {
-            return prop;
-        }
-
-        public void setProp(final String prop) {
-            this.prop = prop;
-        }
-
-        public boolean hasProp() {
-            return prop != null;
-        }
+    public Field(final String alias, final String name, final boolean isMetric) {
+      super();
+      this.alias = alias;
+      if (isMetric) {
+        metric = name;
+      } else {
+        prop = name;
+      }
     }
 
-    private Field[] fields;
-    private String resourceType;
-    private String rollupType;
-    private long rollupMinutes;
-    private String dateFormat;
-    private String outputFormat;
-    private SQLConfig sqlConfig;
-    private WavefrontConfig wavefrontConfig;
-    private String resourceKind;
-    private String adapterKind;
-    private boolean compact;
-    private String compactifyAlg = "LATEST";
-    private CSVConfig csvConfig;
-    private int align = 0;
-    private boolean allMetrics = false;
-
-    public Config() {
+    public String getAlias() {
+      return alias;
     }
 
-    public boolean isAllMetrics() {
-        return allMetrics;
+    public void setAlias(final String alias) {
+      this.alias = alias;
     }
 
-    public void setAllMetrics(final boolean allMetrics) {
-        this.allMetrics = allMetrics;
+    public String getMetric() {
+      return metric;
     }
 
-    public int getAlign() {
-        return align;
+    public boolean hasMetric() {
+      return metric != null;
     }
 
-    public void setAlign(final int align) {
-        this.align = align;
+    public void setMetric(final String metric) {
+      this.metric = metric;
     }
 
-    public Field[] getFields() {
-        return fields;
+    public String getProp() {
+      return prop;
     }
 
-    public void setFields(final Field[] fields) {
-        this.fields = fields;
+    public void setProp(final String prop) {
+      this.prop = prop;
     }
 
-    public void setResourceType(final String resourceType) {
-        final Matcher m = Patterns.adapterAndResourceKindPattern.matcher(resourceType);
-        if (m.matches()) {
-			adapterKind = m.group(1);
-			resourceKind = m.group(2);
-        } else {
-			resourceKind = resourceType;
-		}
+    public boolean hasProp() {
+      return prop != null;
     }
+  }
 
-    public String getRollupType() {
-        return rollupType;
-    }
+  private Field[] fields;
+  private String resourceType;
+  private String rollupType;
+  private long rollupMinutes;
+  private String dateFormat;
+  private String outputFormat;
+  private SQLConfig sqlConfig;
+  private WavefrontConfig wavefrontConfig;
+  private String resourceKind;
+  private String adapterKind;
+  private boolean compact;
+  private String compactifyAlg = "LATEST";
+  private CSVConfig csvConfig;
+  private int align = 0;
+  private boolean allMetrics = false;
 
-    public void setRollupType(final String rollupType) {
-        this.rollupType = rollupType;
-    }
+  public Config() {}
 
-    public long getRollupMinutes() {
-        return rollupMinutes;
-    }
+  public boolean isAllMetrics() {
+    return allMetrics;
+  }
 
-    public void setRollupMinutes(final long rollup) {
-		rollupMinutes = rollup;
-    }
+  public void setAllMetrics(final boolean allMetrics) {
+    this.allMetrics = allMetrics;
+  }
 
-    public String getDateFormat() {
-        return dateFormat;
-    }
+  public int getAlign() {
+    return align;
+  }
 
-    public void setDateFormat(final String dateFormat) {
-        this.dateFormat = dateFormat;
-    }
+  public void setAlign(final int align) {
+    this.align = align;
+  }
 
-    public String getOutputFormat() {
-        return outputFormat;
-    }
+  public Field[] getFields() {
+    return fields;
+  }
 
-    public void setOutputFormat(final String outputFormat) {
-        this.outputFormat = outputFormat;
-    }
+  public void setFields(final Field[] fields) {
+    this.fields = fields;
+  }
 
-    public SQLConfig getSqlConfig() {
-        return sqlConfig;
+  public void setResourceType(final String resourceType) {
+    final Matcher m = Patterns.adapterAndResourceKindPattern.matcher(resourceType);
+    if (m.matches()) {
+      adapterKind = m.group(1);
+      resourceKind = m.group(2);
+    } else {
+      resourceKind = resourceType;
     }
+  }
 
-    public void setSqlConfig(final SQLConfig sqlConfig) {
-        this.sqlConfig = sqlConfig;
-    }
+  public String getRollupType() {
+    return rollupType;
+  }
 
-    public WavefrontConfig getWavefrontConfig() {
-        return wavefrontConfig;
-    }
+  public void setRollupType(final String rollupType) {
+    this.rollupType = rollupType;
+  }
 
-    public void setWavefrontConfig(final WavefrontConfig wavefrontConfig) {
-        this.wavefrontConfig = wavefrontConfig;
-    }
+  public long getRollupMinutes() {
+    return rollupMinutes;
+  }
 
-    public boolean hasProps() {
-        for (final Field f : fields) {
-            if (f.hasProp()) {
-				return true;
-			}
-        }
-        return false;
-    }
+  public void setRollupMinutes(final long rollup) {
+    rollupMinutes = rollup;
+  }
 
-    public String getResourceKind() {
-        return resourceKind;
-    }
+  public String getDateFormat() {
+    return dateFormat;
+  }
 
-    public void setResourceKind(final String resourceKind) {
-        this.resourceKind = resourceKind;
-    }
+  public void setDateFormat(final String dateFormat) {
+    this.dateFormat = dateFormat;
+  }
 
-    public String getAdapterKind() {
-        return adapterKind;
-    }
+  public String getOutputFormat() {
+    return outputFormat;
+  }
 
-    public void setAdapterKind(final String adapterKind) {
-        this.adapterKind = adapterKind;
-    }
+  public void setOutputFormat(final String outputFormat) {
+    this.outputFormat = outputFormat;
+  }
 
-    public boolean hasMetrics() {
-        for (final Field f : fields) {
-            if (f.hasMetric()) {
-				return true;
-			}
-        }
-        return false;
-    }
+  public SQLConfig getSqlConfig() {
+    return sqlConfig;
+  }
 
-    public CSVConfig getCsvConfig() {
-        return csvConfig;
-    }
+  public void setSqlConfig(final SQLConfig sqlConfig) {
+    this.sqlConfig = sqlConfig;
+  }
 
-    public void setCsvConfig(final CSVConfig csvConfig) {
-        this.csvConfig = csvConfig;
-    }
+  public WavefrontConfig getWavefrontConfig() {
+    return wavefrontConfig;
+  }
 
-    public String getResourceType() {
-        return resourceType;
-    }
+  public void setWavefrontConfig(final WavefrontConfig wavefrontConfig) {
+    this.wavefrontConfig = wavefrontConfig;
+  }
 
-    public boolean isCompact() {
-        return compact;
+  public boolean hasProps() {
+    for (final Field f : fields) {
+      if (f.hasProp()) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    public void setCompact(final boolean compact) {
-        this.compact = compact;
-    }
+  public String getResourceKind() {
+    return resourceKind;
+  }
 
-    public String getCompactifyAlg() {
-        return compactifyAlg;
-    }
+  public void setResourceKind(final String resourceKind) {
+    this.resourceKind = resourceKind;
+  }
 
-    public void setCompactifyAlg(final String compactifyAlg) {
-        this.compactifyAlg = compactifyAlg;
+  public String getAdapterKind() {
+    return adapterKind;
+  }
+
+  public void setAdapterKind(final String adapterKind) {
+    this.adapterKind = adapterKind;
+  }
+
+  public boolean hasMetrics() {
+    for (final Field f : fields) {
+      if (f.hasMetric()) {
+        return true;
+      }
     }
+    return false;
+  }
+
+  public CSVConfig getCsvConfig() {
+    return csvConfig;
+  }
+
+  public void setCsvConfig(final CSVConfig csvConfig) {
+    this.csvConfig = csvConfig;
+  }
+
+  public String getResourceType() {
+    return resourceType;
+  }
+
+  public boolean isCompact() {
+    return compact;
+  }
+
+  public void setCompact(final boolean compact) {
+    this.compact = compact;
+  }
+
+  public String getCompactifyAlg() {
+    return compactifyAlg;
+  }
+
+  public void setCompactifyAlg(final String compactifyAlg) {
+    this.compactifyAlg = compactifyAlg;
+  }
 }
