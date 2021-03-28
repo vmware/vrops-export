@@ -23,16 +23,15 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.DataProvider;
 import com.vmware.vropsexport.ExporterException;
-import com.vmware.vropsexport.Row;
 import com.vmware.vropsexport.RowMetadata;
 import com.vmware.vropsexport.Rowset;
 import com.vmware.vropsexport.RowsetProcessor;
 import com.vmware.vropsexport.RowsetProcessorFacotry;
 import com.vmware.vropsexport.json.JsonConfig;
+import com.vmware.vropsexport.json.JsonProducer;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
-import org.apache.http.HttpException;
+import java.text.DateFormat;
 
 public class JsonPrinter implements RowsetProcessor {
   public static class Factory implements RowsetProcessorFacotry {
@@ -46,7 +45,8 @@ public class JsonPrinter implements RowsetProcessor {
           dp,
           config.getJsonConfig() != null
               ? config.getJsonConfig().getFormat()
-              : JsonConfig.JsonFormat.compact);
+              : JsonConfig.JsonFormat.compact,
+          config.getDateFormatter());
     }
 
     @Override
@@ -63,8 +63,13 @@ public class JsonPrinter implements RowsetProcessor {
 
   private final JsonConfig.JsonFormat format;
 
+  private final JsonProducer produder;
+
   public JsonPrinter(
-      final OutputStream out, final DataProvider dp, final JsonConfig.JsonFormat format)
+          final OutputStream out,
+          final DataProvider dp,
+          final JsonConfig.JsonFormat format,
+          final DateFormat dateFormat)
       throws ExporterException {
     try {
       this.dp = dp;
@@ -72,6 +77,7 @@ public class JsonPrinter implements RowsetProcessor {
       this.format = format;
       final JsonFactory jf = new JsonFactory();
       generator = jf.createGenerator(out, JsonEncoding.UTF8);
+      produder = new JsonProducer(generator, dp, dateFormat);
     } catch (final IOException e) {
       throw new ExporterException(e);
     }
@@ -89,107 +95,7 @@ public class JsonPrinter implements RowsetProcessor {
 
   @Override
   public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {
-    synchronized (out) {
-      try {
-        switch (format) {
-          case compact:
-            printCompact(rowset, meta);
-            break;
-          case chatty:
-            printChatty(rowset, meta);
-          case elastic:
-            printElastic(rowset, meta);
-            break;
-        }
-      } catch (final IOException | HttpException e) {
-        throw new ExporterException(e);
-      }
-    }
-  }
-
-  private void printCompact(final Rowset rowset, final RowMetadata meta)
-      throws IOException, HttpException {
-    generator.writeStartObject(); // {
-    generator.writeStringField(
-        "resourceName", dp.getResourceName(rowset.getResourceId())); // resourceName: 'x'
-
-    // Properties
-    if (!rowset.getRows().isEmpty()) {
-      final Row firstRow = rowset.getRows().firstEntry().getValue();
-      generator.writeArrayFieldStart("properties");
-      for (final String propertyName : meta.getPropMap().keySet()) {
-        final int propIndex = meta.getPropertyIndex(propertyName);
-        final String v = firstRow.getProp(propIndex);
-        if (v == null) {
-          continue;
-        }
-        generator.writeStartObject();
-        generator.writeStringField("k", meta.getAliasForProp(propertyName));
-        generator.writeStringField("v", v);
-        generator.writeEndObject();
-      }
-      generator.writeEndArray();
-    }
-
-    // Metrics
-    generator.writeArrayFieldStart("metrics"); // metrics: [
-    for (final String metricName : meta.getMetricMap().keySet()) {
-      generator.writeStartObject(); // {
-      final int metricIndex = meta.getMetricIndex(metricName);
-      generator.writeStringField("name", meta.getAliasForMetric(metricName)); // name: 'x'
-      generator.writeArrayFieldStart("samples"); // samples: [
-      for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
-        final Double v = row.getValue().getMetric(metricIndex);
-        if (v == null) {
-          continue;
-        }
-        generator.writeStartObject(); // {
-        generator.writeNumberField("t", row.getKey()); // t: 28349387
-        generator.writeNumberField("v", v); // v: 234983279874
-        generator.writeEndObject(); // }
-      }
-      generator.writeEndArray(); // ]
-      generator.writeEndObject(); // }
-    }
-    generator.writeEndArray(); // ]
-    generator.writeEndObject(); // }
-  }
-
-  private void printChatty(final Rowset rowset, final RowMetadata meta)
-      throws IOException, HttpException {
-    for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
-      for (final String metricName : meta.getMetricMap().keySet()) {
-        final int metricIndex = meta.getMetricIndex(metricName);
-        final Double v = row.getValue().getMetric(metricIndex);
-        if (v == null) {
-          continue;
-        }
-        generator.writeStartObject();
-        generator.writeNumberField("t", row.getKey());
-        generator.writeStringField("resourceName", dp.getResourceName(rowset.getResourceId()));
-        generator.writeStringField("metric", meta.getAliasForMetric(metricName));
-        generator.writeNumberField("v", v);
-        generator.writeEndObject();
-      }
-    }
-  }
-
-  private void printElastic(final Rowset rowset, final RowMetadata meta)
-      throws IOException, HttpException {
-    for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
-      generator.writeStartObject();
-      generator.writeStringField("resourceName", dp.getResourceName(rowset.getResourceId()));
-      for (final String metricName : meta.getMetricMap().keySet()) {
-        final int metricIndex = meta.getMetricIndex(metricName);
-        final Double v = row.getValue().getMetric(metricIndex);
-        if (v == null) {
-          continue;
-        }
-        generator.writeNumberField("t", row.getKey());
-        generator.writeNumberField(meta.getAliasForMetric(metricName), v);
-      }
-      generator.writeEndObject();
-    }
+    produder.produce(rowset, meta, format);
   }
 
   @Override

@@ -17,9 +17,12 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.elasticsearch.ElasticSearchConfig;
 import com.vmware.vropsexport.json.JsonConfig;
 import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
@@ -89,6 +92,7 @@ public class Config {
   private String compactifyAlg = "LATEST";
   private CSVConfig csvConfig;
   private JsonConfig jsonConfig;
+  private ElasticSearchConfig elasticSearchConfig;
   private int align = 0;
   private boolean allMetrics = false;
 
@@ -100,6 +104,14 @@ public class Config {
 
   public void setJsonConfig(final JsonConfig jsonConfig) {
     this.jsonConfig = jsonConfig;
+  }
+
+  public ElasticSearchConfig getElasticSearchConfig() {
+    return elasticSearchConfig;
+  }
+
+  public void setElasticSearchConfig(final ElasticSearchConfig elasticSearchConfig) {
+    this.elasticSearchConfig = elasticSearchConfig;
   }
 
   public boolean isAllMetrics() {
@@ -158,6 +170,10 @@ public class Config {
 
   public void setDateFormat(final String dateFormat) {
     this.dateFormat = dateFormat;
+  }
+
+  public DateFormat getDateFormatter() {
+    return "%E".equals(dateFormat) ? new EpochDateFormat() : new SimpleDateFormat(dateFormat);
   }
 
   public String getOutputFormat() {
