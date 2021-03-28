@@ -45,12 +45,12 @@ public class RowMetadata {
   public RowMetadata(final Config conf, final List<String> metricNames) throws ExporterException {
     resourceKind = conf.getResourceKind();
     adapterKind = conf.getAdapterKind();
+    final NameSanitizer ns = conf.createNameSanitizer();
     int mp = 0;
-    final List<Integer> pip = new ArrayList<>();
     for (final String metricName : metricNames) {
       metricMap.put(metricName, mp);
       metricAliasMap.put(metricName, mp++);
-      metricNameToAlias.put(metricName, metricName);
+      metricNameToAlias.put(metricName, ns.transform(metricName));
     }
     propInsertionPoints = new int[0];
   }

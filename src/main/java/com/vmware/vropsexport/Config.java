@@ -27,6 +27,28 @@ import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
 public class Config {
+  public static class NameSanitizerConfig {
+    public String forbidden;
+
+    public char replacement;
+
+    public String getForbidden() {
+      return forbidden;
+    }
+
+    public void setForbidden(final String forbidden) {
+      this.forbidden = forbidden;
+    }
+
+    public char getReplacement() {
+      return replacement;
+    }
+
+    public void setReplacement(final char replacement) {
+      this.replacement = replacement;
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class Field {
     private String alias;
@@ -95,8 +117,23 @@ public class Config {
   private ElasticSearchConfig elasticSearchConfig;
   private int align = 0;
   private boolean allMetrics = false;
+  private NameSanitizerConfig nameSanitizer;
 
   public Config() {}
+
+  public NameSanitizerConfig getNameSanitizer() {
+    return nameSanitizer;
+  }
+
+  public void setNameSanitizer(final NameSanitizerConfig nameSanitizer) {
+    this.nameSanitizer = nameSanitizer;
+  }
+
+  public NameSanitizer createNameSanitizer() {
+    return nameSanitizer != null
+        ? new ReplacingNameSanitizer(nameSanitizer.forbidden, nameSanitizer.replacement)
+        : s -> s;
+  }
 
   public JsonConfig getJsonConfig() {
     return jsonConfig;

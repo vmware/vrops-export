@@ -66,10 +66,10 @@ public class JsonPrinter implements RowsetProcessor {
   private final JsonProducer produder;
 
   public JsonPrinter(
-          final OutputStream out,
-          final DataProvider dp,
-          final JsonConfig.JsonFormat format,
-          final DateFormat dateFormat)
+      final OutputStream out,
+      final DataProvider dp,
+      final JsonConfig.JsonFormat format,
+      final DateFormat dateFormat)
       throws ExporterException {
     try {
       this.dp = dp;
