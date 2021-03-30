@@ -45,10 +45,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.NoHttpResponseException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -78,7 +78,7 @@ public class Exporter implements DataProvider {
     }
   }
 
-  private static final Log log = LogFactory.getLog(Exporter.class);
+  private static final Logger log = LogManager.getLogger(Exporter.class);
 
   private final LRUCache<String, String> nameCache = new LRUCache<>(100000);
 
@@ -225,14 +225,14 @@ public class Exporter implements DataProvider {
       }
       int chunkSize = Math.min(MAX_RESPONSE_ROWS, maxRows);
       if (verbose) {
-        System.err.println("Raw chunk size is " + chunkSize + " resources");
+        log.debug("Raw chunk size is " + chunkSize + " resources");
       }
 
       // We don't want to make the chunks so big that not all threads will have work to do.
       // Make sure that doesn't happen.
       chunkSize = Math.min(chunkSize, 1 + (resources.length() / executor.getMaximumPoolSize()));
       if (verbose) {
-        System.err.println("Adjusted chunk size is " + chunkSize + " resources");
+        log.debug("Adjusted chunk size is " + chunkSize + " resources");
       }
       ArrayList<JSONObject> chunk = new ArrayList<>(chunkSize);
       for (int i = 0; i < resources.length(); ++i) {
@@ -257,7 +257,7 @@ public class Exporter implements DataProvider {
     }
     executor.shutdown();
     try {
-      executor.awaitTermination(2, TimeUnit.MINUTES);
+      executor.awaitTermination();
     } catch (final InterruptedException e) {
       // Shouldn't happen...
       e.printStackTrace();
@@ -289,9 +289,11 @@ public class Exporter implements DataProvider {
   }
 
   private void preloadCache(final List<JSONObject> resources) {
-    for (final JSONObject res : resources) {
-      nameCache.put(
-          res.getString("identifier"), res.getJSONObject("resourceKey").getString("name"));
+    synchronized (nameCache) {
+      for (final JSONObject res : resources) {
+        nameCache.put(
+            res.getString("identifier"), res.getJSONObject("resourceKey").getString("name"));
+      }
     }
   }
 
@@ -311,8 +313,7 @@ public class Exporter implements DataProvider {
     }
     final JSONObject response = client.getJson(url, qs);
     if (verbose) {
-      System.err.println(
-          "Resources found: " + response.getJSONObject("pageInfo").getInt("totalCount"));
+      log.debug("Resources found: " + response.getJSONObject("pageInfo").getInt("totalCount"));
     }
     return response;
   }
@@ -334,7 +335,7 @@ public class Exporter implements DataProvider {
       nameCache.put(resourceId, name);
     }
     if (verbose) {
-      System.err.println("Name cache miss. Lookup took " + (System.currentTimeMillis() - start));
+      log.debug("Name cache miss. Lookup took " + (System.currentTimeMillis() - start));
     }
     return name;
   }
@@ -398,7 +399,7 @@ public class Exporter implements DataProvider {
       }
 
       if (verbose) {
-        System.err.println("Prop cache miss for id: " + id);
+        log.debug("Prop cache miss for id: " + id);
       }
       final String uri = "/suite-api/api/resources/" + id + "/properties";
       final JSONObject json = client.getJson(uri);
@@ -423,7 +424,7 @@ public class Exporter implements DataProvider {
       }
     }
     if (verbose) {
-      System.err.println("Parent cache miss for id: " + id);
+      log.debug("Parent cache miss for id: " + id);
     }
     final JSONObject json =
         client.getJson(
@@ -570,8 +571,7 @@ public class Exporter implements DataProvider {
       final long start = System.currentTimeMillis();
       content = fetchMetricStream(resList, meta, begin, end);
       if (verbose) {
-        System.err.println(
-            "Metric request call took " + (System.currentTimeMillis() - start) + " ms");
+        log.debug("Metric request call took " + (System.currentTimeMillis() - start) + " ms");
       }
     } catch (final NoHttpResponseException e) {
 
@@ -614,8 +614,7 @@ public class Exporter implements DataProvider {
         }
         content = new SelfDeletingFileInputStream(tmpFile);
         if (verbose) {
-          System.err.println(
-              "Dumping to temp file took " + (System.currentTimeMillis() - start) + " ms");
+          log.debug("Dumping to temp file took " + (System.currentTimeMillis() - start) + " ms");
         }
       }
       final long start = System.currentTimeMillis();
@@ -630,10 +629,8 @@ public class Exporter implements DataProvider {
         progress.reportProgress(resList.size() - processed);
       }
       if (verbose) {
-        System.err.println(
-            "Found data for " + processed + " out of " + resList.size() + " resources.");
-        System.err.println(
-            "Result processing took " + (System.currentTimeMillis() - start) + " ms");
+        log.debug("Found data for " + processed + " out of " + resList.size() + " resources.");
+        log.debug("Result processing took " + (System.currentTimeMillis() - start) + " ms");
       }
     } finally {
       content.close();

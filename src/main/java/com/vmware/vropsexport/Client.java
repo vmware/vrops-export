@@ -31,8 +31,6 @@ import java.util.List;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLHandshakeException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -49,11 +47,13 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 @SuppressWarnings("WeakerAccess")
 public class Client {
-  private static final Log log = LogFactory.getLog(Client.class);
+  private static final Logger log = LogManager.getLogger(Client.class);
 
   private static final int CONNTECTION_TIMEOUT_MS = 60000;
 
@@ -154,6 +154,7 @@ public class Client {
     }
     final HttpGet get = new HttpGet(urlBase + uri);
     get.addHeader("Accept", "application/json");
+    get.addHeader("Accept-Encoding", "gzip");
     if (authToken != null) {
       get.addHeader("Authorization", "vRealizeOpsToken " + authToken + "");
     }
@@ -169,6 +170,7 @@ public class Client {
     // System.err.println(payload.toString());
     post.addHeader("Accept", "application/json");
     post.addHeader("Content-Type", "application/json");
+    post.addHeader("Accept-Encoding", "gzip");
     if (authToken != null) {
       post.addHeader("Authorization", "vRealizeOpsToken " + authToken + "");
     }

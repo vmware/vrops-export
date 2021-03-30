@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.http.HttpException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 @SuppressWarnings("SameParameterValue")
@@ -37,6 +39,8 @@ public class StatsProcessor {
     @Override
     public void reportProgress(final int n) {}
   }
+
+  private static final Logger log = LogManager.getLogger(StatsProcessor.class);
 
   private final Config conf;
 
@@ -204,7 +208,7 @@ public class StatsProcessor {
             //
             if (cached != null) {
               if (verbose) {
-                System.err.println(
+                log.debug(
                     "Cache hit for parent "
                         + cacheKey
                         + " "
@@ -215,7 +219,7 @@ public class StatsProcessor {
               // Not in cache. Fetch it the hard (and slow) way!
               //
               if (verbose) {
-                System.err.println(
+                log.debug(
                     "Cache miss for parent "
                         + cacheKey
                         + " "
@@ -233,12 +237,12 @@ public class StatsProcessor {
             }
           }
           if (verbose) {
-            System.err.println("Parent processing took " + (System.currentTimeMillis() - now));
+            log.debug("Parent processing took " + (System.currentTimeMillis() - now));
           }
         }
       }
       if (verbose) {
-        System.err.println(
+        log.debug(
             "Processed "
                 + rs.getRows().size()
                 + " rows. Memory used: "
@@ -313,7 +317,7 @@ public class StatsProcessor {
     final TreeMap<Long, Row> result = new TreeMap<>();
     result.put(ts, target);
     if (verbose) {
-      System.err.println(
+      log.debug(
           "Compactifying "
               + rs.getRows().size()
               + " rows took "

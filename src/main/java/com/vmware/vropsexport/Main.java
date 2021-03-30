@@ -39,8 +39,30 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.http.HttpException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 public class Main {
+  static {
+    final ConfigurationBuilder<BuiltConfiguration> builder =
+        ConfigurationBuilderFactory.newConfigurationBuilder();
+    final LayoutComponentBuilder layout = builder.newLayout("PatternLayout");
+    layout.addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable");
+    final AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+    console.add(layout);
+    builder.add(console);
+    final RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.WARN);
+    rootLogger.add(builder.newAppenderRef("stdout"));
+    builder.add(rootLogger);
+    Configurator.initialize(builder.build());
+  }
+
   private static final int DEFAULT_ROWS_PER_THREAD = 1000;
 
   public static void main(final String[] args) throws Exception {
@@ -91,6 +113,9 @@ public class Main {
         throw new ExporterException("Trusting all certs is no longer supported");
       }
       final boolean verbose = commandLine.hasOption('v');
+      if (verbose) {
+        Configurator.setRootLevel(Level.DEBUG);
+      }
       final boolean useTmpFile = !commandLine.hasOption('S');
       final String trustStore = commandLine.getOptionValue('T');
       final String trustPass = commandLine.getOptionValue("trustpass");

@@ -22,7 +22,7 @@ dateFormat: "yyyy/MM/dd HH:mm:ss"
 elasticSearchConfig:
   url: https://elastic.something
   index: vrops
-  indexType: vrops-record
+  type: vm
 # allMetrics: true
 fields:
   - alias: resourceId

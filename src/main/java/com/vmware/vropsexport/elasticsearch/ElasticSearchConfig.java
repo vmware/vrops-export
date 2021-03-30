@@ -22,7 +22,27 @@ public class ElasticSearchConfig {
 
   private String index;
 
-  private String indexType;
+  private String type;
+
+  private int bulkSize = 10;
+
+  private String apiKey;
+
+  public int getBulkSize() {
+    return bulkSize;
+  }
+
+  public void setBulkSize(final int bulkSize) {
+    this.bulkSize = bulkSize;
+  }
+
+  public String getApiKey() {
+    return apiKey;
+  }
+
+  public void setApiKey(final String apiKey) {
+    this.apiKey = apiKey;
+  }
 
   public String getUrl() {
     return url;
@@ -40,11 +60,11 @@ public class ElasticSearchConfig {
     this.index = index;
   }
 
-  public String getIndexType() {
-    return indexType;
+  public String getType() {
+    return type;
   }
 
-  public void setIndexType(final String indexType) {
-    this.indexType = indexType;
+  public void setType(final String type) {
+    this.type = type;
   }
 }
