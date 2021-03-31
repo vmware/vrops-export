@@ -119,6 +119,7 @@ public class Main {
       final boolean useTmpFile = !commandLine.hasOption('S');
       final String trustStore = commandLine.getOptionValue('T');
       final String trustPass = commandLine.getOptionValue("trustpass");
+      final boolean dumpRest = commandLine.hasOption("dumprest");
 
       // If we're just printing field names, we have enough parameters at this point.
       //
@@ -132,6 +133,7 @@ public class Main {
                 threads,
                 null,
                 verbose,
+                dumpRest,
                 useTmpFile,
                 5000,
                 1000,
@@ -148,6 +150,7 @@ public class Main {
                 threads,
                 null,
                 verbose,
+                dumpRest,
                 useTmpFile,
                 5000,
                 1000,
@@ -164,6 +167,7 @@ public class Main {
                 threads,
                 null,
                 verbose,
+                dumpRest,
                 useTmpFile,
                 5000,
                 1000,
@@ -266,6 +270,7 @@ public class Main {
                   threads,
                   conf,
                   verbose,
+                  dumpRest,
                   useTmpFile,
                   maxRows,
                   maxRes,
@@ -291,6 +296,7 @@ public class Main {
       final int threads,
       final Config conf,
       final boolean verbose,
+      final boolean dumpRest,
       final boolean useTempFile,
       final int maxRows,
       final int maxRes,
@@ -302,7 +308,17 @@ public class Main {
       final KeyStore ks = CertUtils.loadExtendedTrust(trustStore, trustPass);
       try {
         return new Exporter(
-            urlBase, username, password, threads, conf, verbose, useTempFile, maxRows, maxRes, ks);
+            urlBase,
+            username,
+            password,
+            threads,
+            conf,
+            verbose,
+            dumpRest,
+            useTempFile,
+            maxRows,
+            maxRes,
+            ks);
       } catch (final RecoverableCertificateException e) {
         final boolean retry = promptForTrust(e.getCapturedCerts()[0], trustStore, trustPass);
         if (!retry) {
@@ -356,6 +372,7 @@ public class Main {
     opts.addOption("G", "generate", true, "Generate template definition for resource type");
     opts.addOption(null, "trustpass", true, "Truststore password (default=changeit)");
     opts.addOption(null, "resfetch", true, "Resource fetch count (default=1000)");
+    opts.addOption(null, "dumprest", false, "Dump rest calls to output");
     opts.addOption("h", "help", false, "Print a short help text");
     return opts;
   }

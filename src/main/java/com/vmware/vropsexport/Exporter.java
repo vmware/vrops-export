@@ -97,6 +97,8 @@ public class Exporter implements DataProvider {
 
   private final boolean verbose;
 
+  private final boolean dumpRest;
+
   private final boolean useTempFile;
 
   private final ThreadPoolExecutor executor;
@@ -129,6 +131,7 @@ public class Exporter implements DataProvider {
       final int threads,
       final Config conf,
       final boolean verbose,
+      final boolean dumpRest,
       final boolean useTempFile,
       final int maxRows,
       final int maxResourceFetch,
@@ -143,11 +146,12 @@ public class Exporter implements DataProvider {
     }
 
     this.verbose = verbose;
+    this.dumpRest = dumpRest;
     this.useTempFile = useTempFile;
     this.conf = conf;
     this.maxRows = maxRows;
     this.maxResourceFetch = maxResourceFetch;
-    client = new Client(urlBase, username, password, extendedTrust);
+    client = new Client(urlBase, username, password, extendedTrust, dumpRest);
 
     executor =
         new ThreadPoolExecutor(
@@ -257,7 +261,8 @@ public class Exporter implements DataProvider {
     }
     executor.shutdown();
     try {
-      executor.awaitTermination();
+      // We have no idea how long it's going to take, so pick a ridiculously long timeout.
+      executor.awaitTermination(1, TimeUnit.DAYS);
     } catch (final InterruptedException e) {
       // Shouldn't happen...
       e.printStackTrace();

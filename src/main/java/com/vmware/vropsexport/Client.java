@@ -67,11 +67,18 @@ public class Client {
 
   private final String authToken;
 
+  private final boolean dumpRest;
+
   public Client(
-      final String urlBase, String username, final String password, final KeyStore extendedTrust)
+      final String urlBase,
+      String username,
+      final String password,
+      final KeyStore extendedTrust,
+      final boolean dumpRest)
       throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException,
           HttpException, ExporterException {
     this.urlBase = urlBase;
+    this.dumpRest = dumpRest;
     // Configure timeout
     //
     final RequestConfig requestConfig =
@@ -152,6 +159,9 @@ public class Client {
         uri += queries[i];
       }
     }
+    if (dumpRest) {
+      log.debug("GET " + urlBase + uri);
+    }
     final HttpGet get = new HttpGet(urlBase + uri);
     get.addHeader("Accept", "application/json");
     get.addHeader("Accept-Encoding", "gzip");
@@ -173,6 +183,9 @@ public class Client {
     post.addHeader("Accept-Encoding", "gzip");
     if (authToken != null) {
       post.addHeader("Authorization", "vRealizeOpsToken " + authToken + "");
+    }
+    if (dumpRest) {
+      log.debug("POST " + urlBase + uri);
     }
     final HttpResponse resp = client.execute(post);
     checkResponse(resp);
