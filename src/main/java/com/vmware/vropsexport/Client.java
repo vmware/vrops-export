@@ -154,10 +154,12 @@ public class Client {
   private HttpResponse innerGet(String uri, final String... queries)
       throws IOException, HttpException {
     if (queries != null) {
+      final StringBuilder sb = new StringBuilder(uri);
       for (int i = 0; i < queries.length; ++i) {
-        uri += i == 0 ? '?' : '&';
-        uri += queries[i];
+        sb.append(i == 0 ? '?' : '&');
+        sb.append(queries[i]);
       }
+      uri = sb.toString();
     }
     if (dumpRest) {
       log.debug("GET " + urlBase + uri);

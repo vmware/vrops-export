@@ -544,7 +544,7 @@ public class Exporter implements DataProvider {
           }
         };
     final Yaml y = new Yaml(representer, dumperOptions);
-    y.dump(config, new OutputStreamWriter(out));
+    y.dump(config, new OutputStreamWriter(out, "UTF-8"));
   }
 
   public void printResourceKinds(String adapterKind, final PrintStream out)

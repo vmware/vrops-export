@@ -251,15 +251,15 @@ $parent:HostSystem.$parent:ClusterComputeResource.cpu|demandmhz
 
 ## Exporting to SQL
 
-The tool supports exporting to a SQL database. For details, please refer to [this document](SQL.md)
+The tool supports exporting to a SQL database. For details, please refer to [this document](docs/sql.md)
 
 ## Exporting to Wavefront
 
-For information on exporting to Wavefront, please refer to [this document](WAVEFRONT.md)
+For information on exporting to Wavefront, please refer to [this document](docs/wavefront.md)
 
 ## Exporting to JSON
 
-For information on exporting to JSON, please refer to [this document](JSON.md)
+For information on exporting to JSON, please refer to [this document](docs/json.md)
 
 # Known issues
 

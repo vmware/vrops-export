@@ -79,7 +79,6 @@ public class WavefrontPusher implements RowsetProcessor {
       for (final Row r : rowset.getRows().values()) {
         final long ts = r.getTimestamp();
         final String resourceName = dp.getResourceName(rowset.getResourceId());
-        final StringBuilder sb = new StringBuilder();
         for (final Map.Entry<String, Integer> metric : meta.getMetricMap().entrySet()) {
 
           // Build string on the format <metricName> <metricValue> [<timestamp>] source=<source>

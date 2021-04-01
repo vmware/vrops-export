@@ -54,6 +54,7 @@ public class JsonProducer {
             break;
           case chatty:
             produceChatty(rowset, meta);
+            break;
           case elastic:
             produceElastic(rowset, meta);
             break;
@@ -67,8 +68,7 @@ public class JsonProducer {
   public void produceCompact(final Rowset rowset, final RowMetadata meta)
       throws IOException, HttpException {
     generator.writeStartObject(); // {
-    generator.writeStringField(
-        "resourceName", dp.getResourceName(rowset.getResourceId())); // resourceName: 'x'
+    generator.writeStringField("resourceName", dp.getResourceName(rowset.getResourceId()));
 
     // Properties
     if (!rowset.getRows().isEmpty()) {

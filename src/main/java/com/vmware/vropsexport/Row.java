@@ -22,7 +22,7 @@ import java.util.NoSuchElementException;
 
 @SuppressWarnings("WeakerAccess")
 public class Row {
-  public final int FIRST_METRIC_OFFSET = 2;
+  public static final int FIRST_METRIC_OFFSET = 2;
 
   private final long timestamp;
 

@@ -30,6 +30,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -42,12 +43,17 @@ public class CSVPrinter implements RowsetProcessor {
   public static class Factory implements RowsetProcessorFacotry {
     @Override
     public RowsetProcessor makeFromConfig(
-        final OutputStream out, final Config config, final DataProvider dp) {
-      return new CSVPrinter(
-          new BufferedWriter(new OutputStreamWriter(out)),
-          new SimpleDateFormat(config.getDateFormat()),
-          config.getCsvConfig(),
-          dp);
+        final OutputStream out, final Config config, final DataProvider dp)
+        throws ExporterException {
+      try {
+        return new CSVPrinter(
+            new BufferedWriter(new OutputStreamWriter(out, "UTF-8")),
+            new SimpleDateFormat(config.getDateFormat()),
+            config.getCsvConfig(),
+            dp);
+      } catch (final UnsupportedEncodingException e) {
+        throw new ExporterException(e);
+      }
     }
 
     @Override

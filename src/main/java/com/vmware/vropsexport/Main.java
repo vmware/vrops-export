@@ -19,10 +19,13 @@ package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.security.CertUtils;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -231,7 +234,7 @@ public class Main {
 
         // Read definition and run it!
         //
-        try (final FileReader fr = new FileReader(defFile)) {
+        try (final Reader fr = new InputStreamReader(new FileInputStream(defFile), "UTF-8")) {
           final Config conf = ConfigLoader.parse(fr);
 
           // Output to stdout implies quiet mode. Also, verbose would mess up the progress counter,
@@ -276,8 +279,10 @@ public class Main {
                   maxRes,
                   trustStore,
                   trustPass);
-          final OutputStream out = output != null ? new FileOutputStream(output) : System.out;
-          exporter.exportTo(out, begin, end, namePattern, parentSpec, quiet);
+          try (final OutputStream out =
+              output != null ? new FileOutputStream(output) : System.out) {
+            exporter.exportTo(out, begin, end, namePattern, parentSpec, quiet);
+          }
         }
       }
     } catch (final RecoverableCertificateException e) {
@@ -336,10 +341,10 @@ public class Main {
     System.err.println("Issuer: " + serverCert.getIssuerDN().toString());
     System.err.println("Subject: " + serverCert.getSubjectDN().toString());
     System.err.print("Do you want to permanently trust this certificate? (y/n): ");
-    final Scanner s = new Scanner(System.in);
+    final Scanner s = new Scanner(System.in, "UTF-8");
     final String answer = s.nextLine();
     System.err.println();
-    if (answer.toLowerCase().equals("y")) {
+    if (answer.equalsIgnoreCase("y")) {
       CertUtils.storeCert(serverCert, trustStore, trustPass);
       return true;
     }
@@ -377,16 +382,17 @@ public class Main {
     return opts;
   }
 
+  @SuppressFBWarnings("SF_SWITCH_FALLTHROUGH")
   private static long parseLookback(final String lb) throws ExporterException {
     long scale = 1;
     final char unit = lb.charAt(lb.length() - 1);
     switch (unit) {
       case 'd':
-        scale *= 24;
+        scale *= 24; // fallthru
       case 'h':
-        scale *= 60;
+        scale *= 60; // fallthru
       case 'm':
-        scale *= 60;
+        scale *= 60; // fallthru
       case 's':
         scale *= 1000;
         break;

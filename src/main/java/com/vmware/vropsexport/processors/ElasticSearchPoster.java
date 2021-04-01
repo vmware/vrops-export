@@ -39,7 +39,6 @@ import java.text.DateFormat;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
@@ -49,11 +48,8 @@ import org.apache.http.message.BasicHeader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
@@ -170,7 +166,7 @@ public class ElasticSearchPoster implements RowsetProcessor {
       // to end up overloading it again.
       final long actualDelay = delay + ThreadLocalRandom.current().nextLong(delay / 2);
       try {
-        final BulkResponse response = client.bulk(br, RequestOptions.DEFAULT);
+        client.bulk(br, RequestOptions.DEFAULT);
         return;
       } catch (final ElasticsearchStatusException e) {
         if (!(e.getCause() instanceof ResponseException)) {
@@ -221,51 +217,9 @@ public class ElasticSearchPoster implements RowsetProcessor {
   @Override
   public void close() throws ExporterException {
     try {
-      Listener.instance.waitUntilIdle();
       client.close();
-    } catch (final IOException | InterruptedException e) {
+    } catch (final IOException e) {
       throw new ExporterException(e);
-    }
-  }
-
-  private static class Listener implements ActionListener<IndexResponse> {
-
-    private static final Listener instance = new Listener();
-
-    private final AtomicInteger outstandingRq = new AtomicInteger(0);
-
-    public void notifyRequest() {
-      outstandingRq.incrementAndGet();
-    }
-
-    public void waitUntilIdle() throws InterruptedException {
-      synchronized (this) {
-        while (outstandingRq.get() > 0) {
-          wait();
-        }
-      }
-    }
-
-    @Override
-    public void onResponse(final IndexResponse o) {
-      decrementOutstanding();
-      System.err.println("Outstanding: " + outstandingRq.get());
-    }
-
-    @Override
-    public void onFailure(final Exception e) {
-      decrementOutstanding();
-      System.err.println("Error while posting to ElasticSearch: " + e.toString());
-    }
-
-    private void decrementOutstanding() {
-      if (outstandingRq.decrementAndGet() == 0) {
-        // Yes, in theory someone could have incremented the counter before we grab the monitor,
-        // but since we're checking the counter in a loop, we'd catch that.
-        synchronized (this) {
-          notifyAll();
-        }
-      }
     }
   }
 }

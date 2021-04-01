@@ -357,14 +357,6 @@ public class StatsProcessor {
     return fieldname == null || fieldname.equals(p.getCurrentName());
   }
 
-  private void expectCurrent(final JsonParser p, final String fieldname)
-      throws ExporterException, IOException {
-    if (!fieldname.equals(p.getCurrentName())) {
-      throw new ExporterException(
-          "Expected field name " + fieldname + ", got " + p.getCurrentName());
-    }
-  }
-
   private boolean expectCurrentMaybe(final JsonParser p, final String fieldname)
       throws IOException {
     return fieldname.equals(p.getCurrentName());
