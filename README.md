@@ -4,8 +4,8 @@ Simple utility for exporting data from vRealize Operations.
 
 ## Description
 
-A simple command-line data export tool for vRealize Operations. Currently supports CVS and SQL, but additional output
-formats are planned.
+A simple command-line data export tool for vRealize Operations. Currently, the tool supports CVS, JSON, ElasticSearch,
+Wavefront and SQL, but additional output formats are planned.
 
 # Installation
 
@@ -208,14 +208,15 @@ fields:                                          # A list of fields
 * resourceType: Name of the resource type (e.g. VirtualMachine)
 * rollupType: Type of data aggregation. Valid values are MAX, MIN, AVG, SUM, LATEST.
 * rollupMinutes: Number of minutes in each bucket for rollup. E.g. ```rollupType: "AVG"``` and ```rollupMinutes: 5```
-  generates 5 minute averages.
+  generates 5-minute averages.
 * dateFormat: Format to use when specifying and displaying dates.
-  See http://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html for a description of the format.
+  See http://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html for a description of the format. In
+  addition, the format string```"%E"``` will cause the tool to output raw epoch milliseconds as dates.
 * outputFormat: Specifies the output format. Valid values are ```csv```, ```json```, ```wavefront``` and ```sql```.
 * align: Aligns the timestamps to a specified granularity (in seconds). For example, if an align value of 300 is
-  specified, all timestamps will be aligned to the nearest 5 mintes. Note that only the time stamps are changed.
+  specified, all timestamps will be aligned to the nearest 5 minutes. Note that only the time stamps are changed.
   Interpolation is not yet supported.
-* allMetrics: Exports all metrics for every resource. This option is indended mainly for the JSON output format and will
+* allMetrics: Exports all metrics for every resource. This option is intended mainly for the JSON output format and will
   most likely not work for table-oriented outputs, such as CSV and SQL. If specified, the ```fields``` attribute is
   ignored.
 
@@ -224,7 +225,7 @@ fields:                                          # A list of fields
 There are a number of special properties that are always available for use in a properties file for getting things like
 parent resources and resource names.
 
-* $resdId - Internal ID of the current resource.
+* $resId - Internal ID of the current resource.
 * $resName - Resource name of the current resource
 * $parent - Reference to a parent resource.
 
