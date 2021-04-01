@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -223,7 +224,7 @@ public class Main {
         if (tmp != null) {
           try {
             maxRes = Integer.parseInt(tmp);
-            if (threads < 1 || threads > 50000) {
+            if (maxRes < 1 || maxRes > 50000) {
               throw new ExporterException(
                   "Resource fetch must greater than 0 and smaller than 50000");
             }
@@ -234,7 +235,8 @@ public class Main {
 
         // Read definition and run it!
         //
-        try (final Reader fr = new InputStreamReader(new FileInputStream(defFile), "UTF-8")) {
+        try (final Reader fr =
+            new InputStreamReader(new FileInputStream(defFile), StandardCharsets.UTF_8)) {
           final Config conf = ConfigLoader.parse(fr);
 
           // Output to stdout implies quiet mode. Also, verbose would mess up the progress counter,

@@ -144,16 +144,15 @@ public class SQLDumper implements RowsetProcessor {
   }
 
   @Override
-  public void preamble(final RowMetadata meta, final Config conf) throws ExporterException {
+  public void preamble(final RowMetadata meta, final Config conf) {
     // Nothing to do...
   }
 
   @Override
   public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {
     try {
-      NamedParameterStatement stmt = null;
-      final Connection conn = ds.getConnection();
-      try {
+      final NamedParameterStatement stmt;
+      try (final Connection conn = ds.getConnection()) {
         stmt = new NamedParameterStatement(conn, sql);
         int rowsInBatch = 0;
         for (final Row row : rowset.getRows().values()) {
@@ -189,15 +188,10 @@ public class SQLDumper implements RowsetProcessor {
         }
         // Push dangling batch
         //
-        if (rowsInBatch > 0 && stmt != null) {
+        if (rowsInBatch > 0) {
           stmt.executeBatch();
         }
         conn.commit();
-      } finally {
-        if (stmt != null) {
-          stmt.close();
-        }
-        conn.close();
       }
     } catch (final SQLException | HttpException | IOException e) {
       throw new ExporterException(e);

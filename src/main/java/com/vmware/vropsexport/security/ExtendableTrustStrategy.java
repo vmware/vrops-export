@@ -45,8 +45,7 @@ public class ExtendableTrustStrategy implements TrustStrategy, org.apache.http.s
   }
 
   @Override
-  public boolean isTrusted(final X509Certificate[] certs, final String authType)
-      throws CertificateException {
+  public boolean isTrusted(final X509Certificate[] certs, final String authType) {
     capturedCerts = certs;
     if (trustManagers == null) {
       return false;

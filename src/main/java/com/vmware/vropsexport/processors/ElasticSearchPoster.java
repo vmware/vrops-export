@@ -79,8 +79,6 @@ public class ElasticSearchPoster implements RowsetProcessor {
 
   private static final long MAX_RETRY_DELAY = 64000;
 
-  private final String url;
-
   private final RestHighLevelClient client;
 
   private final String index;
@@ -102,7 +100,7 @@ public class ElasticSearchPoster implements RowsetProcessor {
     if (ec.getUrl() == null) {
       throw new ExporterException("The 'url' setting is missing from the configuration");
     }
-    url = ec.getUrl();
+    final String url = ec.getUrl();
     if (ec.getIndex() == null) {
       throw new ExporterException("The 'index' setting is missing from the configuration");
     }
@@ -124,7 +122,7 @@ public class ElasticSearchPoster implements RowsetProcessor {
   }
 
   @Override
-  public void preamble(final RowMetadata meta, final Config conf) throws ExporterException {}
+  public void preamble(final RowMetadata meta, final Config conf) {}
 
   @Override
   public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {

@@ -22,8 +22,6 @@ import java.util.NoSuchElementException;
 
 @SuppressWarnings("WeakerAccess")
 public class Row {
-  public static final int FIRST_METRIC_OFFSET = 2;
-
   private final long timestamp;
 
   private final BitSet definedMetrics;
@@ -99,17 +97,6 @@ public class Row {
       }
       return getMetric(mc++);
     }
-  }
-
-  public Object[] flatten(final RowMetadata meta) {
-    final Object[] answer = new Object[FIRST_METRIC_OFFSET + metrics.length + props.length];
-    int i = 0;
-    answer[0] = timestamp;
-    i = FIRST_METRIC_OFFSET;
-    for (final java.util.Iterator<Object> itor = iterator(meta); itor.hasNext(); ) {
-      answer[i++] = itor.next();
-    }
-    return answer;
   }
 
   public void merge(final Row r) {

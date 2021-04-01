@@ -28,15 +28,14 @@ public class ReplacingNameSanitizer implements NameSanitizer {
 
   public ReplacingNameSanitizer(final String forbidden, final char replacement) {
     this.replacement = replacement;
-    max = forbidden.chars().max().getAsInt();
-    min = forbidden.chars().min().getAsInt();
+    max = forbidden.chars().max().orElse(0);
+    min = forbidden.chars().min().orElse(0);
     flags = new boolean[max - min + 1];
     forbidden.chars().forEach(c -> flags[c - min] = true);
   }
 
   @Override
   public String transform(final String s) {
-    final String result = s;
     StringBuilder sb = null;
     for (int i = 0; i < s.length(); ++i) {
       final char c = s.charAt(i);

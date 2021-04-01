@@ -55,11 +55,7 @@ public class JsonPrinter implements RowsetProcessor {
     }
   }
 
-  private final OutputStream out;
-
   private final JsonGenerator generator;
-
-  private final DataProvider dp;
 
   private final JsonConfig.JsonFormat format;
 
@@ -72,8 +68,6 @@ public class JsonPrinter implements RowsetProcessor {
       final DateFormat dateFormat)
       throws ExporterException {
     try {
-      this.dp = dp;
-      this.out = out;
       this.format = format;
       final JsonFactory jf = new JsonFactory();
       generator = jf.createGenerator(out, JsonEncoding.UTF8);

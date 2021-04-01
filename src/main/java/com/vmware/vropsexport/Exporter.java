@@ -31,6 +31,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -97,8 +98,6 @@ public class Exporter implements DataProvider {
 
   private final boolean verbose;
 
-  private final boolean dumpRest;
-
   private final boolean useTempFile;
 
   private final ThreadPoolExecutor executor;
@@ -146,7 +145,6 @@ public class Exporter implements DataProvider {
     }
 
     this.verbose = verbose;
-    this.dumpRest = dumpRest;
     this.useTempFile = useTempFile;
     this.conf = conf;
     this.maxRows = maxRows;
@@ -544,7 +542,7 @@ public class Exporter implements DataProvider {
           }
         };
     final Yaml y = new Yaml(representer, dumperOptions);
-    y.dump(config, new OutputStreamWriter(out, "UTF-8"));
+    y.dump(config, new OutputStreamWriter(out, StandardCharsets.UTF_8));
   }
 
   public void printResourceKinds(String adapterKind, final PrintStream out)

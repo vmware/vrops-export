@@ -55,8 +55,7 @@ public class NamedParameterStatement {
   private final PreparedStatement statement;
 
   /** Maps parameter names to arrays of ints which are the parameter indices. */
-  @SuppressWarnings("rawtypes")
-  private final Map indexMap;
+  private final Map<String, Object> indexMap;
 
   /**
    * Creates a NamedParameterStatement. Wraps a call to c.{@link
@@ -68,7 +67,7 @@ public class NamedParameterStatement {
    */
   public NamedParameterStatement(final Connection connection, final String query)
       throws SQLException {
-    indexMap = new HashMap();
+    indexMap = new HashMap<>();
     final String parsedQuery = parse(query, indexMap);
     statement = connection.prepareStatement(parsedQuery);
   }
