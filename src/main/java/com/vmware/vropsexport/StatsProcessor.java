@@ -20,18 +20,17 @@ package com.vmware.vropsexport;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.ParentSplicer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.http.HttpException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONObject;
 
 @SuppressWarnings("SameParameterValue")
 public class StatsProcessor {
@@ -197,10 +196,11 @@ public class StatsProcessor {
         final RowMetadata pMeta = meta.forParent();
         if (pMeta.isValid()) {
           final long now = System.currentTimeMillis();
-          final JSONObject parent = dataProvider.getParentOf(resourceId, pMeta.getResourceKind());
+          final NamedResource parent =
+              dataProvider.getParentOf(resourceId, pMeta.getResourceKind());
           if (parent != null) {
             final Rowset cached;
-            final String cacheKey = parent.getString("identifier") + "|" + begin + "|" + end;
+            final String cacheKey = parent.getIdentifier() + "|" + begin + "|" + end;
             synchronized (rowsetCache) {
               cached = rowsetCache.get(cacheKey);
             }
@@ -209,10 +209,7 @@ public class StatsProcessor {
             if (cached != null) {
               if (verbose) {
                 log.debug(
-                    "Cache hit for parent "
-                        + cacheKey
-                        + " "
-                        + parent.getJSONObject("resourceKey").getString("name"));
+                    "Cache hit for parent " + cacheKey + " " + parent.getResourceKey().get("name"));
               }
               ParentSplicer.spliceRows(rs, cached);
             } else {
@@ -223,14 +220,13 @@ public class StatsProcessor {
                     "Cache miss for parent "
                         + cacheKey
                         + " "
-                        + parent.getJSONObject("resourceKey").getString("name"));
+                        + parent.getResourceKey().get("name"));
               }
               final StatsProcessor parentProcessor =
                   new StatsProcessor(
                       conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
               try (final InputStream pIs =
-                  dataProvider.fetchMetricStream(
-                      Collections.singletonList(parent), pMeta, begin, end)) {
+                  dataProvider.fetchMetricStream(new NamedResource[] {parent}, pMeta, begin, end)) {
                 parentProcessor.process(
                     pIs, new ParentSplicer(rs, rowsetCache, cacheKey), begin, end);
               }

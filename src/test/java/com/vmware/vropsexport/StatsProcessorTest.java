@@ -18,13 +18,14 @@
 package com.vmware.vropsexport;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.JsonPrinter;
 import java.io.ByteArrayOutputStream;
@@ -38,8 +39,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,20 +76,24 @@ public class StatsProcessorTest {
     }
   }
 
-  private JSONObject hostResource;
+  private NamedResource hostResource;
   private Map<String, String> hostProperties;
   private Map<String, String> vmProperties;
   private List<String> statKeys;
 
   @Before
   public void loadData() throws IOException {
-    try (final InputStream in = new FileInputStream("src/test/resources/hostresource.json")) {
-      hostResource = new JSONObject(new JSONTokener(in));
-    }
+    hostResource =
+        new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .readValue(new File("src/test/resources/hostresource.json"), NamedResource.class);
+
     hostProperties = loadProps("src/test/resources/hostprops.json");
     vmProperties = loadProps("src/test/resources/vmprops.json");
     statKeys =
-        new ObjectMapper().readValue(new File("src/test/resources/statkeys.json"), List.class);
+        new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .readValue(new File("src/test/resources/statkeys.json"), List.class);
   }
 
   private static Map<String, String> loadProps(final String file) throws IOException {
@@ -156,7 +159,7 @@ public class StatsProcessorTest {
     final DataProvider dp = mock(DataProvider.class);
     when(dp.getResourceName(any())).thenReturn("vm-01");
     when(dp.getParentOf(eq(VM_ID), eq("HostSystem"))).thenReturn(hostResource);
-    when(dp.fetchMetricStream(anyList(), any(RowMetadata.class), anyLong(), anyLong()))
+    when(dp.fetchMetricStream(any(), any(RowMetadata.class), anyLong(), anyLong()))
         .then((inv) -> new FileInputStream("src/test/resources/hoststats.json"));
     when(dp.fetchProps(eq(HOST_ID))).thenReturn(hostProperties);
     when(dp.fetchProps(eq(VM_ID))).thenReturn(vmProperties);

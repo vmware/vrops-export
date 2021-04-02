@@ -15,24 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.vmware.vropsexport;
+package com.vmware.vropsexport.models;
 
-import com.vmware.vropsexport.models.NamedResource;
-import java.io.IOException;
-import java.io.InputStream;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import java.util.List;
 import java.util.Map;
-import org.apache.http.HttpException;
 
-public interface DataProvider {
-  Map<String, String> fetchProps(String id) throws IOException, HttpException;
+public class ResourceStatKeysResponse {
+  @JsonAlias({"stat-key"})
+  private List<Map<String, String>> statKeys;
 
-  NamedResource getParentOf(String id, String parentType) throws IOException, HttpException;
+  public List<Map<String, String>> getStatKeys() {
+    return statKeys;
+  }
 
-  InputStream fetchMetricStream(NamedResource[] resList, RowMetadata meta, long begin, long end)
-      throws IOException, HttpException;
-
-  String getResourceName(String resourceId) throws IOException, HttpException;
-
-  List<String> getStatKeysForResource(final String resourceId) throws IOException, HttpException;
+  public void setStatKeys(final List<Map<String, String>> statKeys) {
+    this.statKeys = statKeys;
+  }
 }
