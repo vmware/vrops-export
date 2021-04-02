@@ -368,7 +368,7 @@ public class StatsProcessor {
       return false;
     }
     expect(p, fieldName); // Advance past the field name
-    final JsonToken t = p.nextToken();
+    final JsonToken t = p.currentToken();
     if (t == JsonToken.START_ARRAY) {
       skipComplex(p, 0, 1);
     } else if (t == JsonToken.START_OBJECT) {
@@ -387,7 +387,7 @@ public class StatsProcessor {
   }
 
   private void skipComplex(final JsonParser p, int structLevel, int arrayLevel) throws IOException {
-    while (structLevel > 0 && arrayLevel > 0) {
+    while (structLevel > 0 || arrayLevel > 0) {
       final JsonToken t = p.nextToken();
       if (t == JsonToken.START_ARRAY) {
         ++arrayLevel;

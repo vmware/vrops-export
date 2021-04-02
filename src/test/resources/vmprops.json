@@ -1,0 +1,265 @@
+{
+  "resourceId": "60508ea6-287b-42be-953c-1554e506cdc1",
+  "property": [
+    {
+      "name": "config|cpuAllocation|limit",
+      "value": "-1.0"
+    },
+    {
+      "name": "config|cpuAllocation|reservation",
+      "value": "0.0"
+    },
+    {
+      "name": "config|cpuAllocation|shares|shares",
+      "value": "2000.0"
+    },
+    {
+      "name": "config|createDate",
+      "value": "1.605638984865E12"
+    },
+    {
+      "name": "config|extraConfig|mem_hotadd",
+      "value": "false"
+    },
+    {
+      "name": "config|extraConfig|vcpu_hotadd",
+      "value": "false"
+    },
+    {
+      "name": "config|extraConfig|vcpu_hotremove",
+      "value": "false"
+    },
+    {
+      "name": "config|guestFullName",
+      "value": "Other 3.x or later Linux (64-bit)"
+    },
+    {
+      "name": "config|hardware|diskSpace",
+      "value": "274.0"
+    },
+    {
+      "name": "config|hardware|memoryKB",
+      "value": "8388608.0"
+    },
+    {
+      "name": "config|hardware|numCoresPerSocket",
+      "value": "1.0"
+    },
+    {
+      "name": "config|hardware|numCpu",
+      "value": "2.0"
+    },
+    {
+      "name": "config|hardware|numSockets",
+      "value": "2.0"
+    },
+    {
+      "name": "config|hardware|thinEnabled",
+      "value": "true"
+    },
+    {
+      "name": "config|memoryAllocation|limit",
+      "value": "-1.0"
+    },
+    {
+      "name": "config|memoryAllocation|reservation",
+      "value": "0.0"
+    },
+    {
+      "name": "config|memoryAllocation|shares|shares",
+      "value": "81920.0"
+    },
+    {
+      "name": "config|name",
+      "value": "vrops-02"
+    },
+    {
+      "name": "config|numVMDKs",
+      "value": "3.0"
+    },
+    {
+      "name": "config|version",
+      "value": "vmx-11"
+    },
+    {
+      "name": "cpu|limit",
+      "value": "-1.0"
+    },
+    {
+      "name": "cpu|reservation",
+      "value": "0.0"
+    },
+    {
+      "name": "cpu|speed",
+      "value": "3.799996962E9"
+    },
+    {
+      "name": "mem|guestOSMemNotCollecting",
+      "value": "0.0"
+    },
+    {
+      "name": "mem|host_limit",
+      "value": "-1.0"
+    },
+    {
+      "name": "net:4000|ip_address",
+      "value": "192.168.1.178"
+    },
+    {
+      "name": "net:4000|mac_address",
+      "value": "00:50:56:a2:80:3e"
+    },
+    {
+      "name": "runtime|memoryCap",
+      "value": "8388608.0"
+    },
+    {
+      "name": "summary|config|appliance",
+      "value": "false"
+    },
+    {
+      "name": "summary|config|isSrmPlaceholder",
+      "value": "false"
+    },
+    {
+      "name": "summary|config|isTemplate",
+      "value": "false"
+    },
+    {
+      "name": "summary|config|numEthernetCards",
+      "value": "1.0"
+    },
+    {
+      "name": "summary|config|productName",
+      "value": "vRealize Operations Manager Appliance"
+    },
+    {
+      "name": "summary|config|type",
+      "value": "default"
+    },
+    {
+      "name": "summary|datastore",
+      "value": "freenas"
+    },
+    {
+      "name": "summary|folder",
+      "value": ""
+    },
+    {
+      "name": "summary|guest|fullName",
+      "value": "VMware Photon OS (64-bit)"
+    },
+    {
+      "name": "summary|guest|hostName",
+      "value": "vrops-02.pontus.lab"
+    },
+    {
+      "name": "summary|guest|ipAddress",
+      "value": "192.168.1.178"
+    },
+    {
+      "name": "summary|guest|toolsRunningStatus",
+      "value": "Guest Tools Running"
+    },
+    {
+      "name": "summary|guest|toolsVersion",
+      "value": "11.1.0"
+    },
+    {
+      "name": "summary|guest|toolsVersionStatus2",
+      "value": "Guest Tools Unmanaged"
+    },
+    {
+      "name": "summary|MOID",
+      "value": "vm-7068"
+    },
+    {
+      "name": "summary|parentCluster",
+      "value": "Workload"
+    },
+    {
+      "name": "summary|parentDatacenter",
+      "value": "PONTUS.LAB"
+    },
+    {
+      "name": "summary|parentFolder",
+      "value": "vm"
+    },
+    {
+      "name": "summary|parentHost",
+      "value": "192.168.1.214"
+    },
+    {
+      "name": "summary|parentVcenter",
+      "value": "vc-01"
+    },
+    {
+      "name": "summary|runtime|connectionState",
+      "value": "connected"
+    },
+    {
+      "name": "summary|runtime|isIdle",
+      "value": "0.0"
+    },
+    {
+      "name": "summary|runtime|powerState",
+      "value": "Powered On"
+    },
+    {
+      "name": "summary|tag",
+      "value": "none"
+    },
+    {
+      "name": "summary|tagJson",
+      "value": "none"
+    },
+    {
+      "name": "summary|UUID",
+      "value": "5022b9df-05d9-cd8e-7f4e-5dbecd5ef95c"
+    },
+    {
+      "name": "System Properties|resource_kind_subtype",
+      "value": "GENERAL"
+    },
+    {
+      "name": "System Properties|resource_kind_type",
+      "value": "GENERAL"
+    },
+    {
+      "name": "virtualDisk:scsi0:0|configuredGB",
+      "value": "20.0"
+    },
+    {
+      "name": "virtualDisk:scsi0:0|datastore",
+      "value": "freenas"
+    },
+    {
+      "name": "virtualDisk:scsi0:0|label",
+      "value": "Hard disk 1"
+    },
+    {
+      "name": "virtualDisk:scsi0:1|configuredGB",
+      "value": "250.0"
+    },
+    {
+      "name": "virtualDisk:scsi0:1|datastore",
+      "value": "freenas"
+    },
+    {
+      "name": "virtualDisk:scsi0:1|label",
+      "value": "Hard disk 2"
+    },
+    {
+      "name": "virtualDisk:scsi0:2|configuredGB",
+      "value": "4.0"
+    },
+    {
+      "name": "virtualDisk:scsi0:2|datastore",
+      "value": "freenas"
+    },
+    {
+      "name": "virtualDisk:scsi0:2|label",
+      "value": "Hard disk 3"
+    }
+  ]
+}
