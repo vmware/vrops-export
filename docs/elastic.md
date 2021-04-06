@@ -15,7 +15,8 @@ rollupMinutes: 5
 outputFormat: elasticsearch
 dateFormat: "yyyy/MM/dd HH:mm:ss"
 elasticSearchConfig:
-  url: https://elastic.something:9200
+  urls: 
+    - https://elastic.something:9200
   index: vrops
   bulkSize: 10
   apiKey: "ABCDEF12345"
