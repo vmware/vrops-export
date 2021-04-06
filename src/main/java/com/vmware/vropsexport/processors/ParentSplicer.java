@@ -18,12 +18,12 @@
 package com.vmware.vropsexport.processors;
 
 import com.vmware.vropsexport.Config;
-import com.vmware.vropsexport.ExporterException;
 import com.vmware.vropsexport.LRUCache;
 import com.vmware.vropsexport.Row;
 import com.vmware.vropsexport.RowMetadata;
 import com.vmware.vropsexport.Rowset;
 import com.vmware.vropsexport.RowsetProcessor;
+import com.vmware.vropsexport.exceptions.ExporterException;
 
 public class ParentSplicer implements RowsetProcessor {
 

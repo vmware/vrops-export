@@ -19,6 +19,7 @@ package com.vmware.vropsexport;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.AuthRequest;
 import com.vmware.vropsexport.models.AuthResponse;
 import com.vmware.vropsexport.security.ExtendableTrustStrategy;

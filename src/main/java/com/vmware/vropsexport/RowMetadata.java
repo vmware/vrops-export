@@ -17,6 +17,7 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.exceptions.ExporterException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

@@ -20,6 +20,7 @@ package com.vmware.vropsexport;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.ParentSplicer;
 import java.io.IOException;
@@ -137,6 +138,17 @@ public class StatsProcessor {
         while (p.nextToken() != JsonToken.END_ARRAY) {
           final double d = p.getDoubleValue();
           if (metricIdx != -1) {
+            if (i >= timestamps.size()) {
+              log.warn(
+                  "More data than timestamps (index="
+                      + i
+                      + ") for metric "
+                      + statKey
+                      + " on "
+                      + meta.getResourceKind()
+                      + " id: "
+                      + resourceId);
+            }
             final long ts = timestamps.get(i++);
             final RowMetadata m = meta;
             final Row r = rows.computeIfAbsent(ts, k -> m.newRow(ts));

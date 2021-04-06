@@ -18,6 +18,7 @@
 package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.elasticsearch.ElasticSearchConfig;
+import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.json.JsonConfig;
 import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
@@ -26,7 +27,8 @@ import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
-public class Config {
+public class Config implements Validatable {
+
   public static class NameSanitizerConfig {
     public String forbidden;
 
@@ -120,6 +122,37 @@ public class Config {
   private NameSanitizerConfig nameSanitizer;
 
   public Config() {}
+
+  @Override
+  public void validate() throws ValidationException {
+    if (allMetrics && fields != null) {
+      throw new ValidationException("The 'allMetric' and 'fields' settings are mutually exclusive");
+    }
+    if (resourceKind == null) {
+      throw new ValidationException("'resourceType' must be specified");
+    }
+    if (outputFormat == null) {
+      throw new ValidationException("'outputFormat' must be specified");
+    }
+    if ("sql".equals(outputFormat) && sqlConfig == null) {
+      throw new ValidationException("'sqlConfig' must be specified for SQL output");
+    }
+    if ("wavefront".equals(outputFormat) && sqlConfig == null) {
+      throw new ValidationException("'wavefrontConfig' must be specified for SQL output");
+    }
+    if ("elastic".equals(outputFormat) && sqlConfig == null) {
+      throw new ValidationException("'elasticConfig' must be specified for SQL output");
+    }
+    if (sqlConfig != null) {
+      sqlConfig.validate();
+    }
+    if (wavefrontConfig != null) {
+      wavefrontConfig.validate();
+    }
+    if (elasticSearchConfig != null) {
+      elasticSearchConfig.validate();
+    }
+  }
 
   public NameSanitizerConfig getNameSanitizer() {
     return nameSanitizer;

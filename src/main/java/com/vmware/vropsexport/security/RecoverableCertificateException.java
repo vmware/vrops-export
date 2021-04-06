@@ -17,7 +17,7 @@
  */
 package com.vmware.vropsexport.security;
 
-import com.vmware.vropsexport.ExporterException;
+import com.vmware.vropsexport.exceptions.ExporterException;
 import java.security.cert.X509Certificate;
 
 public class RecoverableCertificateException extends ExporterException {

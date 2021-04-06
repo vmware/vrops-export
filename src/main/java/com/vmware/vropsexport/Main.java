@@ -17,6 +17,8 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.exceptions.ExporterException;
+import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.security.CertUtils;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -58,11 +60,11 @@ public class Main {
         ConfigurationBuilderFactory.newConfigurationBuilder();
     final LayoutComponentBuilder layout = builder.newLayout("PatternLayout");
     layout.addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable");
-    final AppenderComponentBuilder console = builder.newAppender("stdout", "Console");
+    final AppenderComponentBuilder console = builder.newAppender("stderr", "Console");
     console.add(layout);
     builder.add(console);
     final RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.WARN);
-    rootLogger.add(builder.newAppenderRef("stdout"));
+    rootLogger.add(builder.newAppenderRef("stderr"));
     builder.add(rootLogger);
     Configurator.initialize(builder.build());
   }
@@ -281,9 +283,12 @@ public class Main {
                   maxRes,
                   trustStore,
                   trustPass);
-          try (final OutputStream out =
-              output != null ? new FileOutputStream(output) : System.out) {
-            exporter.exportTo(out, begin, end, namePattern, parentSpec, quiet);
+          if (output == null) {
+            exporter.exportTo(System.out, begin, end, namePattern, parentSpec, quiet);
+          } else {
+            try (final OutputStream out = new FileOutputStream(output)) {
+              exporter.exportTo(out, begin, end, namePattern, parentSpec, quiet);
+            }
           }
         }
       }
@@ -293,6 +298,8 @@ public class Main {
     } catch (final ExporterException e) {
       System.err.println("ERROR: " + e.getMessage());
       System.exit(1);
+    } catch (final ValidationException e) {
+      System.err.println("Config validation error: " + e.getMessage());
     }
   }
 

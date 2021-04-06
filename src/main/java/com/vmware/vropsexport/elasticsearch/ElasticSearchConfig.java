@@ -17,8 +17,12 @@
  */
 package com.vmware.vropsexport.elasticsearch;
 
-public class ElasticSearchConfig {
-  private String url;
+import com.vmware.vropsexport.Validatable;
+import com.vmware.vropsexport.exceptions.ValidationException;
+import java.util.List;
+
+public class ElasticSearchConfig implements Validatable {
+  private List<String> urls;
 
   private String index;
 
@@ -27,6 +31,10 @@ public class ElasticSearchConfig {
   private int bulkSize = 10;
 
   private String apiKey;
+
+  private String username;
+
+  private String password;
 
   public int getBulkSize() {
     return bulkSize;
@@ -44,12 +52,12 @@ public class ElasticSearchConfig {
     this.apiKey = apiKey;
   }
 
-  public String getUrl() {
-    return url;
+  public List<String> getUrls() {
+    return urls;
   }
 
-  public void setUrl(final String url) {
-    this.url = url;
+  public void setUrls(final List<String> urls) {
+    this.urls = urls;
   }
 
   public String getIndex() {
@@ -66,5 +74,34 @@ public class ElasticSearchConfig {
 
   public void setType(final String type) {
     this.type = type;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public void setUsername(final String username) {
+    this.username = username;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(final String password) {
+    this.password = password;
+  }
+
+  @Override
+  public void validate() throws ValidationException {
+    if (urls == null || urls.size() == 0) {
+      throw new ValidationException("ElasticSearch URL must be specified");
+    }
+    if (index == null) {
+      throw new ValidationException("ElasticSearch index must be specified");
+    }
+    if (bulkSize <= 0) {
+      throw new ValidationException("Bulksize must be greater than zero");
+    }
   }
 }

@@ -17,6 +17,7 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.MetricsRequest;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.models.PageOfResources;
@@ -26,7 +27,7 @@ import com.vmware.vropsexport.models.ResourceKindResponse;
 import com.vmware.vropsexport.models.ResourceStatKeysResponse;
 import com.vmware.vropsexport.models.StatKeysResponse;
 import com.vmware.vropsexport.processors.CSVPrinter;
-import com.vmware.vropsexport.processors.ElasticSearchPoster;
+import com.vmware.vropsexport.processors.ElasticSearchIndexer;
 import com.vmware.vropsexport.processors.JsonPrinter;
 import com.vmware.vropsexport.processors.SQLDumper;
 import com.vmware.vropsexport.processors.WavefrontPusher;
@@ -121,7 +122,7 @@ public class Exporter implements DataProvider {
     rspFactories.put("csv", new CSVPrinter.Factory());
     rspFactories.put("wavefront", new WavefrontPusher.Factory());
     rspFactories.put("json", new JsonPrinter.Factory());
-    rspFactories.put("elasticsearch", new ElasticSearchPoster.Factory());
+    rspFactories.put("elasticsearch", new ElasticSearchIndexer.Factory());
   }
 
   public static boolean isProducingOutput(final Config conf) {

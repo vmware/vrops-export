@@ -1,9 +1,12 @@
 package com.vmware.vropsexport.wavefront;
 
-public class WavefrontConfig {
+import com.vmware.vropsexport.Validatable;
+import com.vmware.vropsexport.exceptions.ValidationException;
+
+public class WavefrontConfig implements Validatable {
   private String proxyHost;
 
-  private int proxyPort;
+  private int proxyPort = 2878;
 
   private String wavefrontURL;
 
@@ -39,5 +42,20 @@ public class WavefrontConfig {
 
   public void setToken(final String token) {
     this.token = token;
+  }
+
+  @Override
+  public void validate() throws ValidationException {
+    if (proxyHost != null) {
+      if (wavefrontURL != null) {
+        throw new ValidationException("'proxyHost' and 'wavefrontURL' are mutually exclusive");
+      }
+    } else if (wavefrontURL != null) {
+      if (token == null) {
+        throw new ValidationException("'token' must be specified");
+      }
+    } else {
+      throw new ValidationException("Either 'proxyHos' or 'wavefrontURL' must be specified");
+    }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 VMware, Inc. All RIghts Reserved
+ * Copyright 2017 VMware, Inc. All Rights Reserved
  *
  * SPDX-License-Identifier: Apache-2.0.
  *
@@ -25,6 +25,8 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vmware.vropsexport.exceptions.ExporterException;
+import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.JsonPrinter;
@@ -44,10 +46,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class StatsProcessorTest {
-
-  private interface Checker {
-    void compare(ByteArrayOutputStream stream, String filename);
-  }
 
   private static final String VM_ID = "60508ea6-287b-42be-953c-1554e506cdc1";
   private static final String HOST_ID = "e21f1a97-40a4-4e14-ada8-d7ec659f0cf1";
@@ -108,7 +106,7 @@ public class StatsProcessorTest {
   }
 
   @Test
-  public void testCSV() throws HttpException, IOException, ExporterException {
+  public void testCSV() throws HttpException, IOException, ExporterException, ValidationException {
     final byte[] data = runTest("vmfields.yaml", new CSVPrinter.Factory());
     final byte[] wanted =
         FileUtils.readFileToByteArray(new File("src/test/resources/csv-output.csv"));
@@ -116,36 +114,43 @@ public class StatsProcessorTest {
   }
 
   @Test
-  public void testCompactJSON() throws HttpException, IOException, ExporterException {
+  public void testCompactJSON()
+      throws HttpException, IOException, ExporterException, ValidationException {
     runJSONTest("compact");
   }
 
   @Test
-  public void testCompactJSONAll() throws HttpException, IOException, ExporterException {
+  public void testCompactJSONAll()
+      throws HttpException, IOException, ExporterException, ValidationException {
     runJSONTest("compact-all");
   }
 
   @Test
-  public void testChattyJSON() throws HttpException, IOException, ExporterException {
+  public void testChattyJSON()
+      throws HttpException, IOException, ExporterException, ValidationException {
     runJSONTest("chatty");
   }
 
   @Test
-  public void testChattyJSONAll() throws HttpException, IOException, ExporterException {
+  public void testChattyJSONAll()
+      throws HttpException, IOException, ExporterException, ValidationException {
     runJSONTest("chatty-all");
   }
 
   @Test
-  public void testElasticJSON() throws HttpException, IOException, ExporterException {
+  public void testElasticJSON()
+      throws HttpException, IOException, ExporterException, ValidationException {
     runJSONTest("elastic");
   }
 
   @Test
-  public void testElasticJSONAll() throws HttpException, IOException, ExporterException {
+  public void testElasticJSONAll()
+      throws HttpException, IOException, ExporterException, ValidationException {
     runJSONTest("elastic-all");
   }
 
-  private void runJSONTest(final String name) throws HttpException, IOException, ExporterException {
+  private void runJSONTest(final String name)
+      throws HttpException, IOException, ExporterException, ValidationException {
     final byte[] data = runTest(name + ".yaml", new JsonPrinter.Factory());
     final Map<String, Object> wanted =
         new ObjectMapper()
@@ -155,7 +160,7 @@ public class StatsProcessorTest {
   }
 
   private byte[] runTest(final String definition, final RowsetProcessorFacotry factory)
-      throws IOException, ExporterException, HttpException {
+      throws IOException, ExporterException, HttpException, ValidationException {
     final DataProvider dp = mock(DataProvider.class);
     when(dp.getResourceName(any())).thenReturn("vm-01");
     when(dp.getParentOf(eq(VM_ID), eq("HostSystem"))).thenReturn(hostResource);

@@ -19,12 +19,12 @@ package com.vmware.vropsexport.processors;
 
 import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.DataProvider;
-import com.vmware.vropsexport.ExporterException;
 import com.vmware.vropsexport.Row;
 import com.vmware.vropsexport.RowMetadata;
 import com.vmware.vropsexport.Rowset;
 import com.vmware.vropsexport.RowsetProcessor;
 import com.vmware.vropsexport.RowsetProcessorFacotry;
+import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.sql.NamedParameterStatement;
 import com.vmware.vropsexport.sql.SQLConfig;
 import java.io.IOException;

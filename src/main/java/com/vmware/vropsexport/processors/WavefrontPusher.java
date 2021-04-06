@@ -2,12 +2,12 @@ package com.vmware.vropsexport.processors;
 
 import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.DataProvider;
-import com.vmware.vropsexport.ExporterException;
 import com.vmware.vropsexport.Row;
 import com.vmware.vropsexport.RowMetadata;
 import com.vmware.vropsexport.Rowset;
 import com.vmware.vropsexport.RowsetProcessor;
 import com.vmware.vropsexport.RowsetProcessorFacotry;
+import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
 import com.wavefront.sdk.common.WavefrontSender;
 import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
