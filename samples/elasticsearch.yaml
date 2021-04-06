@@ -20,7 +20,8 @@ rollupMinutes: 5
 outputFormat: elasticsearch
 dateFormat: "yyyy/MM/dd HH:mm:ss"
 elasticSearchConfig:
-  url: https://elastic.something
+  urls: 
+    - https://elastic.something
   index: vrops
   type: vm
 # allMetrics: true
