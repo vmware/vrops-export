@@ -27,9 +27,8 @@
         </fileSet>
         <fileSet>
             <directory>${project.build.directory}</directory>
-            <outputDirectory>samples</outputDirectory>
             <includes>
-                <include>*.yaml</include>
+                <include>samples/*.yaml</include>
             </includes>
         </fileSet>
         <fileSet>
