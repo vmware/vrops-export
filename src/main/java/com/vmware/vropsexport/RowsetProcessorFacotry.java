@@ -17,6 +17,7 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.exceptions.ExporterException;
 import java.io.OutputStream;
 
 public interface RowsetProcessorFacotry {

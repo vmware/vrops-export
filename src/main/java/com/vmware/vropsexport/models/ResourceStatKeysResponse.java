@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.vmware.vropsexport;
+package com.vmware.vropsexport.models;
 
-public class ExporterException extends Exception {
+import com.fasterxml.jackson.annotation.JsonAlias;
+import java.util.List;
+import java.util.Map;
 
-  private static final long serialVersionUID = -5847302957038136704L;
+public class ResourceStatKeysResponse {
+  @JsonAlias({"stat-key"})
+  private List<Map<String, String>> statKeys;
 
-  public ExporterException(final String message, final Throwable cause) {
-    super(message, cause);
+  public List<Map<String, String>> getStatKeys() {
+    return statKeys;
   }
 
-  public ExporterException(final String message) {
-    super(message);
-  }
-
-  public ExporterException(final Throwable cause) {
-    super(cause);
+  public void setStatKeys(final List<Map<String, String>> statKeys) {
+    this.statKeys = statKeys;
   }
 }

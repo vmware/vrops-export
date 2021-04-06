@@ -17,12 +17,18 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.exceptions.ExporterException;
+import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.security.CertUtils;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -39,8 +45,30 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.http.HttpException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 public class Main {
+  static {
+    final ConfigurationBuilder<BuiltConfiguration> builder =
+        ConfigurationBuilderFactory.newConfigurationBuilder();
+    final LayoutComponentBuilder layout = builder.newLayout("PatternLayout");
+    layout.addAttribute("pattern", "%d [%t] %-5level: %msg%n%throwable");
+    final AppenderComponentBuilder console = builder.newAppender("stderr", "Console");
+    console.add(layout);
+    builder.add(console);
+    final RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.WARN);
+    rootLogger.add(builder.newAppenderRef("stderr"));
+    builder.add(rootLogger);
+    Configurator.initialize(builder.build());
+  }
+
   private static final int DEFAULT_ROWS_PER_THREAD = 1000;
 
   public static void main(final String[] args) throws Exception {
@@ -91,9 +119,13 @@ public class Main {
         throw new ExporterException("Trusting all certs is no longer supported");
       }
       final boolean verbose = commandLine.hasOption('v');
+      if (verbose) {
+        Configurator.setRootLevel(Level.DEBUG);
+      }
       final boolean useTmpFile = !commandLine.hasOption('S');
       final String trustStore = commandLine.getOptionValue('T');
       final String trustPass = commandLine.getOptionValue("trustpass");
+      final boolean dumpRest = commandLine.hasOption("dumprest");
 
       // If we're just printing field names, we have enough parameters at this point.
       //
@@ -107,6 +139,7 @@ public class Main {
                 threads,
                 null,
                 verbose,
+                dumpRest,
                 useTmpFile,
                 5000,
                 1000,
@@ -123,6 +156,7 @@ public class Main {
                 threads,
                 null,
                 verbose,
+                dumpRest,
                 useTmpFile,
                 5000,
                 1000,
@@ -139,6 +173,7 @@ public class Main {
                 threads,
                 null,
                 verbose,
+                dumpRest,
                 useTmpFile,
                 5000,
                 1000,
@@ -191,7 +226,7 @@ public class Main {
         if (tmp != null) {
           try {
             maxRes = Integer.parseInt(tmp);
-            if (threads < 1 || threads > 50000) {
+            if (maxRes < 1 || maxRes > 50000) {
               throw new ExporterException(
                   "Resource fetch must greater than 0 and smaller than 50000");
             }
@@ -202,7 +237,8 @@ public class Main {
 
         // Read definition and run it!
         //
-        try (final FileReader fr = new FileReader(defFile)) {
+        try (final Reader fr =
+            new InputStreamReader(new FileInputStream(defFile), StandardCharsets.UTF_8)) {
           final Config conf = ConfigLoader.parse(fr);
 
           // Output to stdout implies quiet mode. Also, verbose would mess up the progress counter,
@@ -241,13 +277,19 @@ public class Main {
                   threads,
                   conf,
                   verbose,
+                  dumpRest,
                   useTmpFile,
                   maxRows,
                   maxRes,
                   trustStore,
                   trustPass);
-          final OutputStream out = output != null ? new FileOutputStream(output) : System.out;
-          exporter.exportTo(out, begin, end, namePattern, parentSpec, quiet);
+          if (output == null) {
+            exporter.exportTo(System.out, begin, end, namePattern, parentSpec, quiet);
+          } else {
+            try (final OutputStream out = new FileOutputStream(output)) {
+              exporter.exportTo(out, begin, end, namePattern, parentSpec, quiet);
+            }
+          }
         }
       }
     } catch (final RecoverableCertificateException e) {
@@ -256,6 +298,8 @@ public class Main {
     } catch (final ExporterException e) {
       System.err.println("ERROR: " + e.getMessage());
       System.exit(1);
+    } catch (final ValidationException e) {
+      System.err.println("Config validation error: " + e.getMessage());
     }
   }
 
@@ -266,6 +310,7 @@ public class Main {
       final int threads,
       final Config conf,
       final boolean verbose,
+      final boolean dumpRest,
       final boolean useTempFile,
       final int maxRows,
       final int maxRes,
@@ -277,7 +322,17 @@ public class Main {
       final KeyStore ks = CertUtils.loadExtendedTrust(trustStore, trustPass);
       try {
         return new Exporter(
-            urlBase, username, password, threads, conf, verbose, useTempFile, maxRows, maxRes, ks);
+            urlBase,
+            username,
+            password,
+            threads,
+            conf,
+            verbose,
+            dumpRest,
+            useTempFile,
+            maxRows,
+            maxRes,
+            ks);
       } catch (final RecoverableCertificateException e) {
         final boolean retry = promptForTrust(e.getCapturedCerts()[0], trustStore, trustPass);
         if (!retry) {
@@ -295,10 +350,10 @@ public class Main {
     System.err.println("Issuer: " + serverCert.getIssuerDN().toString());
     System.err.println("Subject: " + serverCert.getSubjectDN().toString());
     System.err.print("Do you want to permanently trust this certificate? (y/n): ");
-    final Scanner s = new Scanner(System.in);
+    final Scanner s = new Scanner(System.in, "UTF-8");
     final String answer = s.nextLine();
     System.err.println();
-    if (answer.toLowerCase().equals("y")) {
+    if (answer.equalsIgnoreCase("y")) {
       CertUtils.storeCert(serverCert, trustStore, trustPass);
       return true;
     }
@@ -331,20 +386,22 @@ public class Main {
     opts.addOption("G", "generate", true, "Generate template definition for resource type");
     opts.addOption(null, "trustpass", true, "Truststore password (default=changeit)");
     opts.addOption(null, "resfetch", true, "Resource fetch count (default=1000)");
+    opts.addOption(null, "dumprest", false, "Dump rest calls to output");
     opts.addOption("h", "help", false, "Print a short help text");
     return opts;
   }
 
+  @SuppressFBWarnings("SF_SWITCH_FALLTHROUGH")
   private static long parseLookback(final String lb) throws ExporterException {
     long scale = 1;
     final char unit = lb.charAt(lb.length() - 1);
     switch (unit) {
       case 'd':
-        scale *= 24;
+        scale *= 24; // fallthru
       case 'h':
-        scale *= 60;
+        scale *= 60; // fallthru
       case 'm':
-        scale *= 60;
+        scale *= 60; // fallthru
       case 's':
         scale *= 1000;
         break;

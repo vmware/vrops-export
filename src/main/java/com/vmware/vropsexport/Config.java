@@ -17,13 +17,40 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.elasticsearch.ElasticSearchConfig;
+import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.json.JsonConfig;
 import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
-public class Config {
+public class Config implements Validatable {
+
+  public static class NameSanitizerConfig {
+    public String forbidden;
+
+    public char replacement;
+
+    public String getForbidden() {
+      return forbidden;
+    }
+
+    public void setForbidden(final String forbidden) {
+      this.forbidden = forbidden;
+    }
+
+    public char getReplacement() {
+      return replacement;
+    }
+
+    public void setReplacement(final char replacement) {
+      this.replacement = replacement;
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class Field {
     private String alias;
@@ -89,10 +116,57 @@ public class Config {
   private String compactifyAlg = "LATEST";
   private CSVConfig csvConfig;
   private JsonConfig jsonConfig;
+  private ElasticSearchConfig elasticSearchConfig;
   private int align = 0;
   private boolean allMetrics = false;
+  private NameSanitizerConfig nameSanitizer;
 
   public Config() {}
+
+  @Override
+  public void validate() throws ValidationException {
+    if (allMetrics && fields != null) {
+      throw new ValidationException("The 'allMetric' and 'fields' settings are mutually exclusive");
+    }
+    if (resourceKind == null) {
+      throw new ValidationException("'resourceType' must be specified");
+    }
+    if (outputFormat == null) {
+      throw new ValidationException("'outputFormat' must be specified");
+    }
+    if ("sql".equals(outputFormat) && sqlConfig == null) {
+      throw new ValidationException("'sqlConfig' must be specified for SQL output");
+    }
+    if ("wavefront".equals(outputFormat) && sqlConfig == null) {
+      throw new ValidationException("'wavefrontConfig' must be specified for SQL output");
+    }
+    if ("elastic".equals(outputFormat) && sqlConfig == null) {
+      throw new ValidationException("'elasticConfig' must be specified for SQL output");
+    }
+    if (sqlConfig != null) {
+      sqlConfig.validate();
+    }
+    if (wavefrontConfig != null) {
+      wavefrontConfig.validate();
+    }
+    if (elasticSearchConfig != null) {
+      elasticSearchConfig.validate();
+    }
+  }
+
+  public NameSanitizerConfig getNameSanitizer() {
+    return nameSanitizer;
+  }
+
+  public void setNameSanitizer(final NameSanitizerConfig nameSanitizer) {
+    this.nameSanitizer = nameSanitizer;
+  }
+
+  public NameSanitizer createNameSanitizer() {
+    return nameSanitizer != null
+        ? new ReplacingNameSanitizer(nameSanitizer.forbidden, nameSanitizer.replacement)
+        : s -> s;
+  }
 
   public JsonConfig getJsonConfig() {
     return jsonConfig;
@@ -100,6 +174,14 @@ public class Config {
 
   public void setJsonConfig(final JsonConfig jsonConfig) {
     this.jsonConfig = jsonConfig;
+  }
+
+  public ElasticSearchConfig getElasticSearchConfig() {
+    return elasticSearchConfig;
+  }
+
+  public void setElasticSearchConfig(final ElasticSearchConfig elasticSearchConfig) {
+    this.elasticSearchConfig = elasticSearchConfig;
   }
 
   public boolean isAllMetrics() {
@@ -158,6 +240,10 @@ public class Config {
 
   public void setDateFormat(final String dateFormat) {
     this.dateFormat = dateFormat;
+  }
+
+  public DateFormat getDateFormatter() {
+    return "%E".equals(dateFormat) ? new EpochDateFormat() : new SimpleDateFormat(dateFormat);
   }
 
   public String getOutputFormat() {

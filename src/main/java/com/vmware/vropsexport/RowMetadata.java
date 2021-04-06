@@ -17,6 +17,7 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.exceptions.ExporterException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,12 +46,12 @@ public class RowMetadata {
   public RowMetadata(final Config conf, final List<String> metricNames) throws ExporterException {
     resourceKind = conf.getResourceKind();
     adapterKind = conf.getAdapterKind();
+    final NameSanitizer ns = conf.createNameSanitizer();
     int mp = 0;
-    final List<Integer> pip = new ArrayList<>();
     for (final String metricName : metricNames) {
       metricMap.put(metricName, mp);
       metricAliasMap.put(metricName, mp++);
-      metricNameToAlias.put(metricName, metricName);
+      metricNameToAlias.put(metricName, ns.transform(metricName));
     }
     propInsertionPoints = new int[0];
   }
@@ -143,19 +144,19 @@ public class RowMetadata {
   }
 
   public int getMetricIndex(final String metric) {
-    return metricMap.containsKey(metric) ? metricMap.get(metric) : -1;
+    return metricMap.getOrDefault(metric, -1);
   }
 
   public int getPropertyIndex(final String property) {
-    return propMap.containsKey(property) ? propMap.get(property) : -1;
+    return propMap.getOrDefault(property, -1);
   }
 
   public int getMetricIndexByAlias(final String metric) {
-    return metricAliasMap.containsKey(metric) ? metricAliasMap.get(metric) : -1;
+    return metricAliasMap.getOrDefault(metric, -1);
   }
 
   public int getPropertyIndexByAlias(final String property) {
-    return propAliasMap.containsKey(property) ? propAliasMap.get(property) : -1;
+    return propAliasMap.getOrDefault(property, -1);
   }
 
   public String getAliasForProp(final String name) {

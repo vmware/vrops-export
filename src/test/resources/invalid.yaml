@@ -1,0 +1,35 @@
+rollupType: AVG
+rollupMinutes: 5
+dateFormat: "yyyy-MM-dd HH:mm:ss"
+fields:
+  # CPU fields
+  - alias: cpuDemand
+    metric: cpu|demandPct
+  - alias: cpuReady
+    metric: cpu|readyPct
+  - alias: cpuCostop
+    metric: cpu|costopPct
+  # Memory fields
+  - alias: memDemand
+    metric: mem|guestDemand
+  - alias: memSwapOut
+    metric: mem|swapoutRate_average
+  - alias: memSwapIn
+    metric: mem|swapinRate_average
+  # Storage fields
+  - alias: storageDemandKbps
+    metric: storage|demandKBps
+  # Network fields
+  - alias: netBytesRx
+    metric: net|bytesRx_average
+  - alias: netBytesTx
+    metric: net|bytesTx_average
+  # Host CPU
+  - alias: hostCPUDemand
+    metric: $parent:HostSystem.cpu|demandmhz
+  # Guest OS
+  - alias: guestOS
+    prop: config|guestFullName
+  # Host CPU type
+  - alias: hostCPUType
+    prop: $parent:HostSystem.cpu|cpuModel

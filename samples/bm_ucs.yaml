@@ -17,7 +17,7 @@
 # Using the BlueMedora UCS plugin and navigate from a VM to the chassis it's 
 # it's running on.
 #
-resourceType: VirtualMachine
+resourceType: VMWARE:VirtualMachine
 rollupType: AVG
 rollupMinutes: 5
 dateFormat: "yyyy-MM-dd HH:mm:ss"

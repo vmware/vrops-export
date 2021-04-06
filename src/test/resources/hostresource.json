@@ -1,0 +1,92 @@
+{
+  "creationTime": 1607549811918,
+  "resourceKey": {
+    "name": "MyHost",
+    "adapterKindKey": "VMWARE",
+    "resourceKindKey": "HostSystem",
+    "resourceIdentifiers": [
+      {
+        "identifierType": {
+          "name": "isPingEnabled",
+          "dataType": "STRING",
+          "isPartOfUniqueness": false
+        },
+        "value": ""
+      },
+      {
+        "identifierType": {
+          "name": "VMEntityName",
+          "dataType": "STRING",
+          "isPartOfUniqueness": false
+        },
+        "value": "MyHost"
+      },
+      {
+        "identifierType": {
+          "name": "VMEntityObjectID",
+          "dataType": "STRING",
+          "isPartOfUniqueness": true
+        },
+        "value": "host-29"
+      },
+      {
+        "identifierType": {
+          "name": "VMEntityVCID",
+          "dataType": "STRING",
+          "isPartOfUniqueness": true
+        },
+        "value": "e72d25a1-2fb9-4d94-9a3d-6c5db7e9efc0"
+      }
+    ]
+  },
+  "resourceStatusStates": [
+    {
+      "adapterInstanceId": "8eca2eac-aa9d-4b5d-88b8-df28f53dce27",
+      "resourceStatus": "DATA_RECEIVING",
+      "resourceState": "STARTED",
+      "statusMessage": ""
+    }
+  ],
+  "resourceHealth": "GREEN",
+  "resourceHealthValue": 100,
+  "dtEnabled": true,
+  "badges": [
+    {
+      "type": "COMPLIANCE",
+      "color": "GREY",
+      "score": -1
+    },
+    {
+      "type": "WORKLOAD",
+      "color": "GREEN",
+      "score": 59.292086930782226
+    },
+    {
+      "type": "HEALTH",
+      "color": "GREEN",
+      "score": 100
+    },
+    {
+      "type": "RISK",
+      "color": "GREEN",
+      "score": 0
+    },
+    {
+      "type": "CAPACITY_REMAINING",
+      "color": "GREEN",
+      "score": 10.015440353829069
+    },
+    {
+      "type": "TIME_REMAINING",
+      "color": "GREEN",
+      "score": 366
+    },
+    {
+      "type": "EFFICIENCY",
+      "color": "GREEN",
+      "score": 100
+    }
+  ],
+  "relatedResources": [],
+  "identifier": "e21f1a97-40a4-4e14-ada8-d7ec659f0cf1"
+}

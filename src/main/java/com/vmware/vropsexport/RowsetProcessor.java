@@ -17,6 +17,8 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.exceptions.ExporterException;
+
 public interface RowsetProcessor {
   void preamble(RowMetadata meta, Config conf) throws ExporterException;
 

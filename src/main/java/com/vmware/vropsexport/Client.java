@@ -17,6 +17,11 @@
  */
 package com.vmware.vropsexport;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vmware.vropsexport.exceptions.ExporterException;
+import com.vmware.vropsexport.models.AuthRequest;
+import com.vmware.vropsexport.models.AuthResponse;
 import com.vmware.vropsexport.security.ExtendableTrustStrategy;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
 import java.io.IOException;
@@ -31,8 +36,6 @@ import java.util.List;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLHandshakeException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -48,12 +51,12 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings("WeakerAccess")
 public class Client {
-  private static final Log log = LogFactory.getLog(Client.class);
+  private static final Logger log = LogManager.getLogger(Client.class);
 
   private static final int CONNTECTION_TIMEOUT_MS = 60000;
 
@@ -67,11 +70,18 @@ public class Client {
 
   private final String authToken;
 
+  private final boolean dumpRest;
+
   public Client(
-      final String urlBase, String username, final String password, final KeyStore extendedTrust)
+      final String urlBase,
+      String username,
+      final String password,
+      final KeyStore extendedTrust,
+      final boolean dumpRest)
       throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException,
           HttpException, ExporterException {
     this.urlBase = urlBase;
+    this.dumpRest = dumpRest;
     // Configure timeout
     //
     final RequestConfig requestConfig =
@@ -106,27 +116,24 @@ public class Client {
     // Authenticate
     //
     try {
-      final JSONObject rq = new JSONObject();
-
       // User may be in a non-local auth source.
       //
       int p = username.indexOf('\\');
+      String authSource = null;
       if (p != -1) {
-        rq.put("authSource", username.substring(0, p));
+        authSource = username.substring(0, p);
         username = username.substring(p + 1);
       } else {
         p = username.indexOf('@');
         if (p != -1) {
-          rq.put("authSource", username.substring(p + 1));
+          authSource = username.substring(p + 1);
           username = username.substring(0, p);
         }
       }
-      rq.put("username", username);
-      rq.put("password", password);
-      try (final InputStream is = postJsonReturnStream("/suite-api/api/auth/token/acquire", rq)) {
-        final JSONObject response = new JSONObject(IOUtils.toString(is, Charset.defaultCharset()));
-        authToken = response.getString("token");
-      }
+      final AuthRequest rq = new AuthRequest(authSource, username, password);
+      final AuthResponse response =
+          postJsonReturnJson("/suite-api/api/auth/token/acquire", rq, AuthResponse.class);
+      authToken = response.getToken();
     } catch (final SSLHandshakeException e) {
       // If we captured a cert, it's recoverable by asking the user to trust it.
       //
@@ -138,22 +145,28 @@ public class Client {
     }
   }
 
-  public JSONObject getJson(final String uri, final String... queries)
+  public <T> T getJson(final String uri, final Class<T> responseClass, final String... queries)
       throws IOException, HttpException {
     final HttpResponse resp = innerGet(uri, queries);
-    return new JSONObject(EntityUtils.toString(resp.getEntity()));
+    return getObjectMapper().readValue(resp.getEntity().getContent(), responseClass);
   }
 
   private HttpResponse innerGet(String uri, final String... queries)
       throws IOException, HttpException {
     if (queries != null) {
+      final StringBuilder sb = new StringBuilder(uri);
       for (int i = 0; i < queries.length; ++i) {
-        uri += i == 0 ? '?' : '&';
-        uri += queries[i];
+        sb.append(i == 0 ? '?' : '&');
+        sb.append(queries[i]);
       }
+      uri = sb.toString();
+    }
+    if (dumpRest) {
+      log.debug("GET " + urlBase + uri);
     }
     final HttpGet get = new HttpGet(urlBase + uri);
     get.addHeader("Accept", "application/json");
+    get.addHeader("Accept-Encoding", "gzip");
     if (authToken != null) {
       get.addHeader("Authorization", "vRealizeOpsToken " + authToken + "");
     }
@@ -162,24 +175,33 @@ public class Client {
     return resp;
   }
 
-  public InputStream postJsonReturnStream(final String uri, final JSONObject payload)
+  public InputStream postJsonReturnStream(final String uri, final Object payload)
       throws IOException, HttpException {
     final HttpPost post = new HttpPost(urlBase + uri);
-    post.setEntity(new StringEntity(payload.toString()));
-    // System.err.println(payload.toString());
+    post.setEntity(new StringEntity(getObjectMapper().writeValueAsString(payload)));
     post.addHeader("Accept", "application/json");
     post.addHeader("Content-Type", "application/json");
+    post.addHeader("Accept-Encoding", "gzip");
     if (authToken != null) {
       post.addHeader("Authorization", "vRealizeOpsToken " + authToken + "");
+    }
+    if (dumpRest) {
+      log.debug("POST " + urlBase + uri);
     }
     final HttpResponse resp = client.execute(post);
     checkResponse(resp);
     return resp.getEntity().getContent();
   }
 
-  public JSONObject getJson(final String uri, final List<String> queries)
+  public <T> T postJsonReturnJson(
+      final String uri, final Object payload, final Class<T> responseClass)
       throws IOException, HttpException {
-    return getJson(uri, packQueries(queries));
+    return getObjectMapper().readValue(postJsonReturnStream(uri, payload), responseClass);
+  }
+
+  public <T> T getJson(final String uri, final List<String> queries, final Class<T> responseClass)
+      throws IOException, HttpException {
+    return getJson(uri, responseClass, packQueries(queries));
   }
 
   public InputStream getStream(final String uri, final List<String> queries)
@@ -219,5 +241,9 @@ public class Client {
             + response.getStatusLine().getStatusCode()
             + " Reason: "
             + response.getStatusLine().getReasonPhrase());
+  }
+
+  private ObjectMapper getObjectMapper() {
+    return new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 }

@@ -1,0 +1,8 @@
+resourceType: VMWARE:VirtualMachine
+rollupType: AVG
+rollupMinutes: 5
+outputFormat: json
+dateFormat: "yyyy-MM-dd HH:mm:ss"
+jsonConfig:
+  format: elastic
+allMetrics: true

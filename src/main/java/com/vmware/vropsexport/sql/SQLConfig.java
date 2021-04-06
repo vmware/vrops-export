@@ -17,7 +17,10 @@
  */
 package com.vmware.vropsexport.sql;
 
-public class SQLConfig {
+import com.vmware.vropsexport.Validatable;
+import com.vmware.vropsexport.exceptions.ValidationException;
+
+public class SQLConfig implements Validatable {
   private String connectionString;
 
   private String username;
@@ -88,5 +91,21 @@ public class SQLConfig {
 
   public void setBatchSize(final int batchSize) {
     this.batchSize = batchSize;
+  }
+
+  @Override
+  public void validate() throws ValidationException {
+    if (sql == null) {
+      throw new ValidationException("'sql' must be specified");
+    }
+    if (connectionString == null) {
+      throw new ValidationException("'connectionString' must be specified");
+    }
+    if (databaseType == null && driver == null) {
+      throw new ValidationException("'databaseType' or 'driver' must be specified");
+    }
+    if (databaseType != null && driver != null) {
+      throw new ValidationException("'databaseType' and 'driver' are mutually exclusive");
+    }
   }
 }

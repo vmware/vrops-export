@@ -20,16 +20,18 @@ package com.vmware.vropsexport;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.vmware.vropsexport.exceptions.ExporterException;
+import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.ParentSplicer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.http.HttpException;
-import org.json.JSONObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings("SameParameterValue")
 public class StatsProcessor {
@@ -37,6 +39,8 @@ public class StatsProcessor {
     @Override
     public void reportProgress(final int n) {}
   }
+
+  private static final Logger log = LogManager.getLogger(StatsProcessor.class);
 
   private final Config conf;
 
@@ -134,6 +138,17 @@ public class StatsProcessor {
         while (p.nextToken() != JsonToken.END_ARRAY) {
           final double d = p.getDoubleValue();
           if (metricIdx != -1) {
+            if (i >= timestamps.size()) {
+              log.warn(
+                  "More data than timestamps (index="
+                      + i
+                      + ") for metric "
+                      + statKey
+                      + " on "
+                      + meta.getResourceKind()
+                      + " id: "
+                      + resourceId);
+            }
             final long ts = timestamps.get(i++);
             final RowMetadata m = meta;
             final Row r = rows.computeIfAbsent(ts, k -> m.newRow(ts));
@@ -193,10 +208,11 @@ public class StatsProcessor {
         final RowMetadata pMeta = meta.forParent();
         if (pMeta.isValid()) {
           final long now = System.currentTimeMillis();
-          final JSONObject parent = dataProvider.getParentOf(resourceId, pMeta.getResourceKind());
+          final NamedResource parent =
+              dataProvider.getParentOf(resourceId, pMeta.getResourceKind());
           if (parent != null) {
             final Rowset cached;
-            final String cacheKey = parent.getString("identifier") + "|" + begin + "|" + end;
+            final String cacheKey = parent.getIdentifier() + "|" + begin + "|" + end;
             synchronized (rowsetCache) {
               cached = rowsetCache.get(cacheKey);
             }
@@ -204,41 +220,37 @@ public class StatsProcessor {
             //
             if (cached != null) {
               if (verbose) {
-                System.err.println(
-                    "Cache hit for parent "
-                        + cacheKey
-                        + " "
-                        + parent.getJSONObject("resourceKey").getString("name"));
+                log.debug(
+                    "Cache hit for parent " + cacheKey + " " + parent.getResourceKey().get("name"));
               }
               ParentSplicer.spliceRows(rs, cached);
             } else {
               // Not in cache. Fetch it the hard (and slow) way!
               //
               if (verbose) {
-                System.err.println(
+                log.debug(
                     "Cache miss for parent "
                         + cacheKey
                         + " "
-                        + parent.getJSONObject("resourceKey").getString("name"));
+                        + parent.getResourceKey().get("name"));
               }
               final StatsProcessor parentProcessor =
                   new StatsProcessor(
                       conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
               try (final InputStream pIs =
-                  dataProvider.fetchMetricStream(
-                      Collections.singletonList(parent), pMeta, begin, end)) {
+                  dataProvider.fetchMetricStream(new NamedResource[] {parent}, pMeta, begin, end)) {
                 parentProcessor.process(
                     pIs, new ParentSplicer(rs, rowsetCache, cacheKey), begin, end);
               }
             }
           }
           if (verbose) {
-            System.err.println("Parent processing took " + (System.currentTimeMillis() - now));
+            log.debug("Parent processing took " + (System.currentTimeMillis() - now));
           }
         }
       }
       if (verbose) {
-        System.err.println(
+        log.debug(
             "Processed "
                 + rs.getRows().size()
                 + " rows. Memory used: "
@@ -313,7 +325,7 @@ public class StatsProcessor {
     final TreeMap<Long, Row> result = new TreeMap<>();
     result.put(ts, target);
     if (verbose) {
-      System.err.println(
+      log.debug(
           "Compactifying "
               + rs.getRows().size()
               + " rows took "
@@ -353,14 +365,6 @@ public class StatsProcessor {
     return fieldname == null || fieldname.equals(p.getCurrentName());
   }
 
-  private void expectCurrent(final JsonParser p, final String fieldname)
-      throws ExporterException, IOException {
-    if (!fieldname.equals(p.getCurrentName())) {
-      throw new ExporterException(
-          "Expected field name " + fieldname + ", got " + p.getCurrentName());
-    }
-  }
-
   private boolean expectCurrentMaybe(final JsonParser p, final String fieldname)
       throws IOException {
     return fieldname.equals(p.getCurrentName());
@@ -372,7 +376,7 @@ public class StatsProcessor {
       return false;
     }
     expect(p, fieldName); // Advance past the field name
-    final JsonToken t = p.nextToken();
+    final JsonToken t = p.currentToken();
     if (t == JsonToken.START_ARRAY) {
       skipComplex(p, 0, 1);
     } else if (t == JsonToken.START_OBJECT) {
@@ -391,7 +395,7 @@ public class StatsProcessor {
   }
 
   private void skipComplex(final JsonParser p, int structLevel, int arrayLevel) throws IOException {
-    while (structLevel > 0 && arrayLevel > 0) {
+    while (structLevel > 0 || arrayLevel > 0) {
       final JsonToken t = p.nextToken();
       if (t == JsonToken.START_ARRAY) {
         ++arrayLevel;

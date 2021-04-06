@@ -1,0 +1,257 @@
+{
+  "resourceId": "e21f1a97-40a4-4e14-ada8-d7ec659f0cf1",
+  "property": [
+    {
+      "name": "config|diskSpace",
+      "value": "1.697517678592E12"
+    },
+    {
+      "name": "config|hyperThread|active",
+      "value": "true"
+    },
+    {
+      "name": "config|hyperThread|available",
+      "value": "true"
+    },
+    {
+      "name": "config|name",
+      "value": "192.168.1.214"
+    },
+    {
+      "name": "config|network|dnsserver",
+      "value": "[192.168.1.150]"
+    },
+    {
+      "name": "config|network|linkspeed",
+      "value": "1000.0"
+    },
+    {
+      "name": "config|network|nnic",
+      "value": "4.0"
+    },
+    {
+      "name": "config|product|apiVersion",
+      "value": "7.0.0.0"
+    },
+    {
+      "name": "config|product|productLineId",
+      "value": "embeddedEsx"
+    },
+    {
+      "name": "config|security|enable_mob",
+      "value": "false"
+    },
+    {
+      "name": "config|security|service:ESXi Shell|isRunning",
+      "value": "false"
+    },
+    {
+      "name": "config|security|service:NTP Daemon|isRunning",
+      "value": "true"
+    },
+    {
+      "name": "config|security|service:SNMP Server|isRunning",
+      "value": "false"
+    },
+    {
+      "name": "config|security|service:SSH|isRunning",
+      "value": "false"
+    },
+    {
+      "name": "config|security|tlsDisabledProtocols",
+      "value": "sslv3,tlsv1,tlsv1.1"
+    },
+    {
+      "name": "config|storageDevice|multipathInfo|multipathPolicy",
+      "value": "[LUN-0562e6d1de699a55bacf60af3ce58ba34f79c2efc94f9df875aaabfb37d9198e49 : VMW_PSP_FIXED, LUN-0000000000766d68626133323a303a30 : VMW_PSP_FIXED, LUN-0005010000766d68626133323a303a31 : VMW_PSP_FIXED, LUN-0100000000533252454e58304a3630353631314b202020202053616d73756e : VMW_PSP_FIXED]"
+    },
+    {
+      "name": "config|storageDevice|multipathInfo|numberofActivePath",
+      "value": "4.0"
+    },
+    {
+      "name": "config|storageDevice|plugStoreTopology|numberofPath",
+      "value": "4.0"
+    },
+    {
+      "name": "cost|remainingDepreciationMonths",
+      "value": "42"
+    },
+    {
+      "name": "cost|serverIsLeased",
+      "value": "false"
+    },
+    {
+      "name": "cost|serverPurchaseCost",
+      "value": "3849.970427967449"
+    },
+    {
+      "name": "cost|serverPurchaseDate",
+      "value": "2019-10-01"
+    },
+    {
+      "name": "cpu|cpuModel",
+      "value": "Intel(R) Xeon(R) CPU D-1528 @ 1.90GHz"
+    },
+    {
+      "name": "cpu|speed",
+      "value": "11399.990886"
+    },
+    {
+      "name": "hardware|biosVersion",
+      "value": "1.2a"
+    },
+    {
+      "name": "hardware|cpuInfo|hz",
+      "value": "1.899998481E9"
+    },
+    {
+      "name": "hardware|cpuInfo|numCpuCores",
+      "value": "6.0"
+    },
+    {
+      "name": "hardware|cpuInfo|numCpuPackages",
+      "value": "1.0"
+    },
+    {
+      "name": "hardware|enclosureSerialNumberTag",
+      "value": "C101FAG09050410"
+    },
+    {
+      "name": "hardware|memorySize",
+      "value": "6.70035E7"
+    },
+    {
+      "name": "hardware|powerManagementPolicy",
+      "value": "Balanced"
+    },
+    {
+      "name": "hardware|powerManagementTechnoloy",
+      "value": "ACPI P-states"
+    },
+    {
+      "name": "hardware|serialNumberTag",
+      "value": "S243907X7643867"
+    },
+    {
+      "name": "hardware|serviceTag",
+      "value": "S243907X7643867"
+    },
+    {
+      "name": "hardware|vendor",
+      "value": "Supermicro"
+    },
+    {
+      "name": "hardware|vendorModel",
+      "value": "Supermicro SYS-E200-8D"
+    },
+    {
+      "name": "net:vmk0|ip_address",
+      "value": "192.168.1.214"
+    },
+    {
+      "name": "net:vmnic0|nicDriver",
+      "value": "igbn"
+    },
+    {
+      "name": "net:vmnic0|speed",
+      "value": "1000.0"
+    },
+    {
+      "name": "net:vmnic1|nicDriver",
+      "value": "igbn"
+    },
+    {
+      "name": "net:vmnic1|speed",
+      "value": "1000.0"
+    },
+    {
+      "name": "net:vmnic2|nicDriver",
+      "value": "ixgben"
+    },
+    {
+      "name": "net:vmnic3|nicDriver",
+      "value": "ixgben"
+    },
+    {
+      "name": "net|mgmt_address",
+      "value": "192.168.1.214"
+    },
+    {
+      "name": "runtime|connectionState",
+      "value": "connected"
+    },
+    {
+      "name": "runtime|maintenanceState",
+      "value": "notInMaintenance"
+    },
+    {
+      "name": "runtime|memoryCap",
+      "value": "1.15237996E8"
+    },
+    {
+      "name": "runtime|powerState",
+      "value": "Powered On"
+    },
+    {
+      "name": "storageAdapter:vmhba0|hbaDriver",
+      "value": "vmw_ahci"
+    },
+    {
+      "name": "storageAdapter:vmhba1|hbaDriver",
+      "value": "nvme_pcie"
+    },
+    {
+      "name": "storageAdapter:vmhba32|hbaDriver",
+      "value": "vmkusb"
+    },
+    {
+      "name": "summary|folder",
+      "value": ""
+    },
+    {
+      "name": "summary|hostuuid",
+      "value": "00000000-0000-0000-0000-ac1f6b149ee0"
+    },
+    {
+      "name": "summary|parentCluster",
+      "value": "Workload"
+    },
+    {
+      "name": "summary|parentDatacenter",
+      "value": "PONTUS.LAB"
+    },
+    {
+      "name": "summary|parentVcenter",
+      "value": "vc-01"
+    },
+    {
+      "name": "summary|tag",
+      "value": "none"
+    },
+    {
+      "name": "summary|tagJson",
+      "value": "none"
+    },
+    {
+      "name": "summary|version",
+      "value": "7.0.0-15843807"
+    },
+    {
+      "name": "System Properties|resource_kind_subtype",
+      "value": "GENERAL"
+    },
+    {
+      "name": "System Properties|resource_kind_type",
+      "value": "GENERAL"
+    },
+    {
+      "name": "sys|build",
+      "value": "15843807"
+    },
+    {
+      "name": "sys|productString",
+      "value": "VMware ESXi"
+    }
+  ]
+}

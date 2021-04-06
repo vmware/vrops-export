@@ -53,7 +53,7 @@ public class SelfDeletingFileInputStream extends InputStream {
 
   @Override
   public boolean equals(final Object obj) {
-    return backer.equals(obj);
+    return obj == this;
   }
 
   @Override
@@ -108,14 +108,5 @@ public class SelfDeletingFileInputStream extends InputStream {
   @Override
   public boolean markSupported() {
     return backer.markSupported();
-  }
-
-  @Override
-  public void finalize() {
-    try {
-      close();
-    } catch (final IOException e) {
-      // Do nothing. It's probably just already closed.
-    }
   }
 }

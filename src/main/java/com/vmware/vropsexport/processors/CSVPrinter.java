@@ -20,16 +20,17 @@ package com.vmware.vropsexport.processors;
 import com.vmware.vropsexport.CSVConfig;
 import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.DataProvider;
-import com.vmware.vropsexport.ExporterException;
 import com.vmware.vropsexport.Row;
 import com.vmware.vropsexport.RowMetadata;
 import com.vmware.vropsexport.Rowset;
 import com.vmware.vropsexport.RowsetProcessor;
 import com.vmware.vropsexport.RowsetProcessorFacotry;
+import com.vmware.vropsexport.exceptions.ExporterException;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -44,7 +45,7 @@ public class CSVPrinter implements RowsetProcessor {
     public RowsetProcessor makeFromConfig(
         final OutputStream out, final Config config, final DataProvider dp) {
       return new CSVPrinter(
-          new BufferedWriter(new OutputStreamWriter(out)),
+          new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8)),
           new SimpleDateFormat(config.getDateFormat()),
           config.getCsvConfig(),
           dp);

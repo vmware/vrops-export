@@ -17,17 +17,19 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vropsexport.exceptions.ValidationException;
 import java.io.Reader;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 public class ConfigLoader {
-  public static Config parse(final Reader rdr) {
+  public static Config parse(final Reader rdr) throws ValidationException {
     final Yaml yaml = new Yaml(new Constructor(Config.class));
     final Config conf = (Config) yaml.load(rdr);
     if (conf.getOutputFormat() == null) {
       conf.setOutputFormat("csv");
     }
+    conf.validate();
     return conf;
   }
 }
