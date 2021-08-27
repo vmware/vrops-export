@@ -253,11 +253,11 @@ public class Exporter implements DataProvider {
           // Child relationships may return objects of the wrong type, so we have
           // to check the type here.
           final Map<String, Object> rKey = res.getResourceKey();
-          if (!rKey.get("resourceKindKey").equals(conf.getResourceKind())) {
+          if (!((String) rKey.get("resourceKindKey")).equalsIgnoreCase(conf.getResourceKind())) {
             continue;
           }
           if (conf.getAdapterKind() != null
-              && !rKey.get("adapterKindKey").equals(conf.getAdapterKind())) {
+              && !((String) rKey.get("adapterKindKey")).equalsIgnoreCase(conf.getAdapterKind())) {
             continue;
           }
           startChunkJob(chunk, rsp, meta, begin, end, progress);
