@@ -148,6 +148,7 @@ public class StatsProcessor {
                       + meta.getResourceKind()
                       + " id: "
                       + resourceId);
+              continue; // Skip this sample!
             }
             final long ts = timestamps.get(i++);
             final RowMetadata m = meta;
