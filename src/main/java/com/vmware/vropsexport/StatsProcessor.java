@@ -134,6 +134,18 @@ public class StatsProcessor {
         while (p.nextToken() != JsonToken.END_ARRAY) {
           final double d = p.getDoubleValue();
           if (metricIdx != -1) {
+            if (i >= timestamps.size()) {
+              System.err.println(
+                  "More data than timestamps (index="
+                      + i
+                      + ") for metric "
+                      + statKey
+                      + " on "
+                      + meta.getResourceKind()
+                      + " id: "
+                      + resourceId);
+              continue; // Skip this sample!
+            }
             final long ts = timestamps.get(i++);
             final RowMetadata m = meta;
             final Row r = rows.computeIfAbsent(ts, k -> m.newRow(ts));
