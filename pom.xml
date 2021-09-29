@@ -17,7 +17,7 @@
             </snapshots>
         </repository>
     </repositories>
-    <version>2.3.0</version>
+    <version>2.3.1</version>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
