@@ -19,22 +19,11 @@ package com.vmware.vropsexport;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vmware.vrops.client.model.AuthToken;
+import com.vmware.vrops.client.model.UsernamePassword;
 import com.vmware.vropsexport.exceptions.ExporterException;
-import com.vmware.vropsexport.models.AuthRequest;
-import com.vmware.vropsexport.models.AuthResponse;
 import com.vmware.vropsexport.security.ExtendableTrustStrategy;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-import java.util.List;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLHandshakeException;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -53,6 +42,18 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public class Client {
@@ -130,9 +131,10 @@ public class Client {
           username = username.substring(0, p);
         }
       }
-      final AuthRequest rq = new AuthRequest(authSource, username, password);
-      final AuthResponse response =
-          postJsonReturnJson("/suite-api/api/auth/token/acquire", rq, AuthResponse.class);
+      final UsernamePassword rq =
+          new UsernamePassword().username(username).password(password).authSource(authSource);
+      final AuthToken response =
+          postJsonReturnJson("/suite-api/api/auth/token/acquire", rq, AuthToken.class);
       authToken = response.getToken();
     } catch (final SSLHandshakeException e) {
       // If we captured a cert, it's recoverable by asking the user to trust it.

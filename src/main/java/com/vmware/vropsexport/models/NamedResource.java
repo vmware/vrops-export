@@ -17,12 +17,12 @@
  */
 package com.vmware.vropsexport.models;
 
-import java.util.Map;
+import com.vmware.vrops.client.model.ResourceKey;
 
 public class NamedResource {
   private String identifier;
 
-  private Map<String, Object> resourceKey;
+  private ResourceKey resourceKey;
 
   public String getIdentifier() {
     return identifier;
@@ -32,11 +32,21 @@ public class NamedResource {
     this.identifier = identifier;
   }
 
-  public Map<String, Object> getResourceKey() {
+  public NamedResource identifier(final String identifier) {
+    this.identifier = identifier;
+    return this;
+  }
+
+  public ResourceKey getResourceKey() {
     return resourceKey;
   }
 
-  public void setResourceKey(final Map<String, Object> resourceKey) {
+  public void setResourceKey(final ResourceKey resourceKey) {
     this.resourceKey = resourceKey;
+  }
+
+  public NamedResource resourceKey(final ResourceKey resourceKey) {
+    this.resourceKey = resourceKey;
+    return this;
   }
 }

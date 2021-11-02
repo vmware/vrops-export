@@ -18,11 +18,12 @@
 package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.models.NamedResource;
+import org.apache.http.HttpException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import org.apache.http.HttpException;
 
 public interface DataProvider {
   Map<String, String> fetchProps(String id) throws IOException, HttpException;

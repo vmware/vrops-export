@@ -23,15 +23,16 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.ParentSplicer;
+import org.apache.http.HttpException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import org.apache.http.HttpException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings("SameParameterValue")
 public class StatsProcessor {
@@ -222,7 +223,7 @@ public class StatsProcessor {
             if (cached != null) {
               if (verbose) {
                 log.debug(
-                    "Cache hit for parent " + cacheKey + " " + parent.getResourceKey().get("name"));
+                    "Cache hit for parent " + cacheKey + " " + parent.getResourceKey().getName());
               }
               ParentSplicer.spliceRows(rs, cached);
             } else {
@@ -230,10 +231,7 @@ public class StatsProcessor {
               //
               if (verbose) {
                 log.debug(
-                    "Cache miss for parent "
-                        + cacheKey
-                        + " "
-                        + parent.getResourceKey().get("name"));
+                    "Cache miss for parent " + cacheKey + " " + parent.getResourceKey().getName());
               }
               final StatsProcessor parentProcessor =
                   new StatsProcessor(

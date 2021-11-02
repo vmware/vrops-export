@@ -17,44 +17,11 @@
  */
 package com.vmware.vropsexport;
 
+import com.vmware.vrops.client.model.*;
 import com.vmware.vropsexport.exceptions.ExporterException;
-import com.vmware.vropsexport.models.MetricsRequest;
-import com.vmware.vropsexport.models.NamedResource;
-import com.vmware.vropsexport.models.PageOfResources;
-import com.vmware.vropsexport.models.PropertiesResponse;
 import com.vmware.vropsexport.models.ResourceKind;
-import com.vmware.vropsexport.models.ResourceKindResponse;
-import com.vmware.vropsexport.models.ResourceStatKeysResponse;
-import com.vmware.vropsexport.models.StatKeysResponse;
-import com.vmware.vropsexport.processors.CSVPrinter;
-import com.vmware.vropsexport.processors.ElasticSearchIndexer;
-import com.vmware.vropsexport.processors.JsonPrinter;
-import com.vmware.vropsexport.processors.SQLDumper;
-import com.vmware.vropsexport.processors.WavefrontPusher;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.stream.Collectors;
+import com.vmware.vropsexport.models.*;
+import com.vmware.vropsexport.processors.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.NoHttpResponseException;
@@ -66,6 +33,20 @@ import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.nodes.NodeTuple;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
+
+import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("SameParameterValue")
 public class Exporter implements DataProvider {
@@ -197,34 +178,33 @@ public class Exporter implements DataProvider {
                 + ". should be on the form ResourceKind:resourceName");
       }
       // TODO: No way of specifying adapter type here. Should there be?
-      final NamedResource[] pResources =
+      final List<Resource> pResources =
           fetchResources(m.group(1), null, m.group(2), 0).getResourceList();
-      if (pResources.length == 0) {
+      if (pResources.size() == 0) {
         throw new ExporterException("Parent not found");
       }
-      if (pResources.length > 1) {
+      if (pResources.size() > 1) {
         throw new ExporterException("Parent spec is not unique");
       }
-      parentId = pResources[0].getIdentifier();
+      parentId = pResources.get(0).getIdentifier().toString();
     }
 
     int page = 0;
     for (; ; ) {
-      final PageOfResources resPage;
+      final Resources resPage;
 
       // Fetch resources
       if (parentId != null) {
         final String url = "/suite-api/api/resources/" + parentId + "/relationships";
-        resPage =
-            client.getJson(url, PageOfResources.class, "relationshipType=CHILD", "page=" + page++);
+        resPage = client.getJson(url, Resources.class, "relationshipType=CHILD", "page=" + page++);
       } else {
         resPage =
             fetchResources(conf.getResourceKind(), conf.getAdapterKind(), namePattern, page++);
       }
 
-      final NamedResource[] resources = resPage.getResourceList();
+      final List<Resource> resources = resPage.getResourceList();
       // If we got an empty set back, we ran out of pages.
-      if (resources.length == 0) {
+      if (resources.size() == 0) {
         break;
       }
 
@@ -240,24 +220,28 @@ public class Exporter implements DataProvider {
 
       // We don't want to make the chunks so big that not all threads will have work to do.
       // Make sure that doesn't happen.
-      chunkSize = Math.min(chunkSize, 1 + (resources.length / executor.getMaximumPoolSize()));
+      chunkSize = Math.min(chunkSize, 1 + (resources.size() / executor.getMaximumPoolSize()));
       if (verbose) {
         log.debug("Adjusted chunk size is " + chunkSize + " resources");
       }
       int i = 0;
       ArrayList<NamedResource> chunk = new ArrayList<>(chunkSize);
-      for (final NamedResource res : resources) {
-        chunk.add(res);
-        if (chunk.size() >= chunkSize || i == resources.length - 1) {
+      for (final Resource res : resources) {
+        // Store as NamedResource instead of Resource to save some memory.
+        chunk.add(
+            new NamedResource()
+                .resourceKey(res.getResourceKey())
+                .identifier(res.getIdentifier().toString()));
+        if (chunk.size() >= chunkSize || i == resources.size() - 1) {
 
           // Child relationships may return objects of the wrong type, so we have
           // to check the type here.
-          final Map<String, Object> rKey = res.getResourceKey();
-          if (!((String) rKey.get("resourceKindKey")).equalsIgnoreCase(conf.getResourceKind())) {
+          final ResourceKey rKey = res.getResourceKey();
+          if (!rKey.getResourceKindKey().equalsIgnoreCase(conf.getResourceKind())) {
             continue;
           }
           if (conf.getAdapterKind() != null
-              && !((String) rKey.get("adapterKindKey")).equalsIgnoreCase(conf.getAdapterKind())) {
+              && !rKey.getAdapterKindKey().equalsIgnoreCase(conf.getAdapterKind())) {
             continue;
           }
           startChunkJob(chunk, rsp, meta, begin, end, progress);
@@ -303,12 +287,12 @@ public class Exporter implements DataProvider {
   private void preloadCache(final List<NamedResource> resources) {
     synchronized (nameCache) {
       for (final NamedResource res : resources) {
-        nameCache.put(res.getIdentifier(), (String) res.getResourceKey().get("name"));
+        nameCache.put(res.getIdentifier(), res.getResourceKey().getName());
       }
     }
   }
 
-  private PageOfResources fetchResources(
+  private Resources fetchResources(
       final String resourceKind, final String adapterKind, final String name, final int page)
       throws IOException, HttpException {
     final String url = "/suite-api/api/resources";
@@ -322,7 +306,7 @@ public class Exporter implements DataProvider {
     if (name != null) {
       qs.add("name=" + name);
     }
-    final PageOfResources response = client.getJson(url, qs, PageOfResources.class);
+    final Resources response = client.getJson(url, qs, Resources.class);
     if (verbose) {
       log.debug("Resources found: " + response.getPageInfo().getTotalCount());
     }
@@ -340,7 +324,7 @@ public class Exporter implements DataProvider {
     final long start = System.currentTimeMillis();
     final String url = "/suite-api/api/resources/" + resourceId;
     final NamedResource res = client.getJson(url, NamedResource.class);
-    final String name = (String) res.getResourceKey().get("name");
+    final String name = (String) res.getResourceKey().getName();
     synchronized (nameCache) {
       nameCache.put(resourceId, name);
     }
@@ -361,34 +345,38 @@ public class Exporter implements DataProvider {
 
   private InputStream fetchLatestMetrics(final NamedResource[] resList, final RowMetadata meta)
       throws IOException, HttpException {
-    final List<String> stats = meta.getMetricMap().keySet().stream().collect(Collectors.toList());
-    final MetricsRequest q =
-        new MetricsRequest(
-            Arrays.stream(resList).map(r -> r.getIdentifier()).collect(Collectors.toList()),
-            true,
-            "LATEST",
-            1,
-            null,
-            null,
-            null,
-            stats);
+    final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
+    final LatestStatQuery q =
+        new LatestStatQuery()
+            .resourceId(
+                Arrays.stream(resList)
+                    .map(NamedResource::getIdentifier)
+                    .map(UUID::fromString)
+                    .collect(Collectors.toList()))
+            .currentOnly(true)
+            .maxSamples(1)
+            .statKey(stats);
     return client.postJsonReturnStream("/suite-api/api/resources/stats/latest/query", q);
   }
 
   private InputStream queryMetrics(
       final NamedResource[] resList, final RowMetadata meta, final long begin, final long end)
       throws IOException, HttpException {
-    final List<String> stats = meta.getMetricMap().keySet().stream().collect(Collectors.toList());
-    final MetricsRequest q =
-        new MetricsRequest(
-            Arrays.stream(resList).map(r -> r.getIdentifier()).collect(Collectors.toList()),
-            false,
-            conf.getRollupType(),
-            null,
-            begin,
-            end,
-            "MINUTES",
-            stats);
+    final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
+    final StatQuery q =
+        new StatQuery()
+            .resourceId(
+                Arrays.stream(resList)
+                    .map(NamedResource::getIdentifier)
+                    .map(UUID::fromString)
+                    .collect(Collectors.toList()))
+            .currentOnly(false)
+            .rollUpType(StatQuery.RollUpTypeEnum.fromValue(conf.getRollupType()))
+            .intervalType(StatQuery.IntervalTypeEnum.MINUTES)
+            .begin(begin)
+            .end(end)
+            .statKey(stats);
+
     // log.debug("Metric query: " + new ObjectMapper().writeValueAsString(q));
     return client.postJsonReturnStream("/suite-api/api/resources/stats/query", q);
   }
@@ -430,22 +418,26 @@ public class Exporter implements DataProvider {
     if (verbose) {
       log.debug("Parent cache miss for id: " + id);
     }
-    final PageOfResources page =
+    final ResourceRelation page =
         client.getJson(
             "/suite-api/api/resources/" + id + "/relationships",
-            PageOfResources.class,
+            ResourceRelation.class,
             "relationshipType=PARENT");
-    final NamedResource res =
-        Arrays.stream(page.getResourceList())
-            .filter(r -> r.getResourceKey().get("resourceKindKey").equals(parentType))
+    final Resource res =
+        page.getResourceList().stream()
+            .filter(r -> r.getResourceKey().getResourceKindKey().equals(parentType))
             .findFirst()
             .orElse(null);
+    final NamedResource namedResource =
+        new NamedResource()
+            .resourceKey(res.getResourceKey())
+            .identifier(res.getIdentifier().toString());
     if (res != null) {
       synchronized (parentCache) {
-        parentCache.put(id + parentType, res);
+        parentCache.put(id + parentType, namedResource);
       }
     }
-    return res;
+    return namedResource;
   }
 
   public void printResourceMetadata(final String adapterAndResourceKind, final PrintStream out)
@@ -483,7 +475,9 @@ public class Exporter implements DataProvider {
                 + "/statkeys",
             StatKeysResponse.class);
 
-    return response.getStatKeys().stream().map(r -> r.getKey()).collect(Collectors.toList());
+    return response.getStatKeys().stream()
+        .map(StatKeysResponse.StatKey::getKey)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -563,7 +557,7 @@ public class Exporter implements DataProvider {
     InputStream content;
     try {
       final long start = System.currentTimeMillis();
-      content = fetchMetricStream(resList.stream().toArray(NamedResource[]::new), meta, begin, end);
+      content = fetchMetricStream(resList.toArray(new NamedResource[0]), meta, begin, end);
       if (verbose) {
         log.debug("Metric request call took " + (System.currentTimeMillis() - start) + " ms");
       }
