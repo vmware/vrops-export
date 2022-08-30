@@ -101,27 +101,35 @@ chmod +x exporttool.sh
 ## Command syntax
 
 ```
-usage: exporttool [-d <arg>] [-e <arg>] [-F <arg>] [-H <arg>] [-h] [-i]
-       [-l <arg>] [-m <arg>] [-n <arg>] [-o <arg>] [-P <arg>] [-p <arg>]
-       [-q] [-R <arg>] [-s <arg>] [-S] [-t <arg>] [-T <arg>] [--trustpass
-       <arg>] [-u <arg>] [-v]
-
+usage: exporttool [-d <arg>] [--dumprest] [-e <arg>] [-F <arg>] [-G <arg>]
+       [-H <arg>] [-h] [-i] [-l <arg>] [-m <arg>] [-n <arg>]
+       [--no-sniextension] [-o <arg>] [-P <arg>] [-p <arg>] [-q] [-r
+       <arg>] [-R <arg>] [--resfetch <arg>] [-s <arg>] [-S] [-t <arg>] [-T
+       <arg>] [--trustpass <arg>] [-u <arg>] [-v]
+Exports vRealize Operations Metrics
  -d,--definition <arg>       Path to definition file
+    --dumprest               Dump rest calls to output
  -e,--end <arg>              Time period end (date format in definition
                              file)
  -F,--list-fields <arg>      Print name and keys of all fields to stdout
+ -G,--generate <arg>         Generate template definition for resource
+                             type
  -H,--host <arg>             URL to vRealize Operations Host
  -h,--help                   Print a short help text
  -i,--ignore-cert            Trust any cert (DEPRECATED!)
  -l,--lookback <arg>         Lookback time
- -m,--max-rows <arg>         Maximum number of rows to fetch 
+ -m,--max-rows <arg>         Maximum number of rows to fetch
                              (default=1000*thread count)
  -n,--namequery <arg>        Name query
+    --no-sniextension        Disable SNI extension. May be needed for very
+                             old SSL implementations
  -o,--output <arg>           Output file
  -P,--parent <arg>           Parent resource (ResourceKind:resourceName)
  -p,--password <arg>         Password
  -q,--quiet                  Quiet mode (no progress counter)
+ -r,--refreshtoken <arg>     Refresh token
  -R,--resource-kinds <arg>   List resource kinds
+    --resfetch <arg>         Resource fetch count (default=1000)
  -s,--start <arg>            Time period start (date format in definition
                              file)
  -S,--streaming              True streaming processing. Faster but less
@@ -141,11 +149,31 @@ it encounters an untrusted certificate. If the user chooses to trust the certifi
 truststore and reused next time the tool is executed against that host. By default, the trusted certs are stored in
 $HOME/.vropsexport/truststore, but the location can be overridden using the -T flag.
 
+### TLS handshake issues
+
+In some cases, especially with very old SSL/TLS implementations, you may see name verification errors. To remedy this,
+please try the --no-sniextension command-line argument.
+
 ### Authentication
 
 The vrops-export tool uses the local authentication source by default. Other sources can be specified by using the "
 username@source" syntax. Be aware that in the case of e.g. Active Directory, the string after the @-sign should be the
 name of the *authentication source* and not that of the Active Directory domain.
+
+### Support for vRealize Operations Cloud
+
+As of version 3.2.0, vRealize Operations Cloud is supported. To export data from a cloud instance, use the following API
+endpoind URLs as arguments to the `-H` option:
+
+United States:
+`https://www.mgmt.cloud.vmware.com/vrops-cloud/suite-api`
+
+All other countries:
+`https://<country>.www.mgmt.cloud.vmware.com/vrops-cloud/suite-api`
+Where `country` is the country code of your API endpoint. Should match the country code in your browser URL when
+interacting with vRealize Operations Cloud.
+
+Use the `-r` option to log in using a refresh token/API token.
 
 ### Notes:
 
