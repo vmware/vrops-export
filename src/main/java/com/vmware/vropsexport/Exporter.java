@@ -18,43 +18,8 @@
 package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.exceptions.ExporterException;
-import com.vmware.vropsexport.models.MetricsRequest;
-import com.vmware.vropsexport.models.NamedResource;
-import com.vmware.vropsexport.models.PageOfResources;
-import com.vmware.vropsexport.models.PropertiesResponse;
-import com.vmware.vropsexport.models.ResourceKind;
-import com.vmware.vropsexport.models.ResourceKindResponse;
-import com.vmware.vropsexport.models.ResourceStatKeysResponse;
-import com.vmware.vropsexport.models.StatKeysResponse;
-import com.vmware.vropsexport.processors.CSVPrinter;
-import com.vmware.vropsexport.processors.ElasticSearchIndexer;
-import com.vmware.vropsexport.processors.JsonPrinter;
-import com.vmware.vropsexport.processors.SQLDumper;
-import com.vmware.vropsexport.processors.WavefrontPusher;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.stream.Collectors;
+import com.vmware.vropsexport.models.*;
+import com.vmware.vropsexport.processors.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.NoHttpResponseException;
@@ -66,6 +31,16 @@ import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.nodes.NodeTuple;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
+
+import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("SameParameterValue")
 public class Exporter implements DataProvider {
@@ -131,19 +106,14 @@ public class Exporter implements DataProvider {
   }
 
   public Exporter(
-      final String urlBase,
-      final String username,
-      final String password,
+      final Client client,
       final int threads,
       final Config conf,
       final boolean verbose,
-      final boolean dumpRest,
       final boolean useTempFile,
       final int maxRows,
-      final int maxResourceFetch,
-      final KeyStore extendedTrust)
-      throws IOException, HttpException, KeyStoreException, NoSuchAlgorithmException,
-          KeyManagementException, ExporterException {
+      final int maxResourceFetch)
+      throws ExporterException {
     if (conf != null) {
       rspFactory = rspFactories.get(conf.getOutputFormat());
       if (rspFactory == null) {
@@ -156,7 +126,7 @@ public class Exporter implements DataProvider {
     this.conf = conf;
     this.maxRows = maxRows;
     this.maxResourceFetch = maxResourceFetch;
-    client = new Client(urlBase, username, password, extendedTrust, dumpRest);
+    this.client = client;
 
     executor =
         new ThreadPoolExecutor(
