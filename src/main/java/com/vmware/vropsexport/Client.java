@@ -22,23 +22,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.AuthRequest;
 import com.vmware.vropsexport.models.AuthResponse;
+import com.vmware.vropsexport.models.TokenAuthResponse;
 import com.vmware.vropsexport.security.ExtendableTrustStrategy;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-import java.util.List;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLHandshakeException;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -54,6 +45,18 @@ import org.apache.http.ssl.SSLContexts;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.List;
+
 @SuppressWarnings("WeakerAccess")
 public class Client {
   private static final Logger log = LogManager.getLogger(Client.class);
@@ -68,16 +71,15 @@ public class Client {
 
   private final String urlBase;
 
-  private final String authToken;
+  private String authToken;
 
   private final boolean dumpRest;
 
-  public Client(
-      final String urlBase,
-      String username,
-      final String password,
-      final KeyStore extendedTrust,
-      final boolean dumpRest)
+  private String tokenPrefix;
+
+  private final ExtendableTrustStrategy trustStrategy;
+
+  public Client(final String urlBase, final KeyStore extendedTrust, final boolean dumpRest)
       throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException,
           HttpException, ExporterException {
     this.urlBase = urlBase;
@@ -89,12 +91,12 @@ public class Client {
             .setConnectTimeout(CONNTECTION_TIMEOUT_MS)
             .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
             .setSocketTimeout(SOCKET_TIMEOUT_MS)
+            .setCookieSpec(CookieSpecs.STANDARD)
             .build();
 
-    final ExtendableTrustStrategy extendedTrustStrategy =
-        new ExtendableTrustStrategy(extendedTrust);
+    trustStrategy = new ExtendableTrustStrategy(extendedTrust);
     final SSLContext sslContext =
-        SSLContexts.custom().loadTrustMaterial(null, extendedTrustStrategy).build();
+        SSLContexts.custom().loadTrustMaterial(null, trustStrategy).build();
     final SSLConnectionSocketFactory sslf =
         new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
     final Registry<ConnectionSocketFactory> socketFactoryRegistry =
@@ -108,41 +110,67 @@ public class Client {
             .setSSLSocketFactory(sslf)
             .setConnectionManager(cm)
             .setDefaultRequestConfig(requestConfig)
-            .
-            // setRetryHandler(new DefaultHttpRequestRetryHandler(3, false)).
-            setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+            .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
             .build();
 
-    // Authenticate
-    //
     try {
-      // User may be in a non-local auth source.
-      //
-      int p = username.indexOf('\\');
-      String authSource = null;
-      if (p != -1) {
-        authSource = username.substring(0, p);
-        username = username.substring(p + 1);
-      } else {
-        p = username.indexOf('@');
-        if (p != -1) {
-          authSource = username.substring(p + 1);
-          username = username.substring(0, p);
-        }
-      }
-      final AuthRequest rq = new AuthRequest(authSource, username, password);
-      final AuthResponse response =
-          postJsonReturnJson("/suite-api/api/auth/token/acquire", rq, AuthResponse.class);
-      authToken = response.getToken();
+      // Make a dummy API call to make sure we have our certs in order
+      log.debug("Hitting dummy URL to get certs");
+      getStream("/suite-api/api/resources");
     } catch (final SSLHandshakeException e) {
       // If we captured a cert, it's recoverable by asking the user to trust it.
       //
-      final X509Certificate[] cc = extendedTrustStrategy.getCapturedCerts();
+      final X509Certificate[] cc = trustStrategy.getCapturedCerts();
       if (cc == null) {
         throw e;
       }
       throw new RecoverableCertificateException(cc, e);
+    } catch (final HttpException e) {
+      // Ignore all other exceptions. We'll probably get a 401 here.
     }
+  }
+
+  public Client login(final String apiToken) throws HttpException, IOException {
+    final HttpPost post =
+        new HttpPost(
+            "https://console.cloud.vmware.com/csp/gateway/am/api/auth/api-tokens/authorize");
+    post.addHeader("Accept", "application/json");
+    post.addHeader("Accept-Encoding", "gzip");
+    post.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    post.setEntity(new StringEntity("refresh_token=" + apiToken));
+
+    final HttpResponse resp = client.execute(post);
+    checkResponse(resp);
+    final TokenAuthResponse tokenResp =
+        getObjectMapper().readValue(resp.getEntity().getContent(), TokenAuthResponse.class);
+    authToken = tokenResp.getAccess_token();
+    tokenPrefix = "CSPToken ";
+    return this;
+  }
+
+  public Client login(String username, final String password)
+      throws HttpException, IOException, RecoverableCertificateException {
+
+    // User may be in a non-local auth source.
+    //
+    int p = username.indexOf('\\');
+    String authSource = null;
+    if (p != -1) {
+      authSource = username.substring(0, p);
+      username = username.substring(p + 1);
+    } else {
+      p = username.indexOf('@');
+      if (p != -1) {
+        authSource = username.substring(p + 1);
+        username = username.substring(0, p);
+      }
+    }
+    final AuthRequest rq = new AuthRequest(authSource, username, password);
+    final AuthResponse response =
+        postJsonReturnJson("/suite-api/api/auth/token/acquire", rq, AuthResponse.class);
+    authToken = response.getToken();
+    tokenPrefix = "vRealizeOpsToken ";
+    return this;
   }
 
   public <T> T getJson(final String uri, final Class<T> responseClass, final String... queries)
@@ -168,7 +196,7 @@ public class Client {
     get.addHeader("Accept", "application/json");
     get.addHeader("Accept-Encoding", "gzip");
     if (authToken != null) {
-      get.addHeader("Authorization", "vRealizeOpsToken " + authToken + "");
+      get.addHeader("Authorization", tokenPrefix + authToken);
     }
     final HttpResponse resp = client.execute(get);
     checkResponse(resp);
@@ -183,7 +211,7 @@ public class Client {
     post.addHeader("Content-Type", "application/json");
     post.addHeader("Accept-Encoding", "gzip");
     if (authToken != null) {
-      post.addHeader("Authorization", "vRealizeOpsToken " + authToken + "");
+      post.addHeader("Authorization", tokenPrefix + authToken + "");
     }
     if (dumpRest) {
       log.debug("POST " + urlBase + uri);

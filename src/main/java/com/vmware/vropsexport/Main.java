@@ -22,12 +22,14 @@ import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.security.CertUtils;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
+import org.apache.commons.cli.*;
+import org.apache.http.HttpException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.*;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -38,21 +40,6 @@ import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Scanner;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.http.HttpException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
-import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 public class Main {
   static {
@@ -72,8 +59,8 @@ public class Main {
   private static final int DEFAULT_ROWS_PER_THREAD = 1000;
 
   public static void main(final String[] args) throws Exception {
+
     // Parse command line
-    //
     final CommandLineParser parser = new DefaultParser();
     final Options opts = defineOptions();
     CommandLine commandLine = null;
@@ -84,8 +71,8 @@ public class Main {
           "Error parsing command. Use -h option for help. Details: " + e.getMessage());
       System.exit(1);
     }
+
     // Help requested?
-    //
     if (commandLine.hasOption('h')) {
       final HelpFormatter hf = new HelpFormatter();
       final String head = "Exports vRealize Operations Metrics";
@@ -95,20 +82,26 @@ public class Main {
     }
     try {
       // Extract command options and do sanity checks.
-      //
       int threads = 10;
-      final String username = commandLine.getOptionValue('u');
-      if (username == null) {
-        throw new ExporterException("Username must be specified");
-      }
-      String password = commandLine.getOptionValue('p');
 
-      // Prompt for password if not specified.
-      //
-      if (password == null) {
-        System.err.print("Password: ");
-        final char[] chp = System.console().readPassword();
-        password = new String(chp);
+      // Using refresh token
+      final String refreshToken = commandLine.getOptionValue('r');
+      final String username = commandLine.getOptionValue('u');
+      String password = commandLine.getOptionValue('p');
+      if (refreshToken != null && username != null) {
+        throw new ExporterException("Refresh token and user name are mutually exclusive");
+      }
+      if (refreshToken == null) {
+        if (username == null) {
+          throw new ExporterException("Username must be specified");
+        }
+
+        // Prompt for password if not specified.
+        if (password == null) {
+          System.err.print("Password: ");
+          final char[] chp = System.console().readPassword();
+          password = new String(chp);
+        }
       }
       final String host = commandLine.getOptionValue('H');
       if (host == null) {
@@ -127,58 +120,34 @@ public class Main {
       final String trustPass = commandLine.getOptionValue("trustpass");
       final boolean dumpRest = commandLine.hasOption("dumprest");
 
+      // Disable SNIExtensions if specified. Only needed for very old SSL implementations
+      if (commandLine.hasOption("no-sniextension")) {
+        System.setProperty("jsse.enableSNIExtension", "false");
+      }
+
+      // Create the vR Ops client
+      final Client client = createClient(host, trustStore, trustPass, dumpRest);
+      if (refreshToken != null) {
+        client.login(refreshToken);
+      } else {
+        client.login(username, password);
+      }
+
       // If we're just printing field names, we have enough parameters at this point.
-      //
       final String resourceKind = commandLine.getOptionValue('F');
       if (resourceKind != null) {
         final Exporter exporter =
-            createExporter(
-                host,
-                username,
-                password,
-                threads,
-                null,
-                verbose,
-                dumpRest,
-                useTmpFile,
-                5000,
-                1000,
-                trustStore,
-                trustPass);
+            createExporter(client, threads, null, verbose, useTmpFile, 5000, 1000);
         exporter.printResourceMetadata(resourceKind, System.out);
       } else if (commandLine.hasOption('R')) {
         final String adapterKind = commandLine.getOptionValue('R');
         final Exporter exporter =
-            createExporter(
-                host,
-                username,
-                password,
-                threads,
-                null,
-                verbose,
-                dumpRest,
-                useTmpFile,
-                5000,
-                1000,
-                trustStore,
-                trustPass);
+            createExporter(client, threads, null, verbose, useTmpFile, 5000, 1000);
         exporter.printResourceKinds(adapterKind, System.out);
       } else if (commandLine.hasOption('G')) {
         final String rk = commandLine.getOptionValue('G');
         final Exporter exporter =
-            createExporter(
-                host,
-                username,
-                password,
-                threads,
-                null,
-                verbose,
-                dumpRest,
-                useTmpFile,
-                5000,
-                1000,
-                trustStore,
-                trustPass);
+            createExporter(client, threads, null, verbose, useTmpFile, 5000, 1000);
         exporter.generateExportDefinition(rk, System.out);
       } else {
         final String defFile = commandLine.getOptionValue('d');
@@ -189,7 +158,6 @@ public class Main {
         int maxRows = mrS != null ? Integer.parseInt(mrS) : 0;
 
         // Deal with lookback/time period
-        //
         final String lb = commandLine.getOptionValue('l');
         final String startS = commandLine.getOptionValue('s');
         final String endS = commandLine.getOptionValue('e');
@@ -236,7 +204,6 @@ public class Main {
         }
 
         // Read definition and run it!
-        //
         try (final Reader fr =
             new InputStreamReader(new FileInputStream(defFile), StandardCharsets.UTF_8)) {
           final Config conf = ConfigLoader.parse(fr);
@@ -246,13 +213,11 @@ public class Main {
           // If we're outputting to a textual format that can dump to stdout, we supress the
           // progress counter, but
           // if we're dumping to e.g. SQL, we keep it on. This is a bit kludgy.. TODO: Revisit
-          //
           if (output == null && Exporter.isProducingOutput(conf) || verbose) {
             quiet = true;
           }
 
           // Deal with start and end dates
-          //
           long end = System.currentTimeMillis();
           final long lbMs = lb != null ? parseLookback(lb) : 1000L * 60L * 60L * 24L;
           long begin = end - lbMs;
@@ -270,19 +235,7 @@ public class Main {
             }
           }
           final Exporter exporter =
-              createExporter(
-                  host,
-                  username,
-                  password,
-                  threads,
-                  conf,
-                  verbose,
-                  dumpRest,
-                  useTmpFile,
-                  maxRows,
-                  maxRes,
-                  trustStore,
-                  trustPass);
+              createExporter(client, threads, conf, verbose, useTmpFile, maxRows, maxRes);
           if (output == null) {
             exporter.exportTo(System.out, begin, end, namePattern, parentSpec, quiet);
           } else {
@@ -304,35 +257,25 @@ public class Main {
   }
 
   private static Exporter createExporter(
-      final String urlBase,
-      final String username,
-      final String password,
+      final Client client,
       final int threads,
       final Config conf,
       final boolean verbose,
-      final boolean dumpRest,
       final boolean useTempFile,
       final int maxRows,
-      final int maxRes,
-      final String trustStore,
-      final String trustPass)
-      throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException,
-          KeyManagementException, HttpException, ExporterException {
+      final int maxRes)
+      throws ExporterException {
+    return new Exporter(client, threads, conf, verbose, useTempFile, maxRows, maxRes);
+  }
+
+  private static Client createClient(
+      final String host, final String trustStore, final String trustPass, final boolean dumpRest)
+      throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException,
+          ExporterException, HttpException, KeyManagementException {
     for (; ; ) {
       final KeyStore ks = CertUtils.loadExtendedTrust(trustStore, trustPass);
       try {
-        return new Exporter(
-            urlBase,
-            username,
-            password,
-            threads,
-            conf,
-            verbose,
-            dumpRest,
-            useTempFile,
-            maxRows,
-            maxRes,
-            ks);
+        return new Client(host, ks, dumpRest);
       } catch (final RecoverableCertificateException e) {
         final boolean retry = promptForTrust(e.getCapturedCerts()[0], trustStore, trustPass);
         if (!retry) {
@@ -372,6 +315,7 @@ public class Main {
     opts.addOption("P", "parent", true, "Parent resource (ResourceKind:resourceName)");
     opts.addOption("u", "username", true, "Username");
     opts.addOption("p", "password", true, "Password");
+    opts.addOption("r", "refreshtoken", true, "Refresh token");
     opts.addOption("o", "output", true, "Output file");
     opts.addOption("H", "host", true, "URL to vRealize Operations Host");
     opts.addOption("q", "quiet", false, "Quiet mode (no progress counter)");
@@ -387,6 +331,11 @@ public class Main {
     opts.addOption(null, "trustpass", true, "Truststore password (default=changeit)");
     opts.addOption(null, "resfetch", true, "Resource fetch count (default=1000)");
     opts.addOption(null, "dumprest", false, "Dump rest calls to output");
+    opts.addOption(
+        null,
+        "no-sniextension",
+        false,
+        "Disable SNI extension. May be needed for very old SSL implementations");
     opts.addOption("h", "help", false, "Print a short help text");
     return opts;
   }
