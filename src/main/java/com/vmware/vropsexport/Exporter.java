@@ -477,7 +477,9 @@ public class Exporter implements DataProvider {
 
     final List<String> metrics = getStatKeysForResourceKind(adapterKind, resourceKind);
     final List<Config.Field> fields =
-        metrics.stream().map(s -> new Config.Field(s, s, true)).collect(Collectors.toList());
+        metrics.stream()
+            .map(s -> new Config.Field(s, s, Config.Field.Kind.METRIC))
+            .collect(Collectors.toList());
     final Config config = new Config();
     final Config.Field[] fieldArr = new Config.Field[fields.size()];
     fields.toArray(fieldArr);

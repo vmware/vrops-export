@@ -151,6 +151,10 @@ public class RowMetadata {
     return propMap.getOrDefault(property, -1);
   }
 
+  public int getTagIndex(final String tag) {
+    return getPropertyIndex(Config.Field.TAG_PROP_PREFIX + tag);
+  }
+
   public int getMetricIndexByAlias(final String metric) {
     return metricAliasMap.getOrDefault(metric, -1);
   }
