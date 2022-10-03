@@ -25,7 +25,11 @@ public class MetricsRequest {
 
   private final boolean currentOnly;
 
-  private final String rollupType;
+  private final String rollUpType;
+
+  private final String intervalType;
+
+  private final int intervalQuantifier;
 
   private final Integer maxSamples;
 
@@ -35,25 +39,25 @@ public class MetricsRequest {
 
   private final List<String> stat;
 
-  private final String intervalQualifier;
-
   public MetricsRequest(
       final List<String> resourceId,
       final boolean currentOnly,
       final String rollupType,
+      final String intervalType,
+      final int intervalQuantifier,
       final Integer maxSamples,
       final Long begin,
       final Long end,
-      final String intervalQualifier,
       final List<String> stat) {
     this.resourceId = resourceId;
     this.currentOnly = currentOnly;
-    this.rollupType = rollupType;
+    this.rollUpType = rollupType;
+    this.intervalType = intervalType;
     this.maxSamples = maxSamples;
     this.begin = begin;
     this.end = end;
     this.stat = stat;
-    this.intervalQualifier = intervalQualifier;
+    this.intervalQuantifier = intervalQuantifier;
   }
 
   public List<String> getResourceId() {
@@ -64,8 +68,12 @@ public class MetricsRequest {
     return currentOnly;
   }
 
-  public String getRollupType() {
-    return rollupType;
+  public String getRollUpType() {
+    return rollUpType;
+  }
+
+  public String getIntervalType() {
+    return intervalType;
   }
 
   public Integer getMaxSamples() {
@@ -84,7 +92,7 @@ public class MetricsRequest {
     return end;
   }
 
-  public String getIntervalQualifier() {
-    return intervalQualifier;
+  public int getIntervalQuantifier() {
+    return intervalQuantifier;
   }
 }

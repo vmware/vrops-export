@@ -337,6 +337,7 @@ public class Exporter implements DataProvider {
             Arrays.stream(resList).map(r -> r.getIdentifier()).collect(Collectors.toList()),
             true,
             "LATEST",
+            "MINUTES",
             1,
             null,
             null,
@@ -354,10 +355,11 @@ public class Exporter implements DataProvider {
             Arrays.stream(resList).map(r -> r.getIdentifier()).collect(Collectors.toList()),
             false,
             conf.getRollupType(),
+            "MINUTES",
+            (int) conf.getRollupMinutes(),
             null,
             begin,
             end,
-            "MINUTES",
             stats);
     // log.debug("Metric query: " + new ObjectMapper().writeValueAsString(q));
     return client.postJsonReturnStream("/suite-api/api/resources/stats/query", q);
