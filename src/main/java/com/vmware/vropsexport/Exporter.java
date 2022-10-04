@@ -339,7 +339,7 @@ public class Exporter implements DataProvider {
             "LATEST",
             "MINUTES",
             1,
-            null,
+            1,
             null,
             null,
             stats);
