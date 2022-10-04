@@ -40,5 +40,8 @@ fields:
   # Cost center tag
   - alias: costcenter
     tag: costcenter
+  # Cost center tag
+  - alias: owner
+    tag: owner
 
  
