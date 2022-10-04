@@ -167,15 +167,15 @@ public class Exporter implements DataProvider {
                 + ". should be on the form ResourceKind:resourceName");
       }
       // TODO: No way of specifying adapter type here. Should there be?
-      final NamedResource[] pResources =
+      final List<NamedResource> pResources =
           fetchResources(m.group(1), null, m.group(2), 0).getResourceList();
-      if (pResources.length == 0) {
+      if (pResources.size() == 0) {
         throw new ExporterException("Parent not found");
       }
-      if (pResources.length > 1) {
+      if (pResources.size() > 1) {
         throw new ExporterException("Parent spec is not unique");
       }
-      parentId = pResources[0].getIdentifier();
+      parentId = pResources.get(0).getIdentifier();
     }
 
     int page = 0;
@@ -192,9 +192,9 @@ public class Exporter implements DataProvider {
             fetchResources(conf.getResourceKind(), conf.getAdapterKind(), namePattern, page++);
       }
 
-      final NamedResource[] resources = resPage.getResourceList();
+      final List<NamedResource> resources = resPage.getResourceList();
       // If we got an empty set back, we ran out of pages.
-      if (resources.length == 0) {
+      if (resources.size() == 0) {
         break;
       }
 
@@ -210,7 +210,7 @@ public class Exporter implements DataProvider {
 
       // We don't want to make the chunks so big that not all threads will have work to do.
       // Make sure that doesn't happen.
-      chunkSize = Math.min(chunkSize, 1 + (resources.length / executor.getMaximumPoolSize()));
+      chunkSize = Math.min(chunkSize, 1 + (resources.size() / executor.getMaximumPoolSize()));
       if (verbose) {
         log.debug("Adjusted chunk size is " + chunkSize + " resources");
       }
@@ -218,7 +218,7 @@ public class Exporter implements DataProvider {
       ArrayList<NamedResource> chunk = new ArrayList<>(chunkSize);
       for (final NamedResource res : resources) {
         chunk.add(res);
-        if (chunk.size() >= chunkSize || i == resources.length - 1) {
+        if (chunk.size() >= chunkSize || i == resources.size() - 1) {
 
           // Child relationships may return objects of the wrong type, so we have
           // to check the type here.
@@ -408,7 +408,7 @@ public class Exporter implements DataProvider {
             PageOfResources.class,
             "relationshipType=PARENT");
     final NamedResource res =
-        Arrays.stream(page.getResourceList())
+        page.getResourceList().stream()
             .filter(r -> r.getResourceKey().get("resourceKindKey").equals(parentType))
             .findFirst()
             .orElse(null);
