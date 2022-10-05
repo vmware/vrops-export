@@ -17,10 +17,12 @@
  */
 package com.vmware.vropsexport.models;
 
+import java.util.List;
+
 public class PageOfResources {
   private PageInfo pageInfo;
 
-  private NamedResource[] resourceList;
+  private List<NamedResource> resourceList;
 
   public PageInfo getPageInfo() {
     return pageInfo;
@@ -30,11 +32,11 @@ public class PageOfResources {
     this.pageInfo = pageInfo;
   }
 
-  public NamedResource[] getResourceList() {
+  public List<NamedResource> getResourceList() {
     return resourceList;
   }
 
-  public void setResourceList(final NamedResource[] resourceList) {
+  public void setResourceList(final List<NamedResource> resourceList) {
     this.resourceList = resourceList;
   }
 }

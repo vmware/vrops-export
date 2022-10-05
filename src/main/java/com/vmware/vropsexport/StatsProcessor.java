@@ -20,6 +20,7 @@ package com.vmware.vropsexport;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.ParentSplicer;
@@ -93,7 +94,6 @@ public class StatsProcessor {
       }
 
       // Process stat-list { stat [ ...
-      //
       expect(p, "stat-list");
       expect(p, JsonToken.START_OBJECT);
       expect(p, "stat");
@@ -102,7 +102,6 @@ public class StatsProcessor {
       while (p.nextToken() != JsonToken.END_ARRAY) {
 
         // Process timestamps[ ...
-        //
         expectCurrent(p, JsonToken.START_OBJECT);
         expect(p, "timestamps");
         expect(p, JsonToken.START_ARRAY);
@@ -111,7 +110,6 @@ public class StatsProcessor {
           long ts = p.getLongValue();
 
           // Align timestamp if needed
-          //
           final int align = conf.getAlign() * 1000;
           if (align != 0) {
             ts = ((ts + align / 2) / align) * align;
@@ -125,13 +123,11 @@ public class StatsProcessor {
         expect(p, JsonToken.END_OBJECT);
 
         // Keep skipping members until we've found the data node
-        //
         while (!expectMaybe(p, "data")) {
           skipMember(p, null);
         }
 
         // Process data[ ...
-        //
         expect(p, JsonToken.START_ARRAY);
         final int metricIdx = meta.getMetricIndex(statKey);
         int i = 0;
@@ -160,18 +156,15 @@ public class StatsProcessor {
       }
 
       // End of stat-list and values object
-      //
       expect(p, JsonToken.END_OBJECT);
       expect(p, JsonToken.END_OBJECT);
       Rowset rs = new Rowset(resourceId, rows);
       rows = null; // Make the GC release this a bit earlier
 
       // Splice in properties
-      //
       if (dataProvider != null) {
         if (meta.hasProperties()) {
           // Put in resource id if requested.
-          //
           final int idIdx = meta.getPropertyIndex("$resId");
           if (idIdx != -1) {
             for (final Row row : rs.getRows().values()) {
@@ -180,7 +173,6 @@ public class StatsProcessor {
           }
 
           // Put in name if requested
-          //
           final int nameIdx = meta.getPropertyIndex("$resName");
           if (nameIdx != -1) {
             final String name = dataProvider.getResourceName(resourceId);
@@ -190,7 +182,6 @@ public class StatsProcessor {
           }
 
           // Splice in properties
-          //
           if (meta.needsPropertyLoad()) {
             final Map<String, String> props = dataProvider.fetchProps(resourceId);
             for (final Map.Entry<String, String> e : props.entrySet()) {
@@ -201,11 +192,25 @@ public class StatsProcessor {
                 }
               }
             }
+            // Splice in tags
+            String tags = props.get("summary|tagJson");
+            if (tags != null && !"none".equals(tags)) {
+              ObjectMapper om = new ObjectMapper();
+              List<Map<String, String>> parsed = om.readValue(tags, List.class);
+              for (Map<String, String> tag : parsed) {
+                int idx = meta.getTagIndex(tag.get("category"));
+                if (idx != -1) {
+                  String tagValue = tag.get("name");
+                  for (final Row row : rs.getRows().values()) {
+                    row.setProp(idx, tagValue);
+                  }
+                }
+              }
+            }
           }
         }
 
         // Splice in data from parent
-        //
         final RowMetadata pMeta = meta.forParent();
         if (pMeta.isValid()) {
           final long now = System.currentTimeMillis();
@@ -218,7 +223,6 @@ public class StatsProcessor {
               cached = rowsetCache.get(cacheKey);
             }
             // Try cache first! Chances are we've seen this parent many times.
-            //
             if (cached != null) {
               if (verbose) {
                 log.debug(
@@ -227,7 +231,6 @@ public class StatsProcessor {
               ParentSplicer.spliceRows(rs, cached);
             } else {
               // Not in cache. Fetch it the hard (and slow) way!
-              //
               if (verbose) {
                 log.debug(
                     "Cache miss for parent "
@@ -261,7 +264,6 @@ public class StatsProcessor {
       }
 
       // Compactify if needed
-      //
       if (conf.isCompact()) {
         rs = compactify(rs, meta);
       }
@@ -277,13 +279,11 @@ public class StatsProcessor {
 
   private Rowset compactify(final Rowset rs, final RowMetadata meta) throws ExporterException {
     // No need to process empty rowsets
-    //
     if (rs.getRows().size() == 0) {
       return rs;
     }
 
     // Calculate range according to compactification algorithm.
-    //
     final long startTime = System.currentTimeMillis();
     final TreeMap<Long, Row> rows = rs.getRows();
     final long start;
@@ -316,7 +316,6 @@ public class StatsProcessor {
     }
 
     // Compactify everything that fits within the timerange into a single row
-    //
     final Row target = meta.newRow(ts);
     for (final Row r : rows.values()) {
       if (r.getTimestamp() <= end && r.getTimestamp() >= start) {

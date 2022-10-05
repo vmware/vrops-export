@@ -229,6 +229,9 @@ fields:                                          # A list of fields
  # Host CPU type
   - alias: hostCPUType
     prop: $parent:HostSystem.cpu|cpuModel		# Reference to a metric in a parent
+ # A vCenter tag
+  - alias: costcenter
+    tag: costcenter
 ```
 
 ### Global directives
@@ -247,6 +250,12 @@ fields:                                          # A list of fields
 * allMetrics: Exports all metrics for every resource. This option is intended mainly for the JSON output format and will
   most likely not work for table-oriented outputs, such as CSV and SQL. If specified, the ```fields``` attribute is
   ignored.
+  
+### Field properties
+* alias: The name of the field as it will appear in the output
+* prop: Name of a property on the resource from which the value is fetched.
+* metric: Name of a metric on the resource from which the value is fetched.
+* tag: Name of a vCenter tag category on the resource from which the value is fetched.
 
 ### Special properties in the definition file
 

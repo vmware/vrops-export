@@ -22,6 +22,7 @@ import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.json.JsonConfig;
 import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
@@ -51,21 +52,38 @@ public class Config implements Validatable {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class Field {
+    enum Kind {
+      METRIC,
+      PROPERTY,
+      TAG
+    }
+
+    protected static final String TAG_PROP_PREFIX = "summary|tagJson#";
+
     private String alias;
     private String metric;
     private String prop;
 
+    public void setTag(final String tag) {
+      this.prop = TAG_PROP_PREFIX + tag;
+    }
+
     public Field() {}
 
-    public Field(final String alias, final String name, final boolean isMetric) {
+    public Field(final String alias, final String name, final Kind kind) {
       super();
       this.alias = alias;
-      if (isMetric) {
-        metric = name;
-      } else {
-        prop = name;
+      switch (kind) {
+        case METRIC:
+          setMetric(name);
+          break;
+        case PROPERTY:
+          setProp(name);
+          break;
+        case TAG:
+          setTag(name);
+          break;
       }
     }
 
