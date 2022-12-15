@@ -144,6 +144,10 @@ public class Main {
         final Exporter exporter =
             createExporter(client, threads, null, verbose, useTmpFile, 5000, 1000);
         exporter.printResourceKinds(adapterKind, System.out);
+      } else if (commandLine.hasOption('A')) {
+        final Exporter exporter =
+            createExporter(client, threads, null, verbose, useTmpFile, 5000, 1000);
+        exporter.printAdapterKinds(System.out);
       } else if (commandLine.hasOption('G')) {
         final String rk = commandLine.getOptionValue('G');
         final Exporter exporter =
@@ -324,6 +328,7 @@ public class Main {
     opts.addOption("t", "threads", true, "Number of parallel processing threads (default=10)");
     opts.addOption("S", "streaming", false, "True streaming processing. Faster but less reliable");
     opts.addOption("R", "resource-kinds", true, "List resource kinds");
+    opts.addOption("A", "adapter-kinds", false, "List adapter kinds");
     opts.addOption(
         "m", "max-rows", true, "Maximum number of rows to fetch (default=1000*thread count)");
     opts.addOption("T", "truststore", true, "Truststore filename");

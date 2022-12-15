@@ -290,7 +290,7 @@ public class Exporter implements DataProvider {
     qs.add("pageSize=" + maxResourceFetch);
     qs.add("page=" + page);
     if (name != null) {
-      qs.add("name=" + name);
+      qs.add("name=" + urlencode(name));
     }
     final PageOfResources response = client.getJson(url, qs, PageOfResources.class);
     if (verbose) {
@@ -522,6 +522,16 @@ public class Exporter implements DataProvider {
     for (final ResourceKind rk : response.getResourceKinds()) {
       out.println("Key  : " + rk.getKey());
       out.println("Name : " + rk.getName());
+      out.println();
+    }
+  }
+
+  public void printAdapterKinds(final PrintStream out) throws IOException, HttpException {
+    final AdapterKindResponse response =
+        client.getJson("/suite-api/api/adapterkinds", AdapterKindResponse.class);
+    for (final AdapterKind ak : response.getAdapterKind()) {
+      out.println("Key  : " + ak.getKey());
+      out.println("Name : " + ak.getName());
       out.println();
     }
   }
