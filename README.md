@@ -107,6 +107,7 @@ usage: exporttool [-d <arg>] [--dumprest] [-e <arg>] [-F <arg>] [-G <arg>]
        <arg>] [-R <arg>] [--resfetch <arg>] [-s <arg>] [-S] [-t <arg>] [-T
        <arg>] [--trustpass <arg>] [-u <arg>] [-v]
 Exports vRealize Operations Metrics
+ -A,--adapter-kinds          List adapter kinds
  -d,--definition <arg>       Path to definition file
     --dumprest               Dump rest calls to output
  -e,--end <arg>              Time period end (date format in definition
