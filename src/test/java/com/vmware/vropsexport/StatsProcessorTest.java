@@ -39,6 +39,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpException;
 import org.junit.Assert;
@@ -80,7 +82,8 @@ public class StatsProcessorTest {
   private List<String> statKeys;
 
   @Before
-  public void loadData() throws IOException {
+  public void init() throws IOException {
+    TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"));
     hostResource =
         new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -156,7 +159,7 @@ public class StatsProcessorTest {
         new ObjectMapper()
             .readValue(new File("src/test/resources/" + name + "-output.json"), Map.class);
     final Map<String, Object> actual = new ObjectMapper().readValue(data, Map.class);
-    Assert.assertTrue(actual.equals(wanted));
+    Assert.assertEquals(wanted, actual);
   }
 
   private byte[] runTest(final String definition, final RowsetProcessorFacotry factory)

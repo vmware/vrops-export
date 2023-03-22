@@ -491,7 +491,7 @@ public class Exporter implements DataProvider {
     dumperOptions.setPrettyFlow(true);
 
     final Representer representer =
-        new Representer() {
+        new Representer(new DumperOptions()) {
           @Override
           protected NodeTuple representJavaBeanProperty(
               final Object javaBean,
