@@ -27,7 +27,8 @@ import org.apache.http.HttpException;
 public interface DataProvider {
   Map<String, String> fetchProps(String id) throws IOException, HttpException;
 
-  NamedResource getParentOf(String id, String parentType) throws IOException, HttpException;
+  NamedResource getRelated(Exporter.RelationshipKind relationshipKind, String id, String parentType)
+      throws IOException, HttpException;
 
   InputStream fetchMetricStream(NamedResource[] resList, RowMetadata meta, long begin, long end)
       throws IOException, HttpException;

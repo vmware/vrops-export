@@ -61,13 +61,15 @@ public class Exporter implements DataProvider {
     }
   }
 
+  public enum RelationshipKind { CHILD, PARENT }
+
   private static final Logger log = LogManager.getLogger(Exporter.class);
 
   private final LRUCache<String, String> nameCache = new LRUCache<>(100000);
 
   private final LRUCache<String, Map<String, String>> propCache = new LRUCache<>(1000);
 
-  private final LRUCache<String, NamedResource> parentCache = new LRUCache<>(1000);
+  private final LRUCache<String, NamedResource> relationshipCache = new LRUCache<>(1000);
 
   private final Client client;
 
@@ -331,10 +333,10 @@ public class Exporter implements DataProvider {
 
   private InputStream fetchLatestMetrics(final NamedResource[] resList, final RowMetadata meta)
       throws IOException, HttpException {
-    final List<String> stats = meta.getMetricMap().keySet().stream().collect(Collectors.toList());
+    final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
     final MetricsRequest q =
         new MetricsRequest(
-            Arrays.stream(resList).map(r -> r.getIdentifier()).collect(Collectors.toList()),
+            Arrays.stream(resList).map(NamedResource::getIdentifier).collect(Collectors.toList()),
             true,
             "LATEST",
             "MINUTES",
@@ -391,10 +393,11 @@ public class Exporter implements DataProvider {
   }
 
   @Override
-  public NamedResource getParentOf(final String id, final String parentType)
+  public NamedResource getRelated(RelationshipKind relationshipKind, final String id, final String targetResourceType)
       throws IOException, HttpException {
-    synchronized (parentCache) {
-      final NamedResource p = parentCache.get(id + parentType);
+    String key = relationshipKind.toString() + ":" + id + ":" + targetResourceType;
+    synchronized (relationshipCache) {
+      final NamedResource p = relationshipCache.get(key);
       if (p != null) {
         return p;
       }
@@ -406,15 +409,15 @@ public class Exporter implements DataProvider {
         client.getJson(
             "/suite-api/api/resources/" + id + "/relationships",
             PageOfResources.class,
-            "relationshipType=PARENT");
+            "relationshipType=" + relationshipKind.toString());
     final NamedResource res =
         page.getResourceList().stream()
-            .filter(r -> r.getResourceKey().get("resourceKindKey").equals(parentType))
+            .filter(r -> r.getResourceKey().get("resourceKindKey").equals(targetResourceType))
             .findFirst()
             .orElse(null);
     if (res != null) {
-      synchronized (parentCache) {
-        parentCache.put(id + parentType, res);
+      synchronized (relationshipCache) {
+        relationshipCache.put(key, res);
       }
     }
     return res;

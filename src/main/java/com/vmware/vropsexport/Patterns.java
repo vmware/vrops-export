@@ -21,8 +21,12 @@ import java.util.regex.Pattern;
 
 public class Patterns {
 
-  public static final Pattern parentPattern =
-      Pattern.compile("^\\$parent:([_A-Za-z][_A-Za-z0-9\\s]*)\\.(.+)$");
+  public static final Pattern relationshipPattern =
+      Pattern.compile("^\\$(parent|child):([_A-Za-z][_A-Za-z0-9\\s]*)\\.(.+)$");
+
+  public static final int relationshipKindGroup = 1;
+  public static final int relationshipResourceKindGroup = 2;
+  public static final int relationshipMemberGroup = 3;
 
   public static final Pattern parentSpecPattern =
       Pattern.compile("^([_\\-A-Za-z][_\\-A-Za-z0-9\\s]*):(.+)$");

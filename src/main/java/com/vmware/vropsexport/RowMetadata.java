@@ -92,33 +92,33 @@ public class RowMetadata {
     }
   }
 
-  private RowMetadata(final RowMetadata child) throws ExporterException {
-    propInsertionPoints = child.propInsertionPoints;
+  private RowMetadata(final RowMetadata self) throws ExporterException {
+    propInsertionPoints = self.propInsertionPoints;
     String t = null;
-    for (final Map.Entry<String, Integer> e : child.propMap.entrySet()) {
+    for (final Map.Entry<String, Integer> e : self.propMap.entrySet()) {
       final String p = e.getKey();
-      final Matcher m = Patterns.parentPattern.matcher(p);
+      final Matcher m = Patterns.relationshipPattern.matcher(p);
       if (m.matches()) {
         if (t == null) {
-          t = m.group(1);
-        } else if (!t.equals(m.group(1))) {
-          throw new ExporterException("Only one parent type is currently supported");
+          t = m.group(Patterns.relationshipResourceKindGroup);
+        } else if (!t.equals(m.group(Patterns.relationshipResourceKindGroup))) {
+          throw new ExporterException("Only one type of related resource is currently supported");
         }
-        propMap.put(m.group(2), e.getValue());
+        propMap.put(m.group(Patterns.relationshipMemberGroup), e.getValue());
       } else {
         propMap.put("_placeholder_" + p, e.getValue());
       }
     }
-    for (final Map.Entry<String, Integer> e : child.metricMap.entrySet()) {
+    for (final Map.Entry<String, Integer> e : self.metricMap.entrySet()) {
       final String mt = e.getKey();
-      final Matcher m = Patterns.parentPattern.matcher(mt);
+      final Matcher m = Patterns.relationshipPattern.matcher(mt);
       if (m.matches()) {
         if (t == null) {
-          t = m.group(1);
-        } else if (!t.equals(m.group(1))) {
-          throw new ExporterException("Only one parent type is currently supported");
+          t = m.group(Patterns.relationshipResourceKindGroup);
+        } else if (!t.equals(m.group(Patterns.relationshipResourceKindGroup))) {
+          throw new ExporterException("Only one type of related resource is currently supported");
         }
-        metricMap.put(m.group(2), e.getValue());
+        metricMap.put(m.group(Patterns.relationshipMemberGroup), e.getValue());
       } else {
         metricMap.put("_placholder_" + mt, e.getValue());
       }

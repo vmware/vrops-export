@@ -214,19 +214,19 @@ public class StatsProcessor {
         final RowMetadata pMeta = meta.forParent();
         if (pMeta.isValid()) {
           final long now = System.currentTimeMillis();
-          final NamedResource parent =
-              dataProvider.getParentOf(resourceId, pMeta.getResourceKind());
-          if (parent != null) {
+          final NamedResource related =
+              dataProvider.getRelated(resourceId, pMeta.getResourceKind());
+          if (related != null) {
             final Rowset cached;
-            final String cacheKey = parent.getIdentifier() + "|" + begin + "|" + end;
+            final String cacheKey = related.getIdentifier() + "|" + begin + "|" + end;
             synchronized (rowsetCache) {
               cached = rowsetCache.get(cacheKey);
             }
-            // Try cache first! Chances are we've seen this parent many times.
+            // Try cache first! Chances are we've seen this related resource many times.
             if (cached != null) {
               if (verbose) {
                 log.debug(
-                    "Cache hit for parent " + cacheKey + " " + parent.getResourceKey().get("name"));
+                    "Cache hit for related resource " + cacheKey + " " + related.getResourceKey().get("name"));
               }
               ParentSplicer.spliceRows(rs, cached);
             } else {
@@ -236,13 +236,13 @@ public class StatsProcessor {
                     "Cache miss for parent "
                         + cacheKey
                         + " "
-                        + parent.getResourceKey().get("name"));
+                        + related.getResourceKey().get("name"));
               }
               final StatsProcessor parentProcessor =
                   new StatsProcessor(
                       conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
               try (final InputStream pIs =
-                  dataProvider.fetchMetricStream(new NamedResource[] {parent}, pMeta, begin, end)) {
+                  dataProvider.fetchMetricStream(new NamedResource[] {related}, pMeta, begin, end)) {
                 parentProcessor.process(
                     pIs, new ParentSplicer(rs, rowsetCache, cacheKey), begin, end);
               }
