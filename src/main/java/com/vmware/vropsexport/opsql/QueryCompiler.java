@@ -8,9 +8,13 @@ public class QueryCompiler {
     OpsqlLexer lexer = new OpsqlLexer(CharStreams.fromString(qtext));
     OpsqlParser parser = new OpsqlParser(new CommonTokenStream(lexer));
     QueryListener ql = new QueryListener();
-    parser.addParseListener(ql);
+    // parser.addParseListener(ql);
     OpsqlParser.QueryContext q = parser.query();
-    //return ql.getQuery();
+    // return ql.getQuery();
+
+    ASTCreatorVisitor acv = new ASTCreatorVisitor();
+    q.accept(acv);
+
     return new Query(); // TODO: Temporary
   }
 }

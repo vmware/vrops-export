@@ -18,26 +18,31 @@ resourceSpecifier
     ;
 
 filterExpression
-    : '(' filterExpression ')'
-    | Not filterExpression
-    | comparisonExpression
-    | filterExpression And filterExpression
-    | filterExpression Or filterExpression
+    : Not filterExpression                      # negation
+    | comparisonExpression                      # comparison
+    | filterExpression And filterExpression     # andExpression
+    | filterExpression Or filterExpression      # orExpression
+    | '(' filterExpression ')'                  # subExpression
     ;
 
 comparisonExpression
-    : booleanTerm BooleanOperator Literal
+    : booleanTerm BooleanOperator literal
     ;
 
 booleanTerm
-    : Identifier
-    | specialTerm
+    : Identifier                                # identifierTerm
+    | reservedFieldName                         # specialTerm
     ;
 
-specialTerm
+reservedFieldName
     : Name
     | Id
     | Tag
+    ;
+
+literal
+    : StringLiteral                             # stringLiteral
+    | ScientificNumber                          # number
     ;
 
 /// Reserved words
@@ -64,11 +69,6 @@ BooleanOperator
     | '>='
     | '<='
     | 'contains'
-    ;
-
-Literal
-    : StringLiteral
-    | Number
     ;
 
 // Identifiers
