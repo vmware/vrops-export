@@ -19,14 +19,10 @@ resourceSpecifier
 
 filterExpression
     : Not filterExpression                      # negation
-    | comparisonExpression                      # comparison
+    | booleanTerm BooleanOperator literal       # comparison
     | filterExpression And filterExpression     # andExpression
     | filterExpression Or filterExpression      # orExpression
     | '(' filterExpression ')'                  # subExpression
-    ;
-
-comparisonExpression
-    : booleanTerm BooleanOperator literal
     ;
 
 booleanTerm

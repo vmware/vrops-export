@@ -13,7 +13,8 @@ public class QueryCompiler {
     // return ql.getQuery();
 
     ASTCreatorVisitor acv = new ASTCreatorVisitor();
-    q.accept(acv);
+    QueryAST.Expression filterExp =
+        q.filterExpression() != null ? q.filterExpression().accept(acv) : null;
 
     return new Query(); // TODO: Temporary
   }
