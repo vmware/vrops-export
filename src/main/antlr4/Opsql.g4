@@ -1,49 +1,47 @@
-grammar opsql;
+grammar Opsql;
+
+@header {
+    package com.vmware.vropsexport.opsql;
+}
 
 query
-    : Select fieldList From resourceSpecifier (Where filterSpecifier)
+    : Select fieldList From resourceSpecifier (Where filterExpression)? EOF
     ;
 
 fieldList
-    : field
-    | fieldList ',' field
-    ;
-
-field
     : Identifier
+    | fieldList ',' Identifier
     ;
 
 resourceSpecifier
     : Identifier
-    | Identifier ':' Identifier
     ;
 
-filterSpecifier
-    : andExpression
-    | orExpression
+filterExpression
+    : '(' filterExpression ')'
+    | Not filterExpression
+    | comparisonExpression
+    | filterExpression And filterExpression
+    | filterExpression Or filterExpression
     ;
 
-andExpression:
-      andExpression (And andExpression)
-    | booleanExpression
+comparisonExpression
+    : booleanTerm BooleanOperator Literal
     ;
 
-orExpression:
-      orExpression (And orExpression)
-    | booleanExpression
+booleanTerm
+    : Identifier
+    | specialTerm
     ;
 
-booleanExpression
-    : simpleBooleanExpression
-    | Not simpleBooleanExpression
+specialTerm
+    : Name
+    | Id
+    | Tag
     ;
-
-simpleBooleanExpression
-    : Identifier BooleanOperator Literal
-   ;
 
 /// Reserved words
-Select:     'select' 'hello';
+Select:     'select';
 From:       'from';
 Where:      'where';
 And:        'and';
@@ -51,10 +49,14 @@ Or:         'or';
 Not:        'not';
 Parent:     'parent';
 Child:      'child';
-Prop:       '$prop';
+Name:       'name';
+Id:         'id';
+Tag:        'tag';
+Health:     'health';
+Status:     'status';
+State:      'state';
 
 BooleanOperator
-
     : '='
     | '!='
     | '>'
@@ -64,13 +66,26 @@ BooleanOperator
     | 'contains'
     ;
 
-Literal:
-      StringLiteral
+Literal
+    : StringLiteral
     | Number
     ;
 
-Identifier:
-    ValidIdStart ValidIdChar*
+// Identifiers
+Identifier
+    : ValidIdStart ValidIdChar*
+    ;
+
+ fragment ValidIdStart
+    : ('a' .. 'z') | ('A' .. 'Z') | '_'
+    ;
+
+ fragment ValidIdChar
+    : ValidIdStart | ('0' .. '9') | SpecialVropIdentifierChars
+    ;
+
+ fragment SpecialVropIdentifierChars
+    : [|$:]
     ;
 
 fragment EscapeSequence
@@ -102,6 +117,7 @@ HexadecimalDigit
 
 StringLiteral
     :  '"' SCharSequence? '"'
+//    | '\'' SCharSequence? '\''
     ;
 
 fragment SCharSequence
@@ -114,14 +130,6 @@ fragment SChar
     |   '\\\n'   // Added line
     |   '\\\r\n' // Added line
     ;
-
-fragment ValidIdStart
-   : ('a' .. 'z') | ('A' .. 'Z') | '_'
-   ;
-
-fragment ValidIdChar
-   : ValidIdStart | ('0' .. '9')
-   ;
 
 WS
    : [ \r\n\t] + -> skip
