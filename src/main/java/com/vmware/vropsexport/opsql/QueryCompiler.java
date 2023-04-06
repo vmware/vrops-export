@@ -12,9 +12,13 @@ public class QueryCompiler {
     OpsqlParser.QueryContext q = parser.query();
     // return ql.getQuery();
 
+      // Convert to a simplified AST since we need to do some boolean gymnastics
     ASTCreatorVisitor acv = new ASTCreatorVisitor();
     QueryAST.Expression filterExp =
         q.filterExpression() != null ? q.filterExpression().accept(acv) : null;
+
+    // Remove all negations
+    filterExp = NegationRemover.removeNegations(filterExp);
 
     return new Query(); // TODO: Temporary
   }

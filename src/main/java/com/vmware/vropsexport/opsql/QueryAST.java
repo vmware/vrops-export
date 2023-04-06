@@ -182,7 +182,7 @@ public class QueryAST {
 
     @Override
     public Expression negate() {
-      return child.negate();
+      return child instanceof Not ? ((Not) child).getChild() : child.negate();
     }
 
     @Override
@@ -192,7 +192,7 @@ public class QueryAST {
 
     @Override
     public String toString() {
-      return "not (" + child.toString() + ")";
+      return "not (" + child + ")";
     }
   }
 
@@ -216,7 +216,7 @@ public class QueryAST {
 
     @Override
     public String toString() {
-      return "(" + left.toString() + " and " + right.toString() + ")";
+      return "(" + left + " and " + right + ")";
     }
   }
 
@@ -240,7 +240,7 @@ public class QueryAST {
 
     @Override
     public String toString() {
-      return "(" + left.toString() + " or " + right.toString() + ")";
+      return "(" + left + " or " + right + ")";
     }
   }
 
@@ -282,7 +282,7 @@ public class QueryAST {
 
     @Override
     public String toString() {
-      return left.toString() + " " + operator + " " + right.toString();
+      return left + " " + operator + " " + right;
     }
   }
 
