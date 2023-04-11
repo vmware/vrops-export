@@ -65,10 +65,6 @@ public class Config implements Validatable {
     private String metric;
     private String prop;
 
-    public void setTag(final String tag) {
-      this.prop = TAG_PROP_PREFIX + tag;
-    }
-
     public Field() {}
 
     public Field(final String alias, final String name, final Kind kind) {
@@ -85,6 +81,10 @@ public class Config implements Validatable {
           setTag(name);
           break;
       }
+    }
+
+    public String getName() {
+      return hasProp() ? prop : metric; // TODO: Handle tags?
     }
 
     public String getAlias() {
@@ -113,6 +113,10 @@ public class Config implements Validatable {
 
     public void setProp(final String prop) {
       this.prop = prop;
+    }
+
+    public void setTag(final String tag) {
+      prop = TAG_PROP_PREFIX + tag;
     }
 
     public boolean hasProp() {

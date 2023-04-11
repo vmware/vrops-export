@@ -5,29 +5,42 @@ grammar Opsql;
 }
 
 query
-    : Select fieldList From resourceSpecifier (Where filterExpression)? EOF
+    : Select fieldList From resource=Identifier (Where filterExpression)? EOF   # selectStatement
+    | Set Identifier '=' literal                                                # setStatement
     ;
 
 fieldList
-    : Identifier
-    | fieldList ',' Identifier
+    : fieldSpecifier (',' fieldSpecifier)*
     ;
 
-resourceSpecifier
-    : Identifier
+fieldSpecifier
+    : propertyOrMetricIdentifier                                 # simpleField
+    | field=propertyOrMetricIdentifier As? alias=Identifier      # aliasedField
     ;
 
 filterExpression
-    : Not filterExpression                      # negation
-    | booleanTerm BooleanOperator literal       # comparison
-    | filterExpression And filterExpression     # andExpression
-    | filterExpression Or filterExpression      # orExpression
-    | '(' filterExpression ')'                  # subExpression
+    : topLevelBoolean (And topLevelBoolean)+
     ;
 
-booleanTerm
-    : Identifier                                # identifierTerm
-    | reservedFieldName                         # specialTerm
+topLevelBoolean
+    : Metrics '(' expr=booleanExpression ')'                    # metricFilter
+    | Properties '(' expr=booleanExpression ')'                 # propertiesFilter
+    | reservedFieldComparison (And reservedFieldComparison)*    # reservedFieldFilter
+    ;
+
+reservedFieldComparison
+    : name=reservedFieldName op=BooleanOperator value=literal
+    ;
+
+booleanExpression
+    : comparison (And comparison)+                              # andExpression
+    | comparison (Or comparison)+                               # orExpression
+    | comparison                                                # simpleExpression
+    ;
+
+comparison
+    : Not propertyOrMetricIdentifier op=BooleanOperator literal # negatedComparison
+    | propertyOrMetricIdentifier BooleanOperator literal        # normalComparison
     ;
 
 reservedFieldName
@@ -37,8 +50,8 @@ reservedFieldName
     ;
 
 literal
-    : StringLiteral                             # stringLiteral
-    | ScientificNumber                          # number
+    : StringLiteral                                             # stringLiteral
+    | ScientificNumber                                          # number
     ;
 
 /// Reserved words
@@ -56,6 +69,10 @@ Tag:        'tag';
 Health:     'health';
 Status:     'status';
 State:      'state';
+As:         'as';
+Metrics:    'metrics';
+Properties: 'properties';
+Set:        'set';
 
 BooleanOperator
     : '='
@@ -65,9 +82,19 @@ BooleanOperator
     | '>='
     | '<='
     | 'contains'
+    | 'in'
     ;
 
 // Identifiers
+propertyOrMetricIdentifier
+    : PropertyIdentifier                                        # propertyIdentifier
+    | Identifier                                                # metricIdentifier
+    ;
+
+PropertyIdentifier
+    : '@' Identifier
+    ;
+
 Identifier
     : ValidIdStart ValidIdChar*
     ;
@@ -127,10 +154,6 @@ fragment SChar
     |   '\\\r\n' // Added line
     ;
 
-WS
-   : [ \r\n\t] + -> skip
-   ;
-
 ScientificNumber
    : Sign? Number ((E1 | E2) Sign? Number)?
    ;
@@ -151,4 +174,8 @@ fragment E2
 
 fragment Sign
    : ('+' | '-')
+   ;
+
+WS
+   : [ \r\n\t] + -> skip
    ;
