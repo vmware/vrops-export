@@ -5,7 +5,8 @@ grammar Opsql;
 }
 
 query
-    : Select fieldList From resource=Identifier (Where filterExpression)? EOF   # selectStatement
+ //   : Select fieldList From resource=Identifier (Where filterExpression)? EOF   # selectStatement
+    : Resource '(' Identifier ')' ('.' filter)* '.' Fields fieldList            # quertyStatement
     | Set Identifier '=' literal                                                # setStatement
     ;
 
@@ -18,19 +19,15 @@ fieldSpecifier
     | field=propertyOrMetricIdentifier As? alias=Identifier      # aliasedField
     ;
 
-filterExpression
-    : topLevelBoolean (And topLevelBoolean)+
+filter
+    : WhereMetrics '(' expr=booleanExpression ')'               # whereMetric
+    | WhereProperties '(' expr=booleanExpression ')'            # whereProperties
+    | WhereHealth '(' args=literalList ')'                      # whereHealth
+    | WhereTags '(' args=literalList ')'                        # whereTags
+    | WhereState '(' args=literalList ')'                       # whereState
+    | WhereStatus '(' args=literalList ')'                      # whereStatus
     ;
 
-topLevelBoolean
-    : Metrics '(' expr=booleanExpression ')'                    # metricFilter
-    | Properties '(' expr=booleanExpression ')'                 # propertiesFilter
-    | reservedFieldComparison (And reservedFieldComparison)*    # reservedFieldFilter
-    ;
-
-reservedFieldComparison
-    : name=reservedFieldName op=BooleanOperator value=literal
-    ;
 
 booleanExpression
     : comparison (And comparison)+                              # andExpression
@@ -43,10 +40,8 @@ comparison
     | propertyOrMetricIdentifier BooleanOperator literal        # normalComparison
     ;
 
-reservedFieldName
-    : Name
-    | Id
-    | Tag
+literalList
+    : literal (',' literal)*
     ;
 
 literal
@@ -55,6 +50,15 @@ literal
     ;
 
 /// Reserved words
+Resource:           'resource';
+WhereMetrics:       'whereMetrics';
+WhereProperties:    'whereProperties';
+WhereHealth:        'whereHealth';
+WhereState:         'whereState';
+WhereStatus:        'whereStatus';
+WhereTags:          'whereTags';
+
+
 Select:     'select';
 From:       'from';
 Where:      'where';
