@@ -6,7 +6,7 @@ grammar Opsql;
 
 query
  //   : Select fieldList From resource=Identifier (Where filterExpression)? EOF   # selectStatement
-    : Resource '(' Identifier ')' ('.' filter)* '.' Fields fieldList            # quertyStatement
+    : Resource '(' resource=Identifier ')' ('.' filter)* '.' Fields '(' fieldList ')'   # queryStatement
     | Set Identifier '=' literal                                                # setStatement
     ;
 
@@ -20,7 +20,7 @@ fieldSpecifier
     ;
 
 filter
-    : WhereMetrics '(' expr=booleanExpression ')'               # whereMetric
+    : WhereMetrics '(' expr=booleanExpression ')'               # whereMetrics
     | WhereProperties '(' expr=booleanExpression ')'            # whereProperties
     | WhereHealth '(' args=literalList ')'                      # whereHealth
     | WhereTags '(' args=literalList ')'                        # whereTags
@@ -49,6 +49,11 @@ literal
     | ScientificNumber                                          # number
     ;
 
+propertyOrMetricIdentifier
+    : PropertyIdentifier                                        # propertyIdentifier
+    | Identifier                                                # metricIdentifier
+    ;
+
 /// Reserved words
 Resource:           'resource';
 WhereMetrics:       'whereMetrics';
@@ -57,6 +62,7 @@ WhereHealth:        'whereHealth';
 WhereState:         'whereState';
 WhereStatus:        'whereStatus';
 WhereTags:          'whereTags';
+Fields:             'fields';
 
 
 Select:     'select';
@@ -87,12 +93,6 @@ BooleanOperator
     | '<='
     | 'contains'
     | 'in'
-    ;
-
-// Identifiers
-propertyOrMetricIdentifier
-    : PropertyIdentifier                                        # propertyIdentifier
-    | Identifier                                                # metricIdentifier
     ;
 
 PropertyIdentifier

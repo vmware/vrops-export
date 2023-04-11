@@ -26,7 +26,7 @@ public class QueryCompilerTest {
   @Test
   public void testSimpleQuery() throws IOException {
     final QueryCompiler qc = new QueryCompiler();
-    runQuery("select cpu|demandmhz from VMWARE:VirtualMachine", "SimpleQueryResult");
+    runQuery("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz)", "SimpleQueryResult");
   }
 
   @Test

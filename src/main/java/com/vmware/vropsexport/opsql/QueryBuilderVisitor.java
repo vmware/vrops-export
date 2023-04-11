@@ -136,7 +136,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor {
   }
 
   @Override
-  public Object visitSelectStatement(final OpsqlParser.SelectStatementContext ctx) {
+  public Object visitQueryStatement(final OpsqlParser.QueryStatementContext ctx) {
     final String resource = ctx.resource.getText();
     final int p = resource.indexOf(":");
     if (p == -1) {
@@ -145,7 +145,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor {
       query.getResourceRequest().setAdapterKind(List.of(resource.substring(0, p)));
       query.getResourceRequest().setResourceKind(List.of(resource.substring(p + 1)));
     }
-    return super.visitSelectStatement(ctx);
+    return super.visitQueryStatement(ctx);
   }
 
   @Override
@@ -164,17 +164,17 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor {
   // ***************** Filters *****************
 
   @Override
-  public Object visitMetricFilter(final OpsqlParser.MetricFilterContext ctx) {
+  public Object visitWhereMetrics(final OpsqlParser.WhereMetricsContext ctx) {
     mode = Mode.metric;
     query.resourceRequest.setStatConditions(makeFilter());
-    return super.visitMetricFilter(ctx);
+    return super.visitWhereMetrics(ctx);
   }
 
   @Override
-  public Object visitPropertiesFilter(final OpsqlParser.PropertiesFilterContext ctx) {
+  public Object visitWhereProperties(final OpsqlParser.WherePropertiesContext ctx) {
     mode = Mode.property;
     query.resourceRequest.setPropertyConditions(makeFilter());
-    return super.visitPropertiesFilter(ctx);
+    return super.visitWhereProperties(ctx);
   }
 
   @Override
