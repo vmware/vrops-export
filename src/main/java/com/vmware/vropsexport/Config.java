@@ -20,11 +20,13 @@ package com.vmware.vropsexport;
 import com.vmware.vropsexport.elasticsearch.ElasticSearchConfig;
 import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.json.JsonConfig;
+import com.vmware.vropsexport.models.ResourceRequest;
 import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
@@ -132,8 +134,7 @@ public class Config implements Validatable {
   private String outputFormat;
   private SQLConfig sqlConfig;
   private WavefrontConfig wavefrontConfig;
-  private String resourceKind;
-  private String adapterKind;
+  private ResourceRequest query = new ResourceRequest();
   private boolean compact;
   private String compactifyAlg = "LATEST";
   private CSVConfig csvConfig;
@@ -150,7 +151,7 @@ public class Config implements Validatable {
     if (allMetrics && fields != null) {
       throw new ValidationException("The 'allMetric' and 'fields' settings are mutually exclusive");
     }
-    if (resourceKind == null) {
+    if (query.getResourceKind().isEmpty()) {
       throw new ValidationException("'resourceType' must be specified");
     }
     if (outputFormat == null) {
@@ -233,10 +234,10 @@ public class Config implements Validatable {
   public void setResourceType(final String resourceType) {
     final Matcher m = Patterns.adapterAndResourceKindPattern.matcher(resourceType);
     if (m.matches()) {
-      adapterKind = m.group(1);
-      resourceKind = m.group(2);
+      query.setAdapterKind(Collections.singletonList(m.group(1)));
+      query.setResourceKind(Collections.singletonList(m.group(2)));
     } else {
-      resourceKind = resourceType;
+      query.setResourceKind(Collections.singletonList(resourceType));
     }
   }
 
@@ -302,19 +303,21 @@ public class Config implements Validatable {
   }
 
   public String getResourceKind() {
-    return resourceKind;
+    return query.getResourceKind().get(0);
   }
 
   public void setResourceKind(final String resourceKind) {
-    this.resourceKind = resourceKind;
+    query.setResourceKind(Collections.singletonList(resourceKind));
   }
 
   public String getAdapterKind() {
-    return adapterKind;
+    return query.getAdapterKind() == null || query.getAdapterKind().isEmpty()
+        ? null
+        : query.getAdapterKind().get(0);
   }
 
   public void setAdapterKind(final String adapterKind) {
-    this.adapterKind = adapterKind;
+    query.setAdapterKind(Collections.singletonList(adapterKind));
   }
 
   public boolean hasMetrics() {
@@ -352,5 +355,13 @@ public class Config implements Validatable {
 
   public void setCompactifyAlg(final String compactifyAlg) {
     this.compactifyAlg = compactifyAlg;
+  }
+
+  public ResourceRequest getQuery() {
+    return query;
+  }
+
+  public void setQuery(final ResourceRequest query) {
+    this.query = query;
   }
 }

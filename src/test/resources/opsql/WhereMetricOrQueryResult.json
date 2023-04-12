@@ -1,0 +1,30 @@
+{
+  "resourceRequest": {
+    "adapterKind": [
+      "VMWARE"
+    ],
+    "resourceKind": [
+      "VirtualMachine"
+    ],
+    "statConditions": {
+      "conjunctionOperator": "OR",
+      "conditions": [
+        {
+          "key": "cpu|demandmhz",
+          "operator": "GT",
+          "doubleValue": 20
+        },
+        {
+          "key": "cpu|demandpct",
+          "operator": "GT",
+          "doubleValue": 30
+        }
+      ]
+    }
+  },
+  "fields": [
+    {
+      "metric": "cpu|demandmhz"
+    }
+  ]
+}

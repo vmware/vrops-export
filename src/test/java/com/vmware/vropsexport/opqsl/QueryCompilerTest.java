@@ -50,9 +50,16 @@ public class QueryCompilerTest {
   }
 
   @Test
-  public void testMetricWhereQuery() throws IOException {
+  public void testMetricWhereAndQuery() throws IOException {
     runQuery(
         "resource(VMWARE:VirtualMachine).whereMetrics(cpu|demandmhz > 20 and cpu|demandpct > 30).fields(cpu|demandmhz)",
-        "WhereMetricQueryResult");
+        "WhereMetricAndQueryResult");
+  }
+
+  @Test
+  public void testMetricWhereOrQuery() throws IOException {
+    runQuery(
+        "resource(VMWARE:VirtualMachine).whereMetrics(cpu|demandmhz > 20 or cpu|demandpct > 30).fields(cpu|demandmhz)",
+        "WhereMetricOrQueryResult");
   }
 }

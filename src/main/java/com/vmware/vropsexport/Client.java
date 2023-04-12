@@ -206,7 +206,8 @@ public class Client {
   public InputStream postJsonReturnStream(final String uri, final Object payload)
       throws IOException, HttpException {
     final HttpPost post = new HttpPost(urlBase + uri);
-    post.setEntity(new StringEntity(getObjectMapper().writeValueAsString(payload)));
+    final String content = getObjectMapper().writeValueAsString(payload);
+    post.setEntity(new StringEntity(content));
     post.addHeader("Accept", "application/json");
     post.addHeader("Content-Type", "application/json");
     post.addHeader("Accept-Encoding", "gzip");
@@ -214,7 +215,7 @@ public class Client {
       post.addHeader("Authorization", tokenPrefix + authToken + "");
     }
     if (dumpRest) {
-      log.debug("POST " + urlBase + uri);
+      log.debug("POST " + urlBase + uri + "Body: " + content);
     }
     final HttpResponse resp = client.execute(post);
     checkResponse(resp);

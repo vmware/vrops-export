@@ -39,6 +39,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Scanner;
 
 public class Main {
@@ -240,11 +241,14 @@ public class Main {
           }
           final Exporter exporter =
               createExporter(client, threads, conf, verbose, useTmpFile, maxRows, maxRes);
+          if (namePattern != null) {
+            conf.getQuery().setName(Collections.singletonList(namePattern));
+          }
           if (output == null) {
-            exporter.exportTo(System.out, begin, end, namePattern, parentSpec, quiet);
+            exporter.exportTo(System.out, begin, end, parentSpec, quiet);
           } else {
             try (final OutputStream out = new FileOutputStream(output)) {
-              exporter.exportTo(out, begin, end, namePattern, parentSpec, quiet);
+              exporter.exportTo(out, begin, end, parentSpec, quiet);
             }
           }
         }

@@ -31,8 +31,8 @@ filter
 
 
 booleanExpression
-    : first=comparison rest=(And comparison)+                   # andExpression
-    | first=comparison rest=(Or comparison)+                    # orExpression
+    : comparison (And comparison)+                              # andExpression
+    | comparison (Or comparison)+                               # orExpression
     | comparison                                                # simpleExpression
     ;
 

@@ -142,11 +142,12 @@ public class Exporter implements DataProvider {
       final OutputStream out,
       final long begin,
       final long end,
-      final String namePattern,
       final String parentSpec,
       final boolean quiet)
       throws IOException, HttpException, ExporterException {
     Progress progress = null;
+
+    final ResourceRequest query = conf.getQuery();
 
     final RowMetadata meta =
         conf.isAllMetrics()
@@ -167,8 +168,10 @@ public class Exporter implements DataProvider {
                 + ". should be on the form ResourceKind:resourceName");
       }
       // TODO: No way of specifying adapter type here. Should there be?
-      final List<NamedResource> pResources =
-          fetchResources(m.group(1), null, m.group(2), 0).getResourceList();
+      final ResourceRequest parentQuery = new ResourceRequest();
+      parentQuery.setAdapterKind(Collections.singletonList(m.group(1)));
+      parentQuery.setResourceKind(Collections.singletonList(m.group(2)));
+      final List<NamedResource> pResources = fetchResources(query, 0).getResourceList();
       if (pResources.size() == 0) {
         throw new ExporterException("Parent not found");
       }
@@ -188,8 +191,7 @@ public class Exporter implements DataProvider {
         resPage =
             client.getJson(url, PageOfResources.class, "relationshipType=CHILD", "page=" + page++);
       } else {
-        resPage =
-            fetchResources(conf.getResourceKind(), conf.getAdapterKind(), namePattern, page++);
+        resPage = fetchResources(query, page++);
       }
 
       final List<NamedResource> resources = resPage.getResourceList();
@@ -278,21 +280,11 @@ public class Exporter implements DataProvider {
     }
   }
 
-  private PageOfResources fetchResources(
-      final String resourceKind, final String adapterKind, final String name, final int page)
+  private PageOfResources fetchResources(final ResourceRequest query, final int page)
       throws IOException, HttpException {
-    final String url = "/suite-api/api/resources";
-    final ArrayList<String> qs = new ArrayList<>();
-    if (adapterKind != null) {
-      qs.add("adapterKind=" + urlencode(adapterKind));
-    }
-    qs.add("resourceKind=" + urlencode(resourceKind));
-    qs.add("pageSize=" + maxResourceFetch);
-    qs.add("page=" + page);
-    if (name != null) {
-      qs.add("name=" + urlencode(name));
-    }
-    final PageOfResources response = client.getJson(url, qs, PageOfResources.class);
+    final String url =
+        "/suite-api/api/resources/query?page=" + page + "&pageSize=" + maxResourceFetch;
+    final PageOfResources response = client.postJsonReturnJson(url, query, PageOfResources.class);
     if (verbose) {
       log.debug("Resources found: " + response.getPageInfo().getTotalCount());
     }
