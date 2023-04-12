@@ -33,16 +33,24 @@ public class QueryCompilerTest {
   public void testMultiFieldQuery() throws IOException {
     final QueryCompiler qc = new QueryCompiler();
     runQuery(
-        "select cpu|demandmhz, cpu|demandpct, @summary|guestFullName from VMWARE:VirtualMachine",
+        "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz, cpu|demandpct, @summary|guestFullName)",
         "MultiFieldQueryResult");
   }
 
   @Test
-  public void testSimpleWhereQuery() throws IOException {
+  public void testSimplFilterQuery() throws IOException {
     final QueryCompiler qc = new QueryCompiler();
     runQuery(
-        "select cpu|demandmhz from VMWARE:VirtualMachine where name = \"hello\"",
-        "SimpleWhereQueryResult");
+        "resource(VMWARE:VirtualMachine).name(\"hello\").fields(cpu|demandmhz)",
+        "SimpleFilterQueryResult");
+  }
+
+  @Test
+  public void testStackedFilterQuery() throws IOException {
+    final QueryCompiler qc = new QueryCompiler();
+    runQuery(
+        "resource(VMWARE:VirtualMachine).name(\"hello\", \"goodbye\").regex(\".*foo.*\").whereHealth(\"RED\", \"YELLOW\").whereStatus(\"OK\").whereState(\"RUNNING\").fields(cpu|demandmhz)",
+        "StackedFilterQueryResult");
   }
 
   @Test

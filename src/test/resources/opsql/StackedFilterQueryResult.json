@@ -1,0 +1,32 @@
+{
+  "resourceRequest": {
+    "adapterKind": [
+      "VMWARE"
+    ],
+    "resourceKind": [
+      "VirtualMachine"
+    ],
+    "name": [
+      "hello",
+      "goodbye"
+    ],
+    "regex": [
+      ".*foo.*"
+    ],
+    "resourceHealth": [
+      "RED",
+      "YELLOW"
+    ],
+    "resourceStatus": [
+      "OK"
+    ],
+    "resourceState": [
+      "RUNNING"
+    ]
+  },
+  "fields": [
+    {
+      "metric": "cpu|demandmhz"
+    }
+  ]
+}

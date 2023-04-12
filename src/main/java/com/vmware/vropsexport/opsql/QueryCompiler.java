@@ -8,6 +8,9 @@ public class QueryCompiler {
     final OpsqlLexer lexer = new OpsqlLexer(CharStreams.fromString(qtext));
     final OpsqlParser parser = new OpsqlParser(new CommonTokenStream(lexer));
     final OpsqlParser.QueryContext q = parser.query();
+    if (q.exception != null) {
+      throw q.exception;
+    }
 
     final QueryBuilderVisitor queryBuilder = new QueryBuilderVisitor();
     q.accept(queryBuilder);

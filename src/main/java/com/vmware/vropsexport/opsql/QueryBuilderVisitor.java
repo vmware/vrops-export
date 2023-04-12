@@ -1,20 +1,12 @@
 package com.vmware.vropsexport.opsql;
 
-import com.sun.tools.javac.util.List;
 import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.models.ResourceRequest;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
-public class QueryBuilderVisitor extends OpsqlBaseVisitor {
-  private enum Mode {
-    metric,
-    property,
-    reserved
-  }
+public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   private static final Map<String, String> toInternalOp = new HashMap<>();
 
@@ -68,8 +60,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor {
   private static class IdentifierResolver extends OpsqlBaseVisitor<Config.Field> {
 
     public static Config.Field resolveAny(final ParseTree ctx) {
-      final Config.Field f = ctx.accept(new IdentifierResolver());
-      return f;
+      return ctx.accept(new IdentifierResolver());
     }
 
     public static Config.Field resolveProperty(final ParseTree ctx) {
@@ -105,34 +96,78 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor {
     }
   }
 
-  private static class FieldResolver extends OpsqlBaseVisitor<Config.Field> {
+  private static class BooleanExpressionVisitor extends OpsqlBaseVisitor<Object> {
+    private final ResourceRequest.FilterSpec spec = new ResourceRequest.FilterSpec();
+
     @Override
-    public Config.Field visitSimpleField(final OpsqlParser.SimpleFieldContext ctx) {
-      final Config.Field f = new Config.Field();
-      return super.visitSimpleField(ctx);
+    public Object visitAndExpression(final OpsqlParser.AndExpressionContext ctx) {
+      spec.setConjunctionOperator("AND");
+      return super.visitAndExpression(ctx);
+    }
+
+    @Override
+    public Object visitOrExpression(final OpsqlParser.OrExpressionContext ctx) {
+      spec.setConjunctionOperator("OR");
+      return super.visitOrExpression(ctx);
+    }
+
+    @Override
+    public Object visitSimpleExpression(final OpsqlParser.SimpleExpressionContext ctx) {
+      spec.setConjunctionOperator("AND");
+      return super.visitSimpleExpression(ctx);
+    }
+
+    @Override
+    public Object visitNormalComparison(final OpsqlParser.NormalComparisonContext ctx) {
+      final ResourceRequest.Condition cond = new ResourceRequest.Condition();
+      cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
+      cond.setOperator(toInternalOp.get(ctx.BooleanOperator().getText()));
+      ctx.accept(new LiteralResolver(cond));
+      return null; // No need to go deeper
+    }
+
+    @Override
+    public Object visitNegatedComparison(final OpsqlParser.NegatedComparisonContext ctx) {
+      final ResourceRequest.Condition cond = new ResourceRequest.Condition();
+      cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
+      cond.setOperator(operatorNegations.get(toInternalOp.get(ctx.BooleanOperator().getText())));
+      ctx.accept(new LiteralResolver(cond));
+      return null; // No need to go deeper
+    }
+
+    public ResourceRequest.FilterSpec getSpec() {
+      return spec;
+    }
+
+    public static ResourceRequest.FilterSpec resolveFilter(final OpsqlParser.FilterContext ctx) {
+      final BooleanExpressionVisitor v = new BooleanExpressionVisitor();
+      ctx.accept(v);
+      return v.getSpec();
     }
   }
 
   private final Query query = new Query();
 
-  private Mode mode;
-
   public QueryBuilderVisitor() {
     super();
   }
 
-  private ResourceRequest.FilterSpec getConditions() {
-    if (mode == Mode.property) {
-      return query.resourceRequest.getPropertyConditions();
-    } else {
-      return query.resourceRequest.getStatConditions();
+  private static String unquote(final String s) {
+    if (s.length() == 2) {
+      return "";
     }
+    if (s.length() < 2) {
+      throw new IllegalArgumentException("Internal error: Quoted string has no quotes");
+    }
+    return s.substring(1, s.length() - 1);
   }
 
-  private ResourceRequest.FilterSpec makeFilter() {
-    final ResourceRequest.FilterSpec fs = new ResourceRequest.FilterSpec();
-    fs.setConditions(new LinkedList<>());
-    return fs;
+  private static List<String> extractStringList(final OpsqlParser.StringLiteralListContext ctx) {
+    final List<String> s = new ArrayList<String>(ctx.children.size());
+    for (int i = 0; i < ctx.children.size(); i += 2) {
+      s.add(unquote(ctx.getChild(i).getText()));
+    }
+    return s;
   }
 
   @Override
@@ -140,10 +175,14 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor {
     final String resource = ctx.resource.getText();
     final int p = resource.indexOf(":");
     if (p == -1) {
-      query.getResourceRequest().setResourceKind(List.of(resource));
+      query.getResourceRequest().setResourceKind(Collections.singletonList(resource));
     } else {
-      query.getResourceRequest().setAdapterKind(List.of(resource.substring(0, p)));
-      query.getResourceRequest().setResourceKind(List.of(resource.substring(p + 1)));
+      query
+          .getResourceRequest()
+          .setAdapterKind(Collections.singletonList(resource.substring(0, p)));
+      query
+          .getResourceRequest()
+          .setResourceKind(Collections.singletonList((resource.substring(p + 1))));
     }
     return super.visitQueryStatement(ctx);
   }
@@ -164,47 +203,45 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor {
   // ***************** Filters *****************
 
   @Override
+  public Object visitWhereName(final OpsqlParser.WhereNameContext ctx) {
+    query.resourceRequest.setName(extractStringList(ctx.stringLiteralList()));
+    return super.visitWhereName(ctx);
+  }
+
+  @Override
+  public Object visitWhereRegex(final OpsqlParser.WhereRegexContext ctx) {
+    query.resourceRequest.setRegex(extractStringList(ctx.stringLiteralList()));
+    return super.visitWhereRegex(ctx);
+  }
+
+  @Override
+  public Object visitWhereHealth(final OpsqlParser.WhereHealthContext ctx) {
+    query.resourceRequest.setResourceHealth(extractStringList(ctx.stringLiteralList()));
+    return super.visitWhereHealth(ctx);
+  }
+
+  @Override
+  public Object visitWhereState(final OpsqlParser.WhereStateContext ctx) {
+    query.resourceRequest.setResourceState(extractStringList(ctx.stringLiteralList()));
+    return super.visitWhereState(ctx);
+  }
+
+  @Override
+  public Object visitWhereStatus(final OpsqlParser.WhereStatusContext ctx) {
+    query.resourceRequest.setResourceStatus(extractStringList(ctx.stringLiteralList()));
+    return super.visitWhereStatus(ctx);
+  }
+
+  @Override
   public Object visitWhereMetrics(final OpsqlParser.WhereMetricsContext ctx) {
-    mode = Mode.metric;
-    query.resourceRequest.setStatConditions(makeFilter());
+    query.resourceRequest.setStatConditions(BooleanExpressionVisitor.resolveFilter(ctx));
     return super.visitWhereMetrics(ctx);
   }
 
   @Override
   public Object visitWhereProperties(final OpsqlParser.WherePropertiesContext ctx) {
-    mode = Mode.property;
-    query.resourceRequest.setPropertyConditions(makeFilter());
+    query.resourceRequest.setPropertyConditions(BooleanExpressionVisitor.resolveFilter(ctx));
     return super.visitWhereProperties(ctx);
-  }
-
-  @Override
-  public Object visitAndExpression(final OpsqlParser.AndExpressionContext ctx) {
-    getConditions().setConjunctionOperator("AND");
-    return super.visitAndExpression(ctx);
-  }
-
-  @Override
-  public Object visitOrExpression(final OpsqlParser.OrExpressionContext ctx) {
-    getConditions().setConjunctionOperator("OR");
-    return super.visitOrExpression(ctx);
-  }
-
-  @Override
-  public Object visitNormalComparison(final OpsqlParser.NormalComparisonContext ctx) {
-    final ResourceRequest.Condition cond = new ResourceRequest.Condition();
-    cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
-    cond.setOperator(toInternalOp.get(ctx.BooleanOperator().getText()));
-    ctx.accept(new LiteralResolver(cond));
-    return null; // No need to go deeper
-  }
-
-  @Override
-  public Object visitNegatedComparison(final OpsqlParser.NegatedComparisonContext ctx) {
-    final ResourceRequest.Condition cond = new ResourceRequest.Condition();
-    cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
-    cond.setOperator(operatorNegations.get(toInternalOp.get(ctx.BooleanOperator().getText())));
-    ctx.accept(new LiteralResolver(cond));
-    return null; // No need to go deeper
   }
 
   public Query getQuery() {

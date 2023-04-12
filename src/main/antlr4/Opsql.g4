@@ -5,9 +5,8 @@ grammar Opsql;
 }
 
 query
- //   : Select fieldList From resource=Identifier (Where filterExpression)? EOF   # selectStatement
     : Resource '(' resource=Identifier ')' ('.' filter)* '.' Fields '(' fieldList ')'   # queryStatement
-    | Set Identifier '=' literal                                                # setStatement
+    | Set Identifier '=' literal                                                        # setStatement
     ;
 
 fieldList
@@ -22,16 +21,18 @@ fieldSpecifier
 filter
     : WhereMetrics '(' expr=booleanExpression ')'               # whereMetrics
     | WhereProperties '(' expr=booleanExpression ')'            # whereProperties
-    | WhereHealth '(' args=literalList ')'                      # whereHealth
-    | WhereTags '(' args=literalList ')'                        # whereTags
-    | WhereState '(' args=literalList ')'                       # whereState
-    | WhereStatus '(' args=literalList ')'                      # whereStatus
+    | WhereHealth '(' args=stringLiteralList ')'                # whereHealth
+    | WhereTags '(' args=stringLiteralList ')'                  # whereTags
+    | WhereState '(' args=stringLiteralList ')'                 # whereState
+    | WhereStatus '(' args=stringLiteralList ')'                # whereStatus
+    | Name '(' args=stringLiteralList ')'                       # whereName
+    | RegEx '(' args=stringLiteralList ')'                      # whereRegex
     ;
 
 
 booleanExpression
-    : comparison (And comparison)+                              # andExpression
-    | comparison (Or comparison)+                               # orExpression
+    : first=comparison rest=(And comparison)+                   # andExpression
+    | first=comparison rest=(Or comparison)+                    # orExpression
     | comparison                                                # simpleExpression
     ;
 
@@ -40,8 +41,8 @@ comparison
     | propertyOrMetricIdentifier BooleanOperator literal        # normalComparison
     ;
 
-literalList
-    : literal (',' literal)*
+stringLiteralList
+    : StringLiteral (',' StringLiteral)*
     ;
 
 literal
@@ -63,6 +64,7 @@ WhereState:         'whereState';
 WhereStatus:        'whereStatus';
 WhereTags:          'whereTags';
 Fields:             'fields';
+RegEx:              'regex';
 
 
 Select:     'select';
