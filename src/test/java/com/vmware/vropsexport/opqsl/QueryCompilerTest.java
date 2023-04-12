@@ -25,13 +25,11 @@ public class QueryCompilerTest {
 
   @Test
   public void testSimpleQuery() throws IOException {
-    final QueryCompiler qc = new QueryCompiler();
     runQuery("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz)", "SimpleQueryResult");
   }
 
   @Test
   public void testMultiFieldQuery() throws IOException {
-    final QueryCompiler qc = new QueryCompiler();
     runQuery(
         "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz, cpu|demandpct, @summary|guestFullName)",
         "MultiFieldQueryResult");
@@ -39,7 +37,6 @@ public class QueryCompilerTest {
 
   @Test
   public void testSimplFilterQuery() throws IOException {
-    final QueryCompiler qc = new QueryCompiler();
     runQuery(
         "resource(VMWARE:VirtualMachine).name(\"hello\").fields(cpu|demandmhz)",
         "SimpleFilterQueryResult");
@@ -47,16 +44,15 @@ public class QueryCompilerTest {
 
   @Test
   public void testStackedFilterQuery() throws IOException {
-    final QueryCompiler qc = new QueryCompiler();
     runQuery(
         "resource(VMWARE:VirtualMachine).name(\"hello\", \"goodbye\").regex(\".*foo.*\").whereHealth(\"RED\", \"YELLOW\").whereStatus(\"OK\").whereState(\"RUNNING\").fields(cpu|demandmhz)",
         "StackedFilterQueryResult");
   }
 
   @Test
-  public void testComplexWhereQuery() {
-    final QueryCompiler qc = new QueryCompiler();
-    qc.compile(
-        "select cpu|demandmhz, @summary|guestFullName from VMWARE:VirtualMachine where not name = \"hello\" and id = \"1\" and cpu|demandmhz > 42 or cpu|demandmhz < 1 and cpu|demandpct > 42");
+  public void testMetricWhereQuery() throws IOException {
+    runQuery(
+        "resource(VMWARE:VirtualMachine).whereMetrics(cpu|demandmhz > 20 and cpu|demandpct > 30).fields(cpu|demandmhz)",
+        "WhereMetricQueryResult");
   }
 }

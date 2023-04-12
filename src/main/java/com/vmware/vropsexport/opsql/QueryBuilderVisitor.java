@@ -99,6 +99,10 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
   private static class BooleanExpressionVisitor extends OpsqlBaseVisitor<Object> {
     private final ResourceRequest.FilterSpec spec = new ResourceRequest.FilterSpec();
 
+    public BooleanExpressionVisitor() {
+      spec.setConditions(new LinkedList<>());
+    }
+
     @Override
     public Object visitAndExpression(final OpsqlParser.AndExpressionContext ctx) {
       spec.setConjunctionOperator("AND");
@@ -123,6 +127,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
       cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
       cond.setOperator(toInternalOp.get(ctx.BooleanOperator().getText()));
       ctx.accept(new LiteralResolver(cond));
+      spec.getConditions().add(cond);
       return null; // No need to go deeper
     }
 
@@ -132,6 +137,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
       cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
       cond.setOperator(operatorNegations.get(toInternalOp.get(ctx.BooleanOperator().getText())));
       ctx.accept(new LiteralResolver(cond));
+      spec.getConditions().add(cond);
       return null; // No need to go deeper
     }
 
