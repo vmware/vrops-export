@@ -323,10 +323,10 @@ public class Exporter implements DataProvider {
 
   private InputStream fetchLatestMetrics(final NamedResource[] resList, final RowMetadata meta)
       throws IOException, HttpException {
-    final List<String> stats = meta.getMetricMap().keySet().stream().collect(Collectors.toList());
+    final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
     final MetricsRequest q =
         new MetricsRequest(
-            Arrays.stream(resList).map(r -> r.getIdentifier()).collect(Collectors.toList()),
+            Arrays.stream(resList).map(NamedResource::getIdentifier).collect(Collectors.toList()),
             true,
             "LATEST",
             "MINUTES",
@@ -341,10 +341,10 @@ public class Exporter implements DataProvider {
   private InputStream queryMetrics(
       final NamedResource[] resList, final RowMetadata meta, final long begin, final long end)
       throws IOException, HttpException {
-    final List<String> stats = meta.getMetricMap().keySet().stream().collect(Collectors.toList());
+    final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
     final MetricsRequest q =
         new MetricsRequest(
-            Arrays.stream(resList).map(r -> r.getIdentifier()).collect(Collectors.toList()),
+            Arrays.stream(resList).map(NamedResource::getIdentifier).collect(Collectors.toList()),
             false,
             conf.getRollupType(),
             "MINUTES",
@@ -447,7 +447,9 @@ public class Exporter implements DataProvider {
                 + "/statkeys",
             StatKeysResponse.class);
 
-    return response.getStatKeys().stream().map(r -> r.getKey()).collect(Collectors.toList());
+    return response.getStatKeys().stream()
+        .map(StatKeysResponse.StatKey::getKey)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -475,9 +477,7 @@ public class Exporter implements DataProvider {
             .map(s -> new Config.Field(s, s, Config.Field.Kind.METRIC))
             .collect(Collectors.toList());
     final Config config = new Config();
-    final Config.Field[] fieldArr = new Config.Field[fields.size()];
-    fields.toArray(fieldArr);
-    config.setFields(fieldArr);
+    config.setFields(fields);
     final DumperOptions dumperOptions = new DumperOptions();
     dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
     dumperOptions.setPrettyFlow(true);
@@ -539,7 +539,7 @@ public class Exporter implements DataProvider {
     InputStream content;
     try {
       final long start = System.currentTimeMillis();
-      content = fetchMetricStream(resList.stream().toArray(NamedResource[]::new), meta, begin, end);
+      content = fetchMetricStream(resList.toArray(new NamedResource[0]), meta, begin, end);
       if (verbose) {
         log.debug("Metric request call took " + (System.currentTimeMillis() - start) + " ms");
       }

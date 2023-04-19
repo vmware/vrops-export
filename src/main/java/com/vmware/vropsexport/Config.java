@@ -27,6 +27,7 @@ import com.vmware.vropsexport.wavefront.WavefrontConfig;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
@@ -126,7 +127,7 @@ public class Config implements Validatable {
     }
   }
 
-  private Field[] fields;
+  private List<Field> fields;
   private String resourceType;
   private String rollupType;
   private long rollupMinutes;
@@ -223,11 +224,11 @@ public class Config implements Validatable {
     this.align = align;
   }
 
-  public Field[] getFields() {
+  public List<Field> getFields() {
     return fields;
   }
 
-  public void setFields(final Field[] fields) {
+  public void setFields(final List<Field> fields) {
     this.fields = fields;
   }
 

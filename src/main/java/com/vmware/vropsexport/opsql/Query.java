@@ -47,4 +47,11 @@ public class Query {
   public int hashCode() {
     return Objects.hash(resourceRequest, fields);
   }
+
+  public Config toConfig() {
+    final Config conf = new Config();
+    conf.setQuery(resourceRequest);
+    conf.setFields(fields);
+    return conf;
+  }
 }

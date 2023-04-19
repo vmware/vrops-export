@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 public class QueryCompiler {
-  public Query compile(final String qtext) {
+  public static Query compile(final String qtext) {
     final OpsqlLexer lexer = new OpsqlLexer(CharStreams.fromString(qtext));
     final OpsqlParser parser = new OpsqlParser(new CommonTokenStream(lexer));
     final OpsqlParser.QueryContext q = parser.query();
