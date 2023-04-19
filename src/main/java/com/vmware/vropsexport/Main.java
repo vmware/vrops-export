@@ -18,8 +18,6 @@
 package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.exceptions.ExporterException;
-import com.vmware.vropsexport.exceptions.ValidationException;
-import com.vmware.vropsexport.security.RecoverableCertificateException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.http.HttpException;
@@ -53,7 +51,7 @@ public class Main extends Command {
 
   public static void main(final String[] args) throws Exception {
     final Main program = new Main();
-    program.run(args);
+    program.start(args);
   }
 
   @Override
@@ -64,19 +62,9 @@ public class Main extends Command {
     return commandLine;
   }
 
-  public void run(final String[] args) throws Exception {
-
-    final CommandLine commandLine = parseOptions(args);
-
+  @Override
+  public void run(final CommandLine commandLine) throws ExporterException {
     try {
-      // Create the vR Ops client
-      final Client client = createClient();
-      if (refreshToken != null) {
-        client.login(refreshToken);
-      } else {
-        client.login(username, password);
-      }
-
       // If we're just printing field names, we have enough parameters at this point.
       final String resourceKind = commandLine.getOptionValue('F');
       if (resourceKind != null) {
@@ -136,14 +124,8 @@ public class Main extends Command {
           }
         }
       }
-    } catch (final RecoverableCertificateException e) {
-      System.err.println("SSL ERROR: " + e.getMessage());
-      System.exit(1);
-    } catch (final ExporterException e) {
-      System.err.println("ERROR: " + e.getMessage());
-      System.exit(1);
-    } catch (final ValidationException e) {
-      System.err.println("Config validation error: " + e.getMessage());
+    } catch (final Exception e) {
+      throw new ExporterException(e);
     }
   }
 

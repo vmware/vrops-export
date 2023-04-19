@@ -33,7 +33,6 @@ public abstract class Command {
   protected String output;
   protected String host;
   protected boolean quiet;
-  protected boolean ignoreCert;
   protected int threads = 10;
   protected boolean useTmpFile;
   protected int maxRows;
@@ -41,7 +40,35 @@ public abstract class Command {
   protected String trustPass;
   protected int maxRes;
   protected boolean dumpRest;
-  protected boolean noSniExtension;
+  protected Client client;
+
+  protected static String getExceptionMessage(Throwable t) {
+    while (t != null && t.getMessage() == null) {
+      t = t.getCause();
+    }
+    return t.getMessage() != null ? t.getMessage() : "No error message available";
+  }
+
+  protected abstract void run(CommandLine commandLine) throws ExporterException;
+
+  protected void start(final String[] args) {
+    try {
+      final CommandLine commandLine = parseOptions(args);
+      client = createClient();
+      run(commandLine);
+    } catch (final ExporterException e) {
+      System.err.println("ERROR: " + getExceptionMessage(e));
+      System.exit(1);
+    } catch (final CertificateException
+        | KeyManagementException
+        | KeyStoreException
+        | NoSuchAlgorithmException e) {
+      System.err.println("SSL ERROR: " + getExceptionMessage(e));
+      System.exit(1);
+    } catch (final IOException | HttpException e) {
+      System.err.println("Error connecting to server: " + getExceptionMessage(e));
+    }
+  }
 
   protected Client createClient()
       throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException,
@@ -148,7 +175,7 @@ public abstract class Command {
       commandLine = parser.parse(opts, args);
     } catch (final ParseException e) {
       System.err.println(
-          "Error parsing command. Use -h option for help. Details: " + e.getMessage());
+          "Error parsing command. Use -h option for help. Details: " + getExceptionMessage(e));
       System.exit(1);
     }
 
@@ -180,7 +207,7 @@ public abstract class Command {
         password = new String(chp);
       }
     }
-    final String host = commandLine.getOptionValue('H');
+    host = commandLine.getOptionValue('H');
     if (host == null) {
       throw new ExporterException("Host URL must be specified");
     }
@@ -199,13 +226,6 @@ public abstract class Command {
       System.setProperty("jsse.enableSNIExtension", "false");
     }
 
-    // Create the vR Ops client
-    final Client client = Command.createClient(host, trustStore, trustPass, dumpRest);
-    if (refreshToken != null) {
-      client.login(refreshToken);
-    } else {
-      client.login(username, password);
-    }
     final String mrS = commandLine.getOptionValue('m');
     maxRows = mrS != null ? Integer.parseInt(mrS) : 0;
 
@@ -257,7 +277,7 @@ public abstract class Command {
         end = df.parse(endS).getTime();
         begin = df.parse(startS).getTime();
       } catch (final java.text.ParseException e) {
-        throw new ExporterException(e.getMessage());
+        throw new ExporterException(getExceptionMessage(e));
       }
     }
     return commandLine;
