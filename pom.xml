@@ -205,7 +205,8 @@
                         <id>antlr</id>
                         <configuration>
                             <visitor>true</visitor>
-                            <outputDirectory>target/generated-sources/antlr4/com/vmware/vropsexport/opsql</outputDirectory>
+                            <outputDirectory>target/generated-sources/antlr4/com/vmware/vropsexport/opsql
+                            </outputDirectory>
                         </configuration>
                         <goals>
                             <goal>antlr4</goal>

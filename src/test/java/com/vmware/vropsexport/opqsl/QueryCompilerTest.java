@@ -2,6 +2,7 @@ package com.vmware.vropsexport.opqsl;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vmware.vropsexport.opsql.OpsqlException;
 import com.vmware.vropsexport.opsql.Query;
 import com.vmware.vropsexport.opsql.QueryCompiler;
 import org.junit.Assert;
@@ -79,7 +80,7 @@ public class QueryCompilerTest {
     boolean exceptionHappened = false;
     try {
       qc.compile("resource(VMWARE:VirtualMachine).name(notALiteral).fields(cpu|demandmhz)");
-    } catch (final Exception e) {
+    } catch (final OpsqlException e) {
       exceptionHappened = true;
     }
     Assert.assertTrue("Should have thrown an exception", exceptionHappened);

@@ -15,7 +15,11 @@ public class QueryRunner extends Command {
   @Override
   public void run(final OutputStream out, final CommandLine commandLine) throws ExporterException {
     final String query = commandLine.getOptionValue('Q');
-    executeQuery(query, out);
+    try {
+      executeQuery(query, out);
+    } catch (final OpsqlException e) {
+      // The error message is already printed at this point, so we can ignore the exception
+    }
   }
 
   public void executeQuery(final String query, final OutputStream out) throws ExporterException {
