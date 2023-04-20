@@ -37,8 +37,8 @@ booleanExpression
     ;
 
 comparison
-    : Not propertyOrMetricIdentifier op=BooleanOperator literal # negatedComparison
-    | propertyOrMetricIdentifier BooleanOperator literal        # normalComparison
+    : Not propertyOrMetricIdentifier op=booleanOperator literal # negatedComparison
+    | propertyOrMetricIdentifier booleanOperator literal        # normalComparison
     ;
 
 stringLiteralList
@@ -53,6 +53,17 @@ literal
 propertyOrMetricIdentifier
     : PropertyIdentifier                                        # propertyIdentifier
     | Identifier                                                # metricIdentifier
+    ;
+
+booleanOperator
+    : '!='
+    | '>'
+    | '<'
+    | '>='
+    | '<='
+    | '='
+    | 'contains'
+    | 'in'
     ;
 
 /// Reserved words
@@ -86,17 +97,6 @@ Metrics:    'metrics';
 Properties: 'properties';
 Set:        'set';
 
-BooleanOperator
-    : '='
-    | '!='
-    | '>'
-    | '<'
-    | '>='
-    | '<='
-    | 'contains'
-    | 'in'
-    ;
-
 PropertyIdentifier
     : '@' Identifier
     ;
@@ -114,7 +114,7 @@ Identifier
     ;
 
  fragment SpecialVropIdentifierChars
-    : [|$:]
+    : '|' | ':' | '$'
     ;
 
 fragment EscapeSequence

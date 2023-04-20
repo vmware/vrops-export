@@ -46,7 +46,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     @Override
     public ResourceRequest.Condition visitStringLiteral(
         final OpsqlParser.StringLiteralContext ctx) {
-      cond.setStringValue(ctx.getText());
+      cond.setStringValue(unquote(ctx.getText()));
       return super.visitStringLiteral(ctx);
     }
 
@@ -125,7 +125,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     public Object visitNormalComparison(final OpsqlParser.NormalComparisonContext ctx) {
       final ResourceRequest.Condition cond = new ResourceRequest.Condition();
       cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
-      cond.setOperator(toInternalOp.get(ctx.BooleanOperator().getText()));
+      cond.setOperator(toInternalOp.get(ctx.booleanOperator().getText()));
       ctx.accept(new LiteralResolver(cond));
       spec.getConditions().add(cond);
       return null; // No need to go deeper
@@ -135,7 +135,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     public Object visitNegatedComparison(final OpsqlParser.NegatedComparisonContext ctx) {
       final ResourceRequest.Condition cond = new ResourceRequest.Condition();
       cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
-      cond.setOperator(operatorNegations.get(toInternalOp.get(ctx.BooleanOperator().getText())));
+      cond.setOperator(operatorNegations.get(toInternalOp.get(ctx.booleanOperator().getText())));
       ctx.accept(new LiteralResolver(cond));
       spec.getConditions().add(cond);
       return null; // No need to go deeper

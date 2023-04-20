@@ -93,6 +93,16 @@
             <artifactId>antlr4-runtime</artifactId>
             <version>4.12.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline-terminal</artifactId>
+            <version>3.22.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline-reader</artifactId>
+            <version>3.22.0</version>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>

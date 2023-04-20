@@ -14,18 +14,22 @@ import java.io.OutputStream;
 public class QueryRunner extends Command {
   @Override
   public void run(final OutputStream out, final CommandLine commandLine) throws ExporterException {
-    final String query = commandLine.getOptionValue('Q');
-    try {
-      executeQuery(query, out);
-    } catch (final OpsqlException e) {
-      // The error message is already printed at this point, so we can ignore the exception
+    if (commandLine.hasOption('Q')) {
+      final String query = commandLine.getOptionValue('Q');
+      try {
+        executeQuery(query, out);
+      } catch (final OpsqlException e) {
+        // The error message is already printed at this point, so we can ignore the exception
+      }
+    } else {
+      new Console().run(this);
     }
   }
 
   public void executeQuery(final String query, final OutputStream out) throws ExporterException {
     final Query q = QueryCompiler.compile(query);
     final Config conf = q.toConfig();
-    final Exporter exporter = new Exporter(client, 3, conf, false, true, 1000, 10000);
+    final Exporter exporter = new Exporter(client, threads, conf, false, true, maxRows, maxRes);
     try {
       exporter.exportTo(out, begin, end, null, true);
     } catch (final IOException | HttpException e) {

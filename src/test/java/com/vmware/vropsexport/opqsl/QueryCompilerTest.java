@@ -68,6 +68,20 @@ public class QueryCompilerTest {
   }
 
   @Test
+  public void testPropertyWhereOrQuery() throws IOException {
+    runQuery(
+        "resource(VMWARE:VirtualMachine).whereProperties(summary|guestFamily = \"linux\" or summary|guestFamily != \"windows\").fields(cpu|demandmhz)",
+        "WherePropertyOrQueryResult");
+  }
+
+  @Test
+  public void testPropertyWhereAndQuery() throws IOException {
+    runQuery(
+        "resource(VMWARE:VirtualMachine).whereProperties(summary|guestFamily = \"linux\" and @summary|guestFamily != \"windows\").fields(cpu|demandmhz)",
+        "WherePropertyAndQueryResult");
+  }
+
+  @Test
   public void testMetricWhereOrQuery() throws IOException {
     runQuery(
         "resource(VMWARE:VirtualMachine).whereMetrics(cpu|demandmhz > 20 or cpu|demandpct > 30).fields(cpu|demandmhz)",
