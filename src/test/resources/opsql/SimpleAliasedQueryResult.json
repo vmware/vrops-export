@@ -10,7 +10,7 @@
   "fields": [
     {
       "metric": "cpu|demandmhz",
-      "alias": "cpu|demandmhz"
+      "alias": "cpuDemand"
     }
   ]
 }

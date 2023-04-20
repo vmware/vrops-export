@@ -195,14 +195,17 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitSimpleField(final OpsqlParser.SimpleFieldContext ctx) {
-    query.getFields().add(IdentifierResolver.resolveAny(ctx));
+    final Config.Field f = IdentifierResolver.resolveAny(ctx);
+    f.setAlias(f.getName());
+    query.getFields().add(f);
     return super.visitSimpleField(ctx);
   }
 
   @Override
   public Object visitAliasedField(final OpsqlParser.AliasedFieldContext ctx) {
-    final Config.Field f = IdentifierResolver.resolveAny(ctx);
+    final Config.Field f = IdentifierResolver.resolveAny(ctx.field);
     f.setAlias(ctx.alias.getText());
+    query.getFields().add(f);
     return super.visitAliasedField(ctx);
   }
 

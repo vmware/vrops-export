@@ -9,13 +9,16 @@
   },
   "fields": [
     {
-      "metric": "cpu|demandmhz"
+      "metric": "cpu|demandmhz",
+      "alias": "cpu|demandmhz"
     },
     {
-      "metric": "cpu|demandpct"
+      "metric": "cpu|demandpct",
+      "alias": "cpu|demandpct"
     },
     {
-      "prop": "summary|guestFullName"
+      "prop": "summary|guestFullName",
+      "alias": "summary|guestFullName"
     }
   ]
 }

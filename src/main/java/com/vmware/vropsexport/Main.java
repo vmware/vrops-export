@@ -63,7 +63,7 @@ public class Main extends Command {
   }
 
   @Override
-  public void run(final CommandLine commandLine) throws ExporterException {
+  public void run(final OutputStream out, final CommandLine commandLine) throws ExporterException {
     try {
       // If we're just printing field names, we have enough parameters at this point.
       final String resourceKind = commandLine.getOptionValue('F');
@@ -106,7 +106,7 @@ public class Main extends Command {
           // If we're outputting to a textual format that can dump to stdout, we supress the
           // progress counter, but
           // if we're dumping to e.g. SQL, we keep it on. This is a bit kludgy.. TODO: Revisit
-          if (output == null && Exporter.isProducingOutput(conf) || verbose) {
+          if (outputFile == null && Exporter.isProducingOutput(conf) || verbose) {
             quiet = true;
           }
 
@@ -115,13 +115,7 @@ public class Main extends Command {
           if (namePattern != null) {
             conf.getQuery().setName(Collections.singletonList(namePattern));
           }
-          if (output == null) {
-            exporter.exportTo(System.out, begin, end, parentSpec, quiet);
-          } else {
-            try (final OutputStream out = new FileOutputStream(output)) {
-              exporter.exportTo(out, begin, end, parentSpec, quiet);
-            }
-          }
+          exporter.exportTo(out, begin, end, parentSpec, quiet);
         }
       }
     } catch (final Exception e) {

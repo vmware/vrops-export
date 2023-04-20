@@ -129,16 +129,16 @@ public class Config implements Validatable {
 
   private List<Field> fields;
   private String resourceType;
-  private String rollupType;
-  private long rollupMinutes;
-  private String dateFormat;
-  private String outputFormat;
+  private String rollupType = "AVG";
+  private long rollupMinutes = 5;
+  private String dateFormat = "yyyy-MM-dd HH:mm";
+  private String outputFormat = "csv";
   private SQLConfig sqlConfig;
   private WavefrontConfig wavefrontConfig;
   private ResourceRequest query = new ResourceRequest();
   private boolean compact;
   private String compactifyAlg = "LATEST";
-  private CSVConfig csvConfig;
+  private CSVConfig csvConfig = new CSVConfig(true, ",");
   private JsonConfig jsonConfig;
   private ElasticSearchConfig elasticSearchConfig;
   private int align = 0;
@@ -339,7 +339,7 @@ public class Config implements Validatable {
   }
 
   public String getResourceType() {
-    return resourceType;
+    return query.getAdapterKind().get((0));
   }
 
   public boolean isCompact() {

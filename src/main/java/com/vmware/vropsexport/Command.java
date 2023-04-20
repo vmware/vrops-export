@@ -9,7 +9,9 @@ import org.apache.http.HttpException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -30,7 +32,7 @@ public abstract class Command {
   protected String username;
   protected String password;
   protected String refreshToken;
-  protected String output;
+  protected String outputFile;
   protected String host;
   protected boolean quiet;
   protected int threads = 10;
@@ -49,13 +51,19 @@ public abstract class Command {
     return t.getMessage() != null ? t.getMessage() : "No error message available";
   }
 
-  protected abstract void run(CommandLine commandLine) throws ExporterException;
+  protected abstract void run(OutputStream out, CommandLine commandLine) throws ExporterException;
 
   protected void start(final String[] args) {
     try {
       final CommandLine commandLine = parseOptions(args);
       client = createClient();
-      run(commandLine);
+      if (outputFile == null) {
+        run(System.out, commandLine);
+      } else {
+        try (final OutputStream out = new FileOutputStream(outputFile)) {
+          run(out, commandLine);
+        }
+      }
     } catch (final ExporterException e) {
       System.err.println("ERROR: " + getExceptionMessage(e));
       System.exit(1);
@@ -211,7 +219,7 @@ public abstract class Command {
     if (host == null) {
       throw new ExporterException("Host URL must be specified");
     }
-    output = commandLine.getOptionValue('o');
+    outputFile = commandLine.getOptionValue('o');
     verbose = commandLine.hasOption('v');
     if (verbose) {
       Configurator.setRootLevel(Level.DEBUG);

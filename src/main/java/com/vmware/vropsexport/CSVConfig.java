@@ -19,6 +19,13 @@ package com.vmware.vropsexport;
 
 @SuppressWarnings("unused")
 public class CSVConfig {
+  public CSVConfig() {}
+
+  public CSVConfig(final boolean header, final String delimiter) {
+    this.header = header;
+    this.delimiter = delimiter;
+  }
+
   private boolean header = true;
 
   private String delimiter = ",";

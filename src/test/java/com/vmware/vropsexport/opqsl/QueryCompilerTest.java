@@ -29,6 +29,16 @@ public class QueryCompilerTest {
   }
 
   @Test
+  public void testSimpleAliasQuery() throws IOException {
+    runQuery(
+        "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz cpuDemand)",
+        "SimpleAliasedQueryResult");
+    runQuery(
+        "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz as cpuDemand)",
+        "SimpleAliasedQueryResult");
+  }
+
+  @Test
   public void testMultiFieldQuery() throws IOException {
     runQuery(
         "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz, cpu|demandpct, @summary|guestFullName)",
@@ -61,5 +71,17 @@ public class QueryCompilerTest {
     runQuery(
         "resource(VMWARE:VirtualMachine).whereMetrics(cpu|demandmhz > 20 or cpu|demandpct > 30).fields(cpu|demandmhz)",
         "WhereMetricOrQueryResult");
+  }
+
+  @Test
+  public void testSyntaxError() throws IOException {
+    final QueryCompiler qc = new QueryCompiler();
+    boolean exceptionHappened = false;
+    try {
+      qc.compile("resource(VMWARE:VirtualMachine).name(notALiteral).fields(cpu|demandmhz)");
+    } catch (final Exception e) {
+      exceptionHappened = true;
+    }
+    Assert.assertTrue("Should have thrown an exception", exceptionHappened);
   }
 }
