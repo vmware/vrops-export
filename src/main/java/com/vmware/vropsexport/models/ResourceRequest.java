@@ -1,8 +1,11 @@
 package com.vmware.vropsexport.models;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.List;
 import java.util.Objects;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResourceRequest {
   private List<String> adapterKind;
   private FilterSpec propertyConditions;
@@ -153,13 +156,14 @@ public class ResourceRequest {
         resourceTag);
   }
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   public static class Condition {
-    private double doubleValue;
+    private Double doubleValue;
     private String stringValue;
     private String key;
     private String operator;
 
-    public double getDoubleValue() {
+    public Double getDoubleValue() {
       return doubleValue;
     }
 
@@ -212,6 +216,7 @@ public class ResourceRequest {
     }
   }
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   public static class FilterSpec {
     private List<Condition> conditions;
     private String conjunctionOperator;

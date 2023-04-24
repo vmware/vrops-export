@@ -99,4 +99,11 @@ public class QueryCompilerTest {
     }
     Assert.assertTrue("Should have thrown an exception", exceptionHappened);
   }
+
+  @Test
+  public void testMixedFieldQuery() throws IOException {
+    runQuery(
+        "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz, @summary|guestFullName)",
+        "MixedFieldQueryResult");
+  }
 }

@@ -1,0 +1,20 @@
+{
+  "resourceRequest": {
+    "adapterKind": [
+      "VMWARE"
+    ],
+    "resourceKind": [
+      "VirtualMachine"
+    ]
+  },
+  "fields": [
+    {
+      "metric": "cpu|demandmhz",
+      "alias": "cpu|demandmhz"
+    },
+    {
+      "prop": "summary|guestFullName",
+      "alias": "summary|guestFullName"
+    }
+  ]
+}

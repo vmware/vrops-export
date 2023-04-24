@@ -16,7 +16,7 @@
         },
         {
           "key": "summary|guestFamily",
-          "operator": "NE",
+          "operator": "NOT_EQ",
           "stringValue": "windows"
         }
       ]
