@@ -1,0 +1,1639 @@
+{
+    "adapter-kind": [
+        {
+            "key": "CloudHealthAdapter",
+            "name": "CloudHealth Adapter",
+            "description": "CloudHealth Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "AwsAccount",
+                "AwsRegion",
+                "AwsService",
+                "AzureAccount",
+                "AzureRegion",
+                "AzureService",
+                "AzureSubscription",
+                "CloudHealthAdapterInstance",
+                "GCPBillingAccount",
+                "GCPCloudProduct",
+                "GCPProject",
+                "GCPRegion",
+                "Perspective",
+                "PerspectiveGroup"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/CloudHealthAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/CloudHealthAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "Container",
+            "name": "Container",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 48,
+            "identifiers": [],
+            "resourceKinds": [
+                "Autoscale",
+                "BusinessService",
+                "ContainerAdapterInstance",
+                "Department",
+                "Enterprise",
+                "Environment",
+                "AIM Plugin",
+                "Function",
+                "GeoTag",
+                "Licensing",
+                "Location",
+                "Manual Application",
+                "Security Zone",
+                "Service Level Objective",
+                "Storage Tier",
+                "Tier",
+                "Universe",
+                "VMware Cloud",
+                "vC-Ops-Self-Monitoring"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/Container",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/Container/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "EP Ops Adapter",
+            "name": "EP Ops Adapter",
+            "description": "EP Ops Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 4013,
+            "identifiers": [],
+            "resourceKinds": [
+                "AIX",
+                "ASP.NET",
+                "ASP.NET Application",
+                "EP Ops Adapter Instance",
+                "EP Ops Adapter Resources Group",
+                "EP Ops Agent",
+                "HPUX",
+                "HTTP Check",
+                "ICMP Check",
+                "IIS AppHostSvc",
+                "IIS WAS Service",
+                "IIS WAS Service Application Pool",
+                "IIS WWW Service",
+                "IIS WWW Service Site",
+                "Linux",
+                "MSSQL",
+                "MSSQL Agent",
+                "MSSQL Analysis Services",
+                "MSSQL Cluster",
+                "MSSQL Database",
+                "MSSQL Databases",
+                "MSSQL Reporting Services",
+                "MSSQL World",
+                "MultiProcess",
+                "Operating Systems World",
+                "PostgreSQL",
+                "PostgreSQL Database",
+                "Remote Checks World",
+                "Script",
+                "Solaris",
+                "TCP Check",
+                "VMware Identity Manager",
+                "vRealize Automation Application",
+                "vRealize Automation Application Services",
+                "vRealize Automation Application Services (Group)",
+                "vRealize Automation Database (Group)",
+                "vRealize Automation DEM (Group)",
+                "vRealize Automation DEM Orchestrator",
+                "vRealize Automation DEM Worker",
+                "vRealize Automation IaaS Management Agent",
+                "vRealize Automation IaaS Repository",
+                "vRealize Automation IaaS Web",
+                "vRealize Automation IaaS Web (Group)",
+                "vRealize Automation IaaS Web Load Balancer",
+                "vRealize Automation IaaS Web Relationship discovery service",
+                "vRealize Automation Manager Server",
+                "vRealize Automation Manager Server (Group)",
+                "vRealize Automation Manager Server Load Balancer",
+                "vRealize Automation Proxy Agent",
+                "vRealize Automation Proxy Agent (Group)",
+                "vRealize Automation Server",
+                "vRealize Automation Server (Group)",
+                "vRealize Automation Server Load Balancer",
+                "vRealize Business (Group)",
+                "vRealize Business Standard Data Collector",
+                "vRealize Business Standard Server",
+                "vRealize Orchestrator (Group)",
+                "vRealize Orchestrator App Server",
+                "vRealize Orchestrator Configurator",
+                "vRealize Orchestrator Load Balancer",
+                "vRealize vPostgres Load Balancer",
+                "vSphere SSO",
+                "vSphere SSO (Group)",
+                "vSphere SSO Likewise DCE RPC End-Point Mapper",
+                "vSphere SSO Likewise Eventlog",
+                "vSphere SSO Likewise Input-Output Service",
+                "vSphere SSO Likewise NetLogon Service",
+                "vSphere SSO Likewise Registry Service",
+                "vSphere SSO Likewise Security and Authentication Subsystem",
+                "vSphere SSO Likewise Service Manager",
+                "vSphere SSO Load Balancer",
+                "vSphere SSO VMware AFD Service",
+                "vSphere SSO VMware Certificate Service",
+                "vSphere SSO VMware Directory Service",
+                "vSphere SSO VMware Identity Management Service",
+                "vSphere SSO VMware Kdc Service",
+                "vSphere SSO VMware Secure Token Service",
+                "vSphere SSO Web SSO",
+                "Windows",
+                "Windows Service"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/EP%20Ops%20Adapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/EP%20Ops%20Adapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "Flowgate",
+            "name": "Flowgate",
+            "description": "Flowgate",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "Cabinet",
+                "Chassis",
+                "FlowgateInstance",
+                "PDUSystem",
+                "Switch"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/Flowgate",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/Flowgate/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "FoldingAtHome",
+            "name": "FoldingAtHome",
+            "description": "FoldingAtHome",
+            "adapterKindType": "OPENAPI",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "Folding Donor",
+                "Folding Team"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/FoldingAtHome",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/FoldingAtHome/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "GoogleCloudPlatformAdapter",
+            "name": "GCP",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 4,
+            "identifiers": [],
+            "resourceKinds": [
+                "ae_application",
+                "ae_service",
+                "bq_dataset",
+                "bq_table",
+                "ce_instance",
+                "cloud_bigtable",
+                "cloud_bigtable_cluster",
+                "cloud_bigtable_table",
+                "cloud_cdn",
+                "cloud_dns",
+                "cloud_functions",
+                "cloud_nat",
+                "cloud_router",
+                "cloud_run",
+                "cloud_run_service",
+                "cloud_spanner",
+                "cloud_sql",
+                "file_store",
+                "firebase_database",
+                "firestore_database",
+                "firewalls",
+                "GoogleCloudPlatformAdapterInstance",
+                "GCP Entity Status",
+                "GCPRegionPerProject",
+                "GCP World",
+                "GlobalRegionPerProject",
+                "ce_instance_group",
+                "ke_cluster",
+                "ke_container",
+                "ke_pod",
+                "load_balancer",
+                "memcache_node",
+                "mstore_memcache",
+                "mstore_redis",
+                "node_pool",
+                "storage_persistent_disk",
+                "Region",
+                "sole_tnodegroups",
+                "sole_tnodes",
+                "storage_bucket",
+                "subnet",
+                "vpc_network",
+                "vpn_gateways",
+                "vpn_tunnels",
+                "Zone"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/GoogleCloudPlatformAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/GoogleCloudPlatformAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "HCXAdapter",
+            "name": "HCX Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 28,
+            "identifiers": [],
+            "resourceKinds": [
+                "Migration",
+                "HCXAdapter Instance",
+                "HCX World",
+                "HCMGateway",
+                "IncomingReplication",
+                "MobilityGroup",
+                "HCML2C-HT",
+                "OsAssistedMigration",
+                "OutgoingReplication",
+                "CloudMotion",
+                "ServiceMesh",
+                "SitePairing",
+                "SitePairing_Migrations",
+                "vMotion",
+                "HCMWanOpt"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/HCXAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/HCXAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "Http Post",
+            "name": "Http Post",
+            "adapterKindType": "OPENAPI",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "Http Post Adapter Instance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/Http%20Post",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/Http%20Post/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "KubernetesAdapter",
+            "name": "Kubernetes",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 20,
+            "identifiers": [],
+            "resourceKinds": [
+                "Container",
+                "Container-Process",
+                "K8S-World",
+                "KubernetesAdapter Instance",
+                "K8S-Master",
+                "K8S-Namespace",
+                "K8S-Minion",
+                "K8S-Pod",
+                "K8S-ReplicaSet",
+                "K8S-Service"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/KubernetesAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/KubernetesAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "LogInsight",
+            "name": "LogInsight",
+            "description": "LogInsight",
+            "adapterKindType": "OPENAPI",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "LogInsightAuth",
+                "LogInsightLogServer",
+                "LogInsightLogServerHost"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/LogInsight",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/LogInsight/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "DynatraceAdapter",
+            "name": "Management Pack for Dynatrace",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "Dynatrace Application",
+                "Dynatrace Custom Application",
+                "Dynatrace Host",
+                "Dynatrace Mobile Application",
+                "Dynatrace Process",
+                "Dynatrace Service",
+                "DynatraceAdapter Instance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/DynatraceAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/DynatraceAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "MicrosoftAzureAdapter",
+            "name": "Microsoft Azure",
+            "description": "Microsoft Azure",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 13,
+            "identifiers": [],
+            "resourceKinds": [
+                "AZURE_ANALYSIS_SERVICES",
+                "AZURE_API_MANAGEMENT",
+                "AZURE_APP_CONFIGURATION",
+                "AZURE_APP_SERVICE",
+                "AZURE_APP_SERVICE_PLAN",
+                "AZURE_APPLICATION_GATEWAY",
+                "AZURE_AUTOMATION",
+                "AZURE_AVAILABILITY_SETS",
+                "AZURE_BATCH_ACCOUNT",
+                "AZURE_BOT_SERVICES",
+                "AZURE_CACHE_REDIS",
+                "AZURE_CDN_PROFILES",
+                "AZURE_CDN_PROFILES_ENDPOINTS",
+                "AZURE_COMPUTE_DOMAINNAMES",
+                "AZURE_SEARCH_SERVICES",
+                "AZURE_COGNITIVE_SERVICES_ACCOUNTS",
+                "AZURE_CONTIANER_CONTAINERGROUPS",
+                "AZURE_CONTAINER_REGISTRIES",
+                "AZURE_CONTAINER",
+                "AZURE_DB_ACCOUNT",
+                "AZURE_DATA_BOX",
+                "AZURE_DATA_EXPLORER_CLUSTER",
+                "AZURE_DATA_EXPLORER_DATABASE",
+                "AZURE_DATA_FACTORY",
+                "AZURE_DATA_LAKE_ANALYTICS",
+                "AZURE_DATALAKE_STORE",
+                "AZURE_MARIADB_SERVER",
+                "AZURE_DDOS_PROTECTION_PLAN",
+                "AZURE_DEDICATE_HOST",
+                "AZURE_COMPUTE_HOSTGROUPS",
+                "AZURE_DIGITAL_TWINS",
+                "AZURE_STORAGE_DISK",
+                "AZURE_DNS_ZONES",
+                "AZURE_EVENT_GRID_DOMAIN",
+                "AZURE_EVENT_GRID_SUBSCRIPTION",
+                "AZURE_EVENT_GRID_TOPIC",
+                "AZURE_EVENT_HUBS",
+                "AZURE_EVENTHUBS_NAMESPACES",
+                "AZURE_EXPRESSROUTE_CIRCUITS",
+                "AZURE_FIREWALLS",
+                "AZURE_FRONT_DOORS",
+                "AZURE_FUNCTIONS_APP",
+                "AZURE_HDINSIGHT",
+                "AZURE_IOT_CENTRAL",
+                "AZURE_IOT_HUB",
+                "AZURE_KEY_VAULTS",
+                "AZURE_KUBERNATE_CLUSTER",
+                "AZURE_LB",
+                "AZURE_MACHINE_LEARNING",
+                "AZURE_MARIA_DBSERVER_DATABASE",
+                "AZURE_MEDIASERVICES_LIVEEVENTS",
+                "AZURE_MEDIA_SERVICES",
+                "AZURE_MEDIASERVICES_STREAMINGEP",
+                "AZURE_MYSQL_SERVER",
+                "AZURE_NETAPPACCOUNT",
+                "AZURE_NETAPPACCOUNT_CAPACITYPOOLS_VOLUMES",
+                "AZURE_NETAPPACCOUNT_CAPACITYPOOLS",
+                "AZURE_NW_INTERFACE",
+                "AZURE_NETWORK_SECURITY_GROUP",
+                "AZURE_NETWORK_WATCHERS",
+                "AZURE_NH_NAMESPACES_NOTIFICATIONHUBS",
+                "AZURE_NOTIFICATIONHUBS_NAMESPACES",
+                "AZURE_OPENSHIFT_CLUSTERS",
+                "AZURE_POSTGRESQL_SERVER",
+                "AZURE_POWER_BI_EMBEDDED",
+                "AZURE_PRIVATE_DNSZONES",
+                "AZURE_PROXIMITY_PLACEMENT_GROUP",
+                "AZURE_PUBLIC_IPADDRESSES",
+                "AZURE_PURVIEW_ACCOUNTS",
+                "AZURE_REGION",
+                "AZURE_REGION_PER_SUB",
+                "AZURE_RESOURCE_GROUP",
+                "AZURE_ROUTE_TABLES",
+                "AZURE_SERVICE_BUS",
+                "AZURE_SIGNALR_SERVICES",
+                "AZURE_SPATIAL_ANCHORS",
+                "AZURE_SQL_DATABASE",
+                "AZURE_SQL_MANAGEDINSTANCES_DATABASE",
+                "AZURE_SQL_MANAGEDINSTANCES",
+                "AZURE_SQL_SERVER",
+                "AZURE_STORAGE_ACCOUNT",
+                "AZURE_STREAM_ANALYTICS_CLUSTERS",
+                "AZURE_STREAM_ANALYTICS_JOBS",
+                "AZURE_SYNAPSE_ANALYTICS_BIGDATA_POOL",
+                "AZURE_SYNAPSE_ANALYTICS_SQL_POOL",
+                "AZURE_SYNAPSE_ANALYTICS_WORKSPACE",
+                "AZURE_TIME_SERIES_INSIGHTS",
+                "AZURE_TRAFFIC_MANAGER_PROFILES",
+                "AZURE_VIRTUAL_HUBS",
+                "AZURE_VIRTUAL_MACHINE",
+                "AZURE_VIRTUAL_NETWORK",
+                "AZURE_VIRTUAL_NETWORK_GATEWAY",
+                "AZURE_VIRTUAL_SCALESET",
+                "AZURE_VIRTUAL_SCALESET_INSTANCE",
+                "AZURE_VIRTUAL_WAN",
+                "AZURE_WORLD",
+                "MicrosoftAzureAdapter Instance",
+                "AZURE_SERVICES_FROM_XML"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/MicrosoftAzureAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/MicrosoftAzureAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "AmazonAWSAdapter",
+            "name": "MP for AWS",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 54,
+            "identifiers": [],
+            "resourceKinds": [
+                "amazon_api_gw",
+                "amazon_appstream_fleet",
+                "amazon_athena_workgroup",
+                "amazon_aurora_dbcluster",
+                "amazon_aurora_dbinstance",
+                "amazon_cloudsearch_domain",
+                "amazon_codebuild_project",
+                "amazon_cognito_userpool",
+                "amazon_connect_instance",
+                "amazon_docdb_db_cluster",
+                "amazon_docdb_engine",
+                "amazon_docdb_db_instance",
+                "dynamodb",
+                "ecr_image",
+                "ecr_repo",
+                "ecs_cluster",
+                "ecs_service",
+                "amazon_elastic_inference",
+                "amazon_elasticsearch_domain",
+                "amazon_elasticsearch_node",
+                "amazon_event_bridge_rule",
+                "amazon_storage_fileshare",
+                "amazon_fsx_lustre",
+                "amazon_fsx_windows",
+                "amazon_gamelift_fleet",
+                "amazon_gamelift_queue",
+                "amazon_global_accelerator",
+                "amazon_glue_job",
+                "amazon_iot_protocol",
+                "amazon_iotanalytics_dataset",
+                "amazon_kendra_datasource",
+                "amazon_kendra_index",
+                "amazon_keyspace",
+                "amazon_kinesis_analytics_application",
+                "amazon_kinesis_data_firehose",
+                "amazon_kinesis_stream",
+                "amazon_kinesis_video_stream",
+                "amazon_lex_bot",
+                "amazon_mq_broker",
+                "amazon_mq_node",
+                "amazon_mq_queue",
+                "amazon_mq_topic",
+                "amazon_mq_virtual_host",
+                "amazon_msk_cluster",
+                "amazon_neptune_db_cluster",
+                "amazon_neptune_engine",
+                "amazon_neptune_db_instance",
+                "amazon_personalize_campaign",
+                "amazon_personalize_data_import",
+                "amazon_personalize_event_tracker",
+                "amazon_personalize_solution",
+                "amazon_pinpoint_application",
+                "amazon_qldb_ledger",
+                "amazon_qldb_stream",
+                "redshift_cluster",
+                "redshift_node",
+                "s3_bucket",
+                "amazon_sagemaker_batch_transform_job",
+                "amazon_sagemaker_endpoint",
+                "amazon_sagemaker_ground_truth_labeling_job",
+                "amazon_sagemaker_ground_truth_work_team",
+                "amazon_sagemaker_training_job",
+                "amazon_sns_topic",
+                "amazon_step_functions_state_machine",
+                "amazon_storage_gw",
+                "amazon_swf_activity_type",
+                "amazon_swf_task_list",
+                "amazon_swf_workflow_type",
+                "amazon_timestream_database",
+                "vpc",
+                "vpc_nat_gateway",
+                "amazon_workmail_org",
+                "workspace",
+                "application_load_balancer",
+                "Availability Zone",
+                "amazon_appsync_api",
+                "direct_connect",
+                "AWS Entity Status",
+                "Region",
+                "AWSRegionPerAccount",
+                "aws_stack",
+                "amazon_waf_webacl",
+                "AWS World",
+                "ec2_load_balancer",
+                "cloudfront_distribution",
+                "direct_connect_gateway",
+                "dax_cluster",
+                "dax_node",
+                "ec2_auto_scale_group",
+                "ec2_instance",
+                "EC2 Instance Type",
+                "ec2_volume",
+                "efs",
+                "eks",
+                "elasticbeanstalk",
+                "elasticbeanstalk_env",
+                "elastic_ip",
+                "ec2_network_interface",
+                "elasticache_cachecluster",
+                "elasticache_cachenode",
+                "emr_job_flow",
+                "internet_gateway",
+                "lambda_function",
+                "AmazonAWSAdapter Instance",
+                "network_load_balancer",
+                "aws_services_from_xml",
+                "placement_group",
+                "rds_dbinstance",
+                "RDS Instance Type",
+                "health_check",
+                "hosted_zone",
+                "security_group",
+                "sqs_queue",
+                "subnet",
+                "target_group",
+                "transit_gateway",
+                "vpc_vpn"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/AmazonAWSAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/AmazonAWSAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "MySQLAdapter",
+            "name": "MySQL",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "mysql_adapter_instance",
+                "mysql_database",
+                "mysql_index",
+                "mysql_instance",
+                "mysql_replication",
+                "mysql_query",
+                "mysql_master_server",
+                "mysql_slave_server",
+                "mysql_table",
+                "mysql_tablespace",
+                "mysql_tag",
+                "true_visibility_licensing"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/MySQLAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/MySQLAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "NETWORKINGDEVICES_ADAPTER",
+            "name": "Network Devices",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "networkingdevices_adapter_instance",
+                "networking_devices_networking_devices_network_device",
+                "networking_devices_networking_devices_hsrp_group",
+                "networking_devices_networking_devices_hsrp_group_member",
+                "networking_devices_networking_devices_interface",
+                "networking_devices_networking_devices_l3_interface",
+                "networking_devices_related_resources_tag",
+                "networking_devices_vendor_tag",
+                "networking_devices_networking_devices_vsan",
+                "true_visibility_licensing"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/NETWORKINGDEVICES_ADAPTER",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/NETWORKINGDEVICES_ADAPTER/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "NetworkAdapter",
+            "name": "Network Devices Adapter",
+            "description": "Network Devices Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 233,
+            "identifiers": [],
+            "resourceKinds": [
+                "LeafSwitch",
+                "NetworkAdapter Instance",
+                "PhysicalFabric",
+                "SpineSwitch"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/NetworkAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/NetworkAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "NSXTAdapter",
+            "name": "NSX-T",
+            "description": "Provides the connection information and credentials required to monitor your NSX-T instances",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 25,
+            "identifiers": [],
+            "resourceKinds": [
+                "ControllerCluster",
+                "ControllerNode",
+                "EdgeCluster",
+                "EdgeClusterGroup",
+                "EdgeNode",
+                "EdgeNodeGroup",
+                "FirewallSection",
+                "FirewallSectionGroup",
+                "Group",
+                "Groups",
+                "LoadBalancerPool",
+                "LoadBalancerService",
+                "LoadBalancerVirtualServer",
+                "LoadBalancerVirtualServerGroup",
+                "LogicalRouter",
+                "LogicalRouterGroup",
+                "LogicalSwitch",
+                "LogicalSwitchGroup",
+                "ManagementAppliances",
+                "ManagementCluster",
+                "ManagementNode",
+                "NSService",
+                "NSServiceGroup",
+                "NSServiceGroups",
+                "NSXTAdapterInstance",
+                "ManagementService",
+                "ManagementServiceGroup",
+                "RouterService",
+                "Tier0LogicalRouterGroup",
+                "Tier1LogicalRouterGroup",
+                "TransportNode",
+                "TransportZone",
+                "TransportZoneGroup"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/NSXTAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/NSXTAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "NSX",
+            "name": "NSX-vSphere Adapter",
+            "description": "NSX-vSphere Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 507,
+            "identifiers": [],
+            "resourceKinds": [
+                "Controller",
+                "ControllerCluster",
+                "ECMPCluster",
+                "EdgeServicesGateway",
+                "DHCPEdgeService",
+                "DNSEdgeService",
+                "FirewallEdgeService",
+                "IPSecEdgeService",
+                "L2VPNEdgeService",
+                "LoadBalancerEdgeService",
+                "NATEdgeService",
+                "RoutingEdgeService",
+                "SSLVPNEdgeService",
+                "NSXAdapter Instance",
+                "LogicalRouter",
+                "LogicalSwitch",
+                "Manager",
+                "TransportZone",
+                "PhysicalFabric"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/NSX",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/NSX/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "PingAdapter",
+            "name": "Ping",
+            "description": "Ping",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "fqdn_type",
+                "ip_type",
+                "ping_adapter_instance",
+                "ping_world"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/PingAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/PingAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "SDDCHealthAdapter",
+            "name": "SDDC Health Adapter",
+            "description": "SDDC Health Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 47,
+            "identifiers": [],
+            "resourceKinds": [
+                "advanced-designer-service",
+                "approval-service",
+                "vCenterBackupJob",
+                "branding-service",
+                "catalog-service",
+                "component-registry",
+                "eventlog-service",
+                "External PSC",
+                "externalPSCServices",
+                "iaas-proxy-provider",
+                "vCenterCluster",
+                "management-service",
+                "notification-service",
+                "NSXControllers",
+                "NSXController",
+                "NSXControllerService",
+                "NSXEDGE",
+                "NSXEDGEFEATURE",
+                "NSXEdges",
+                "SDDC NSX World",
+                "NSX",
+                "NSXManager",
+                "NSXManagerService",
+                "NSXRabbitmqService",
+                "NSXReplicatorService",
+                "SSHService",
+                "NSXVPostgresService",
+                "SDDC NSXT World",
+                "NSXT Server",
+                "PostgreSQL",
+                "SDDC World",
+                "SDDCHealth Instance",
+                "SDDC VCF Management World",
+                "SDDC VCF Workload World",
+                "SDDC VCF World",
+                "SDDC Health World",
+                "SDDC SRM World",
+                "SRMHealthServices",
+                "SRM",
+                "SRMSERVER",
+                "SRMCluster",
+                "SDDC VCD World",
+                "vCD Server",
+                "Active Node",
+                "vCenterApplianceHealthServices",
+                "SDDC VCENTER World",
+                "vCenterHealthServices",
+                "vCenterInfrastructure",
+                "vCenterLicensing",
+                "vCenterLicense",
+                "vCenterNtpServer",
+                "Passive Node",
+                "VCENTER",
+                "VSAN_VCENTER",
+                "Witness Host",
+                "vCenterBackupJobs",
+                "VIDMCluster",
+                "SDDC VIDM World",
+                "VIDMSERVER",
+                "VMware Identity Manager",
+                "SDDC VRA World",
+                "SDDC CAS World",
+                "casHealthServices",
+                "CAS Server",
+                "VRA",
+                "vRealize Automation Application",
+                "vRealize Automation DEM Orchestrator",
+                "vRealize Automation DEM Worker",
+                "vRealize Automation Health Broker service",
+                "vRealize Automation Health configuration",
+                "vRealize Automation IaaS Web",
+                "vRealize Automation IaaS Web Load Balancer",
+                "vRealize Automation Manager Server",
+                "vRealize Automation Manager Server Load Balancer",
+                "vRealize Automation Proxy Agent",
+                "vRealize Automation Server",
+                "vRealize Automation Server Load Balancer",
+                "vRopsLicensing",
+                "vRopsLicenseGroup",
+                "vRealize Orchestrator App Server",
+                "vRealize Orchestrator Configurator",
+                "SDDC LOGINSIGHT World",
+                "LogInsight Server",
+                "vRO Cluster",
+                "SDDC VRO World",
+                "VRO",
+                "SDDC VROPS World",
+                "vSANvCenterCluster",
+                "vSAN Deployment",
+                "SDDC VSAN World",
+                "vSANHealthServices",
+                "workitem-service"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/SDDCHealthAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/SDDCHealthAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "APPLICATIONDISCOVERY",
+            "name": "Service Discovery Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 48,
+            "identifiers": [],
+            "resourceKinds": [
+                "AD",
+                "ApplicationDiscoveryAdapterInstance",
+                "ServiceType",
+                "Services",
+                "Tableau",
+                "vRLI_Application",
+                "vROps_Application"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/APPLICATIONDISCOVERY",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/APPLICATIONDISCOVERY/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "SkylineAdapter",
+            "name": "Skyline Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "SkylineAdapterInstance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/SkylineAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/SkylineAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "PKSAdapter",
+            "name": "Tanzu Kubernetes Grid Integrated",
+            "description": "Tanzu Kubernetes Grid Integrated",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 19,
+            "identifiers": [],
+            "resourceKinds": [
+                "KUBE_CLUSTER",
+                "PKSAdapter Instance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/PKSAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/PKSAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "TMCAdapter",
+            "name": "Tanzu Mission Control",
+            "description": "Tanzu Mission Control",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "TMCAdapter Instance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/TMCAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/TMCAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "VMWARE",
+            "name": "vCenter",
+            "description": "Provides the connection information and credentials required to monitor your vCenter Server instances",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 905,
+            "identifiers": [],
+            "resourceKinds": [
+                "ClusterComputeResource",
+                "CustomDatacenter",
+                "Datacenter",
+                "Datastore",
+                "StoragePod",
+                "DatastoreFolder",
+                "VM Entity Status",
+                "Folder",
+                "HostFolder",
+                "HostSystem",
+                "Namespace",
+                "NetworkFolder",
+                "Pod",
+                "ResourcePool",
+                "GuestCluster",
+                "VMwareAdapter Instance",
+                "VirtualMachine",
+                "VMFolder",
+                "DistributedVirtualPortgroup",
+                "VmwareDistributedVirtualSwitch",
+                "vSphere World"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/VMWARE",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/VMWARE/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "PythonRemediationVcenterAdapter",
+            "name": "vCenter Python Actions Adapter",
+            "description": "Provides actions for vCenter objects using Python scripts",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 135,
+            "identifiers": [],
+            "resourceKinds": [
+                "PythonRemediationVcenterAdapter Instance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/PythonRemediationVcenterAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/PythonRemediationVcenterAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "VmcAdapter",
+            "name": "VMware Cloud on AWS",
+            "description": "VMware Cloud on AWS",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 9,
+            "identifiers": [],
+            "resourceKinds": [
+                "VmcBill",
+                "Component",
+                "Sddc",
+                "VmcAdapter Instance",
+                "VMC World"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/VmcAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/VmcAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "IdentityManagerAdapter",
+            "name": "VMware Identity Manager Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "ACSHealth-ApplicationDeployment",
+                "AirWatchAPIServer",
+                "AnalyticsConnection",
+                "ApplicationManager-ApplicationDeployment",
+                "CertProxy",
+                "Cert-Proxy-Certificate",
+                "certificate",
+                "Configurator-ApplicationDeployment",
+                "Connector-ApplicationDeployment",
+                "DatabaseConnection",
+                "DirectorySystem",
+                "diskSpace",
+                "EhCacheClusterDiagnostics",
+                "Elasticsearch-Health",
+                "IdentityManagerFQDN",
+                "Identity Manager World",
+                "MessagingConnection",
+                "PortConnectivity",
+                "RabbitMQ",
+                "IdentityManagerClusterNode",
+                "IdentityManagerAdapterInstance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/IdentityManagerAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/IdentityManagerAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "APPOSUCP",
+            "name": "VMware vRealize Application Management Pack",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 87,
+            "identifiers": [],
+            "resourceKinds": [
+                "activedirectory",
+                "activedirectory_Application",
+                "activedirectory_database",
+                "activedirectory_dfs_replication",
+                "activedirectory_dfsn",
+                "activedirectory_dns",
+                "activedirectory_security",
+                "activedirectory_services",
+                "activemq",
+                "activemq_Application",
+                "activemq_broker",
+                "activemq_jvm_memory_usage",
+                "activemq_os",
+                "activemq_topic",
+                "apache",
+                "apache_Application",
+                "UCPSERVER",
+                "backend",
+                "bgpd",
+                "cassandra",
+                "cassandra_Application",
+                "clickhouse",
+                "clickhouse_Application",
+                "couchbase_GENERIC",
+                "executescript",
+                "gateway",
+                "gateway_Application",
+                "gwd",
+                "horizontomcat",
+                "horizontomcat_Application",
+                "horizontomcat_server_threadpool",
+                "httpresponse",
+                "hyperv",
+                "hyperv_Application",
+                "ms_iis_aspnet",
+                "ms_iis_http_queues",
+                "ms_iis_websvc",
+                "ms_iis_websvc_cache",
+                "java",
+                "java_Application",
+                "jboss_datasource_pool",
+                "jboss_jvm_garbage_collector",
+                "jboss_jvm_memory",
+                "jboss_jvm_memory_pool",
+                "jboss",
+                "jboss_Application",
+                "websphere_jdbc",
+                "kernel_GENERIC",
+                "linux",
+                "mgd",
+                "msiis",
+                "msiis_Application",
+                "mssql",
+                "mssql_Application",
+                "mssql_database",
+                "mongodb",
+                "mongodb_Application",
+                "mongodb_databases",
+                "msexchange",
+                "msexchange_Application",
+                "msexchange_database",
+                "msexchange_database_instance",
+                "msexchange_domain_controller",
+                "msexchange_web_server",
+                "msexchange_win_service",
+                "ms_iis_dotnet",
+                "mysql",
+                "mysql_Application",
+                "mysql_database",
+                "natd",
+                "ntpd",
+                "ntpd_Application",
+                "nginx",
+                "nginx_Application",
+                "OpenSourceProcess",
+                "weblogic",
+                "weblogic_Application",
+                "oracledb",
+                "oracledb_Application",
+                "OS",
+                "ping",
+                "pivotalserver",
+                "pivotalserver_Application",
+                "pivotalserver_threadpool",
+                "pivotalserver_web_module",
+                "portal",
+                "postgresql",
+                "postgresql_Application",
+                "postgresql_database",
+                "processavailability",
+                "rabbitmq",
+                "rabbitmq_Application",
+                "rabbitmq_exchange",
+                "rabbitmq_queue",
+                "rabbitmq_virtual_host",
+                "redis",
+                "redis_Application",
+                "riak",
+                "riak_Application",
+                "sdwan",
+                "serviceavailability",
+                "websphere_servletSessionManager",
+                "sharepoint",
+                "sharepoint_Application",
+                "sharepoint_web_server",
+                "sharepoint_win_service",
+                "ssh",
+                "netresponse_tcp",
+                "websphere_threadpool",
+                "tomcat",
+                "tomcat_Application",
+                "tomcat_server_threadpool",
+                "horizontomcat_server_web_module",
+                "tomcat_server_web_module",
+                "netresponse_udp",
+                "upload",
+                "vc.procmon",
+                "vcsyscmd",
+                "vcg",
+                "vcg_Application",
+                "VelocloudGatewayProcess",
+                "vco",
+                "vco_Application",
+                "APPOSUCPAdapterInstance",
+                "watchquagga",
+                "weblogic_garbage_collector",
+                "weblogic_jms_runtime",
+                "weblogic_jta_runtime",
+                "weblogic_jvm_memory",
+                "weblogic_jvm_memory_pool",
+                "weblogic_jvm_runtime",
+                "websphere",
+                "websphere_Application",
+                "wildfly",
+                "wildfly_Application",
+                "win"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/APPOSUCP",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/APPOSUCP/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "VOAAdapter",
+            "name": "VOAAdapter",
+            "description": "VOAAdapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "VOAAdapterInstance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/VOAAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/VOAAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "CASAdapter",
+            "name": "vRealize Automation Adapter 8.x",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 12,
+            "identifiers": [],
+            "resourceKinds": [
+                "Blueprint",
+                "CAS_CLUSTER_WORLD",
+                "CAS World",
+                "CloudAccount",
+                "CASENTITYSTATUS",
+                "CloudZone",
+                "Deployment",
+                "Organization",
+                "Project",
+                "PublicCloudZone",
+                "USER",
+                "CAS Adapter Instance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/CASAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/CASAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "LogInsightAdapter",
+            "name": "vRealize Log Insight Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 15,
+            "identifiers": [],
+            "resourceKinds": [
+                "LoginSight Adapter Instance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/LogInsightAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/LogInsightAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "NETWORK_INSIGHT",
+            "name": "vRealize Network Insight Adapter",
+            "description": "vRealize Network Insight Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 5,
+            "identifiers": [],
+            "resourceKinds": [
+                "NETWORK_INSIGHT_ADAPTER_INSTANCE",
+                "NETWORK_INSIGHT_OTHERS",
+                "NETWORK_INSIGHT_APPLICATION",
+                "NETWORK_INSIGHT_TIER"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/NETWORK_INSIGHT",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/NETWORK_INSIGHT/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "vCenter Operations Adapter",
+            "name": "vRealize Operations Adapter",
+            "description": "vRealize Operations Manager Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 324,
+            "identifiers": [],
+            "resourceKinds": [
+                "vCenter Operations Adapter Instance",
+                "vC-Ops-Admin-UI",
+                "vC-Ops-Analytics",
+                "vC-Ops-CaSA",
+                "Cloud-Proxy",
+                "vC-Ops-Cluster",
+                "vC-Ops-Collector",
+                "vC-Ops-Controller",
+                "vC-Ops-Fsdb",
+                "vC-Ops-ManagementPack",
+                "vC-Ops-ManagementPackGroup",
+                "vC-Ops-Node",
+                "vC-Ops-Persistence",
+                "vC-Ops-Product-UI",
+                "vC-Ops-Remote-Collector",
+                "vC-Ops-Suite-API",
+                "vC-Ops-Watchdog"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/vCenter%20Operations%20Adapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/vCenter%20Operations%20Adapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "OrchestratorAdapter",
+            "name": "vRealize Orchestrator Adapter",
+            "description": "vRealize Orchestrator Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 16,
+            "identifiers": [],
+            "resourceKinds": [
+                "DynamicActionResource",
+                "OrchestratorAdapter Instance",
+                "vRo_Package",
+                "vRo_Workflow"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/OrchestratorAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/OrchestratorAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "vRealizeOpsMgrAPI",
+            "name": "vRealizeOpsMgrAPI",
+            "adapterKindType": "OPENAPI",
+            "describeVersion": 1,
+            "identifiers": [],
+            "resourceKinds": [
+                "vRealizeOpsMgrAPI Adapter Instance"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/vRealizeOpsMgrAPI",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/vRealizeOpsMgrAPI/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        },
+        {
+            "key": "VirtualAndPhysicalSANAdapter",
+            "name": "vSAN Adapter",
+            "description": "vSAN Adapter",
+            "adapterKindType": "GENERAL",
+            "describeVersion": 24,
+            "identifiers": [],
+            "resourceKinds": [
+                "CacheDisk",
+                "CapacityDisk",
+                "VirtualAndPhysicalSANAdapter Instance",
+                "VirtualSANDCCluster",
+                "VirtualSANDiskGroup",
+                "Vsan2Disk",
+                "VirtualSANFaultDomain",
+                "FileServer",
+                "FileShare",
+                "StoragePool",
+                "VirtualSANWitnessHost",
+                "vSAN World"
+            ],
+            "links": [
+                {
+                    "href": "/suite-api/api/adapterkinds/VirtualAndPhysicalSANAdapter",
+                    "rel": "SELF",
+                    "name": "linkToSelf"
+                },
+                {
+                    "href": "/suite-api/api/adapterkinds/VirtualAndPhysicalSANAdapter/resourcekinds",
+                    "rel": "RELATED",
+                    "name": "linkToAllResourceKinds"
+                }
+            ]
+        }
+    ]
+}

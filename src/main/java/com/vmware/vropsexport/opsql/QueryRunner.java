@@ -20,6 +20,7 @@ package com.vmware.vropsexport.opsql;
 import com.vmware.vropsexport.Command;
 import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.Exporter;
+import com.vmware.vropsexport.Metadata;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.opsql.console.Console;
 import org.apache.commons.cli.CommandLine;
@@ -40,7 +41,7 @@ public class QueryRunner extends Command {
         // The error message is already printed at this point, so we can ignore the exception
       }
     } else {
-      new Console().run(this);
+      new Console(new Metadata(client)).run(this);
     }
   }
 

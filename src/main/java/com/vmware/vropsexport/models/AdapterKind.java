@@ -17,18 +17,21 @@
  */
 package com.vmware.vropsexport.models;
 
+import java.util.List;
+
 public class AdapterKind {
   private String key;
   private String name;
   private String description;
   private String adapterKindType;
   private Integer describeVersion;
+  private List<String> resourceKinds;
 
   public String getKey() {
     return key;
   }
 
-  public void setKey(String key) {
+  public void setKey(final String key) {
     this.key = key;
   }
 
@@ -36,7 +39,7 @@ public class AdapterKind {
     return name;
   }
 
-  public void setName(String name) {
+  public void setName(final String name) {
     this.name = name;
   }
 
@@ -44,7 +47,7 @@ public class AdapterKind {
     return description;
   }
 
-  public void setDescription(String description) {
+  public void setDescription(final String description) {
     this.description = description;
   }
 
@@ -52,7 +55,7 @@ public class AdapterKind {
     return adapterKindType;
   }
 
-  public void setAdapterKindType(String adapterKindType) {
+  public void setAdapterKindType(final String adapterKindType) {
     this.adapterKindType = adapterKindType;
   }
 
@@ -60,7 +63,15 @@ public class AdapterKind {
     return describeVersion;
   }
 
-  public void setDescribeVersion(Integer describeVersion) {
+  public void setDescribeVersion(final Integer describeVersion) {
     this.describeVersion = describeVersion;
+  }
+
+  public List<String> getResourceKinds() {
+    return resourceKinds;
+  }
+
+  public void setResourceKinds(final List<String> resourceKinds) {
+    this.resourceKinds = resourceKinds;
   }
 }
