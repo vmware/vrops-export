@@ -55,6 +55,7 @@ public class Highlighter extends DefaultHighlighter {
         i = token.getStopIndex() + 1;
         tokenIdx++;
       } else {
+        asb.append(s.charAt(i));
         ++i;
       }
     }

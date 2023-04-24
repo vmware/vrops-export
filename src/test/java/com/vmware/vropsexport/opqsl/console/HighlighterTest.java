@@ -32,4 +32,9 @@ public class HighlighterTest {
   public void testLexerFailure() {
     runTest("resource(;;;", "\u001B[1mresource\u001B[0m(;;;");
   }
+
+  @Test
+  public void testLexerFailureAndRecovery() {
+    runTest("resource(;;;)", "\u001B[1mresource\u001B[0m(;;;)");
+  }
 }

@@ -103,6 +103,7 @@ public class Parser implements org.jline.reader.Parser {
       throws SyntaxError {
     // System.err.println("" + i + " " + s + " " + parseContext);
     final OpsqlLexer lexer = new OpsqlLexer(CharStreams.fromString(s));
+    lexer.removeErrorListeners(); // We don't want any error messages
     final List<? extends Token> tokens = lexer.getAllTokens();
     final List<String> words = new ArrayList<>(tokens.size());
     int cursorWord = -1;
