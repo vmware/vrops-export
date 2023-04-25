@@ -1,0 +1,31 @@
+{
+  "resourceRequest": {
+    "adapterKind": [
+      "VMWARE"
+    ],
+    "resourceKind": [
+      "VirtualMachine"
+    ],
+    "propertyConditions": {
+      "conjunctionOperator": "AND",
+      "conditions": [
+        {
+          "key": "summary|guestFamily",
+          "operator": "EQ",
+          "stringValue": "linux"
+        },
+        {
+          "key": "summary|guestFamily",
+          "operator": "NOT_EQ",
+          "stringValue": "windows"
+        }
+      ]
+    }
+  },
+  "fields": [
+    {
+      "metric": "cpu|demandmhz",
+      "alias": "cpu|demandmhz"
+    }
+  ]
+}

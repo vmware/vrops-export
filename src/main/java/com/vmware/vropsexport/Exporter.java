@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
+ * Copyright 2017-2023 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -156,7 +156,8 @@ public class Exporter implements DataProvider {
         conf.isAllMetrics()
             ? new RowMetadata(
                 conf,
-                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
+                metadata
+                    .getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
                     .stream()
                     .map(StatKeysResponse.StatKey::getKey)
                     .collect(Collectors.toList()))

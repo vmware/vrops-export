@@ -15,26 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.vmware.vropsexport;
+package com.vmware.vropsexport.opqsl.console;
 
-import java.util.TreeMap;
-
-public class Rowset {
-  private final String resourceId;
-
-  private final TreeMap<Long, Row> rows;
-
-  public Rowset(final String resourceId, final TreeMap<Long, Row> rows) {
-    super();
-    this.resourceId = resourceId;
-    this.rows = rows;
-  }
-
-  public String getResourceId() {
-    return resourceId;
-  }
-
-  public TreeMap<Long, Row> getRows() {
-    return rows;
-  }
-}
+public class CompleterTest {}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
+ * Copyright 2017-2023 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -24,15 +24,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.ParentSplicer;
+import org.apache.http.HttpException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import org.apache.http.HttpException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings("SameParameterValue")
 public class StatsProcessor {
@@ -193,14 +194,14 @@ public class StatsProcessor {
               }
             }
             // Splice in tags
-            String tags = props.get("summary|tagJson");
+            final String tags = props.get("summary|tagJson");
             if (tags != null && !"none".equals(tags)) {
-              ObjectMapper om = new ObjectMapper();
-              List<Map<String, String>> parsed = om.readValue(tags, List.class);
-              for (Map<String, String> tag : parsed) {
-                int idx = meta.getTagIndex(tag.get("category"));
+              final ObjectMapper om = new ObjectMapper();
+              final List<Map<String, String>> parsed = om.readValue(tags, List.class);
+              for (final Map<String, String> tag : parsed) {
+                final int idx = meta.getTagIndex(tag.get("category"));
                 if (idx != -1) {
-                  String tagValue = tag.get("name");
+                  final String tagValue = tag.get("name");
                   for (final Row row : rs.getRows().values()) {
                     row.setProp(idx, tagValue);
                   }

@@ -15,26 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.vmware.vropsexport;
+package com.vmware.vropsexport.opsql;
 
-import java.util.TreeMap;
+public class OpsqlException extends RuntimeException {
+  private static final long serialVersionUID = -8662628443645489703L;
 
-public class Rowset {
-  private final String resourceId;
+  public OpsqlException() {}
 
-  private final TreeMap<Long, Row> rows;
-
-  public Rowset(final String resourceId, final TreeMap<Long, Row> rows) {
-    super();
-    this.resourceId = resourceId;
-    this.rows = rows;
+  public OpsqlException(final String message) {
+    super(message);
   }
 
-  public String getResourceId() {
-    return resourceId;
+  public OpsqlException(final String message, final Throwable cause) {
+    super(message, cause);
   }
 
-  public TreeMap<Long, Row> getRows() {
-    return rows;
+  public OpsqlException(final Throwable cause) {
+    super(cause);
+  }
+
+  public OpsqlException(
+      final String message,
+      final Throwable cause,
+      final boolean enableSuppression,
+      final boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
+ * Copyright 2017-2023 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -17,15 +17,16 @@
  */
 package com.vmware.vropsexport.security;
 
+import org.apache.http.conn.ssl.TrustStrategy;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import org.apache.http.conn.ssl.TrustStrategy;
 
 public class ExtendableTrustStrategy implements TrustStrategy, org.apache.http.ssl.TrustStrategy {
   private final TrustManager[] trustManagers;

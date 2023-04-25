@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 VMware, Inc. All Rights Reserved.
+ * Copyright 2017-2023 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
  *
@@ -29,7 +29,7 @@ public class AdapterKindResponse {
     return adapterKind;
   }
 
-  public void setAdapterKind(List<AdapterKind> adapterKind) {
+  public void setAdapterKind(final List<AdapterKind> adapterKind) {
     this.adapterKind = adapterKind;
   }
 }
