@@ -55,7 +55,7 @@ public class Completer implements org.jline.reader.Completer {
   public Completer(final Metadata backend) {
     this.backend = backend;
     resourceKinds = loadResourceKinds();
-    resourceKindLookup = resourceKinds.stream().map(Candidate::key).collect(Collectors.toSet());
+    resourceKindLookup = resourceKinds.stream().map(Candidate::value).collect(Collectors.toSet());
   }
 
   @Override
@@ -97,9 +97,7 @@ public class Completer implements org.jline.reader.Completer {
           completer.statCache.computeIfAbsent(
               resourceKind, (k) -> loadStatkeys(completer.backend, resourceKind));
       result.addAll(
-          keys.stream()
-              .map((k) -> makeCandidate(k.getKey(), k.getName()))
-              .collect(Collectors.toList()));
+          keys.stream().map((k) -> makeCandidate(k.getKey())).collect(Collectors.toList()));
     }
     return result;
   }

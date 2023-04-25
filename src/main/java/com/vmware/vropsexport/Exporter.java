@@ -156,8 +156,7 @@ public class Exporter implements DataProvider {
         conf.isAllMetrics()
             ? new RowMetadata(
                 conf,
-                metadata
-                    .getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
+                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
                     .stream()
                     .map(StatKeysResponse.StatKey::getKey)
                     .collect(Collectors.toList()))
