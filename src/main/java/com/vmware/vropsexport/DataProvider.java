@@ -17,9 +17,7 @@
  */
 package com.vmware.vropsexport;
 
-import com.vmware.vropsexport.models.AdapterKind;
 import com.vmware.vropsexport.models.NamedResource;
-import com.vmware.vropsexport.models.ResourceKind;
 import org.apache.http.HttpException;
 
 import java.io.IOException;
@@ -38,8 +36,4 @@ public interface DataProvider {
   String getResourceName(String resourceId) throws IOException, HttpException;
 
   List<String> getStatKeysForResource(final String resourceId) throws IOException, HttpException;
-
-  List<AdapterKind> getAdapterKinds() throws HttpException, IOException;
-
-  List<ResourceKind> getResourceKinds(final String adapterKind) throws IOException, HttpException;
 }

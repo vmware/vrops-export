@@ -4,9 +4,7 @@ import com.vmware.vropsexport.models.*;
 import org.apache.http.HttpException;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public class Metadata {
@@ -31,44 +29,17 @@ public class Metadata {
         .getResourceKinds();
   }
 
-  public void printResourceMetadata(final String adapterAndResourceKind, final PrintStream out)
-      throws IOException, HttpException {
-    String resourceKind = adapterAndResourceKind;
-    String adapterKind = "VMWARE";
-    final Matcher m = Patterns.adapterAndResourceKindPattern.matcher(adapterAndResourceKind);
-    if (m.matches()) {
-      adapterKind = m.group(1);
-      resourceKind = m.group(2);
-    }
-    final StatKeysResponse response =
-        client.getJson(
-            "/suite-api/api/adapterkinds/"
-                + Exporter.urlencode(adapterKind)
-                + "/resourcekinds/"
-                + Exporter.urlencode(resourceKind)
-                + "/statkeys",
-            StatKeysResponse.class);
-    for (final StatKeysResponse.StatKey key : response.getStatKeys()) {
-      out.println("Key  : " + key.getKey());
-      out.println("Name : " + key.getName());
-      out.println();
-    }
-  }
-
-  public List<String> getStatKeysForResourceKind(
+  public List<StatKeysResponse.StatKey> getStatKeysForResourceKind(
       final String adapterKind, final String resourceKind) throws IOException, HttpException {
-    final StatKeysResponse response =
-        client.getJson(
+    return client
+        .getJson(
             "/suite-api/api/adapterkinds/"
                 + Exporter.urlencode(adapterKind)
                 + "/resourcekinds/"
                 + Exporter.urlencode(resourceKind)
                 + "/statkeys",
-            StatKeysResponse.class);
-
-    return response.getStatKeys().stream()
-        .map(StatKeysResponse.StatKey::getKey)
-        .collect(Collectors.toList());
+            StatKeysResponse.class)
+        .getStatKeys();
   }
 
   public List<String> getStatKeysForResource(final String resourceId)

@@ -19,6 +19,7 @@ package com.vmware.vropsexport.opsql.console;
 
 import com.vmware.vropsexport.Metadata;
 import com.vmware.vropsexport.models.AdapterKind;
+import com.vmware.vropsexport.models.StatKeysResponse;
 import com.vmware.vropsexport.opsql.Constants;
 import org.apache.http.HttpException;
 import org.jline.reader.Candidate;
@@ -27,11 +28,12 @@ import org.jline.reader.ParsedLine;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Completer implements org.jline.reader.Completer {
   @FunctionalInterface
   interface Resolver {
-    public List<Candidate> apply(Completer completer, String pattern);
+    List<Candidate> apply(Completer completer, ParsedLine parsedLine, String pattern);
   }
 
   private final Metadata backend;
@@ -40,13 +42,20 @@ public class Completer implements org.jline.reader.Completer {
 
   static {
     resolvers.put("resource", Completer::resolveResourceType);
+    resolvers.put("fields", Completer::resolveStatKey);
+    resolvers.put("whereMetrics", Completer::resolveStatKey);
   }
 
   private final List<Candidate> resourceKinds;
 
+  private final Set<String> resourceKindLookup;
+
+  private final Map<String, List<StatKeysResponse.StatKey>> statCache = new HashMap<>();
+
   public Completer(final Metadata backend) {
     this.backend = backend;
     resourceKinds = loadResourceKinds();
+    resourceKindLookup = resourceKinds.stream().map(Candidate::key).collect(Collectors.toSet());
   }
 
   @Override
@@ -58,26 +67,41 @@ public class Completer implements org.jline.reader.Completer {
     }
 
     // Handle keywords
-    for (final String keyword : Constants.keywords) {
-      if (keyword.startsWith(word)) {
-        list.add(makeCandidate(keyword));
-      }
-    }
+    list.addAll(
+        Arrays.stream(Constants.keywords)
+            .map(Completer::makeCandidate)
+            .collect(Collectors.toList()));
 
     // Handle context-sensitive completion. Infer context by backing up until we find a keyword we
     // have a resolver for.
     for (int i = parsedLine.wordIndex(); i >= 0; --i) {
       final Resolver resolver = resolvers.get(parsedLine.words().get(i));
       if (resolver != null) {
-        list.addAll(resolver.apply(this, word));
+        list.addAll(resolver.apply(this, parsedLine, word));
         break;
       }
     }
   }
 
   private static List<Candidate> resolveResourceType(
-      final Completer completer, final String pattern) {
+      final Completer completer, final ParsedLine parsedLine, final String pattern) {
     return completer.resourceKinds;
+  }
+
+  private static List<Candidate> resolveStatKey(
+      final Completer completer, final ParsedLine parsedLine, final String pattern) {
+    final List<Candidate> result = new ArrayList<>();
+    final List<String> resourceKinds = inferResourceKind(parsedLine, completer);
+    for (final String resourceKind : resourceKinds) {
+      final List<StatKeysResponse.StatKey> keys =
+          completer.statCache.computeIfAbsent(
+              resourceKind, (k) -> loadStatkeys(completer.backend, resourceKind));
+      result.addAll(
+          keys.stream()
+              .map((k) -> makeCandidate(k.getKey(), k.getName()))
+              .collect(Collectors.toList()));
+    }
+    return result;
   }
 
   private List<Candidate> loadResourceKinds() {
@@ -95,7 +119,44 @@ public class Completer implements org.jline.reader.Completer {
     return result;
   }
 
+  private static List<StatKeysResponse.StatKey> loadStatkeys(
+      final Metadata metadata, final String qualifiedResourceKind) {
+    final int p = qualifiedResourceKind.indexOf(":");
+    final String adapterKind = p != -1 ? qualifiedResourceKind.substring(0, p) : "VMWARE";
+    final String resourceKind =
+        p != -1 ? qualifiedResourceKind.substring(p + 1) : qualifiedResourceKind;
+    try {
+      return metadata.getStatKeysForResourceKind(adapterKind, resourceKind);
+    } catch (final IOException | HttpException e) {
+      // Just return an empty list. We don't want any error messages cluttering the console
+      return Collections.emptyList();
+    }
+  }
+
   private static Candidate makeCandidate(final String word) {
     return new Candidate(word, word, null, null, "(", null, false, 0);
+  }
+
+  private static Candidate makeCandidate(final String key, final String name) {
+    return new Candidate(key, name, null, null, "(", null, false, 0);
+  }
+
+  private static List<String> inferResourceKind(final ParsedLine p, final Completer completer) {
+    final List<String> result = new ArrayList<>(10);
+    final List<String> words = p.words();
+    for (int i = 0; i < words.size(); ++i) {
+      if (words.get(i).equals("resource")) {
+        ++i;
+        for (; i < words.size(); ++i) {
+          final String word = words.get(i);
+          if (completer.resourceKindLookup.contains(word)) {
+            result.add(word);
+          } else {
+            break;
+          }
+        }
+      }
+    }
+    return result;
   }
 }

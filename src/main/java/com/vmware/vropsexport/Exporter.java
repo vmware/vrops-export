@@ -156,7 +156,10 @@ public class Exporter implements DataProvider {
         conf.isAllMetrics()
             ? new RowMetadata(
                 conf,
-                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind()))
+                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
+                    .stream()
+                    .map(StatKeysResponse.StatKey::getKey)
+                    .collect(Collectors.toList()))
             : new RowMetadata(conf);
     final RowsetProcessor rsp = rspFactory.makeFromConfig(out, conf, this);
     rsp.preamble(meta, conf);
@@ -362,6 +365,12 @@ public class Exporter implements DataProvider {
   }
 
   @Override
+  public List<String> getStatKeysForResource(final String resourceId)
+      throws IOException, HttpException {
+    return metadata.getStatKeysForResource(resourceId);
+  }
+
+  @Override
   public Map<String, String> fetchProps(final String id) throws IOException, HttpException {
     synchronized (propCache) {
       final Map<String, String> result = propCache.get(id);
@@ -416,32 +425,28 @@ public class Exporter implements DataProvider {
     return res;
   }
 
-  @Override
-  public List<AdapterKind> getAdapterKinds() throws HttpException, IOException {
-    return metadata.getAdapterKinds();
-  }
-
-  @Override
-  public List<ResourceKind> getResourceKinds(final String adapterKind)
-      throws IOException, HttpException {
-    return metadata.getResourceKinds(adapterKind);
-  }
-
   public void printResourceMetadata(final String adapterAndResourceKind, final PrintStream out)
       throws IOException, HttpException {
-    metadata.printResourceMetadata(adapterAndResourceKind, out);
-  }
-
-  public List<String> getStatKeysForResourceKind(
-      final String adapterKind, final String resourceKind) throws IOException, HttpException {
-
-    return metadata.getStatKeysForResourceKind(adapterKind, resourceKind);
-  }
-
-  @Override
-  public List<String> getStatKeysForResource(final String resourceId)
-      throws IOException, HttpException {
-    return metadata.getStatKeysForResource(resourceId);
+    String resourceKind = adapterAndResourceKind;
+    String adapterKind = "VMWARE";
+    final Matcher m = Patterns.adapterAndResourceKindPattern.matcher(adapterAndResourceKind);
+    if (m.matches()) {
+      adapterKind = m.group(1);
+      resourceKind = m.group(2);
+    }
+    final StatKeysResponse response =
+        client.getJson(
+            "/suite-api/api/adapterkinds/"
+                + Exporter.urlencode(adapterKind)
+                + "/resourcekinds/"
+                + Exporter.urlencode(resourceKind)
+                + "/statkeys",
+            StatKeysResponse.class);
+    for (final StatKeysResponse.StatKey key : response.getStatKeys()) {
+      out.println("Key  : " + key.getKey());
+      out.println("Name : " + key.getName());
+      out.println();
+    }
   }
 
   public void generateExportDefinition(final String adapterAndResourceKind, final PrintStream out)
@@ -454,10 +459,11 @@ public class Exporter implements DataProvider {
       resourceKind = m.group(2);
     }
 
-    final List<String> metrics = metadata.getStatKeysForResourceKind(adapterKind, resourceKind);
+    final List<StatKeysResponse.StatKey> metrics =
+        metadata.getStatKeysForResourceKind(adapterKind, resourceKind);
     final List<Config.Field> fields =
         metrics.stream()
-            .map(s -> new Config.Field(s, s, Config.Field.Kind.METRIC))
+            .map(s -> new Config.Field(s.getKey(), s.getKey(), Config.Field.Kind.METRIC))
             .collect(Collectors.toList());
     final Config config = new Config();
     config.setFields(fields);
