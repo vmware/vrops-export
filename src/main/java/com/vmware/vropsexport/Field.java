@@ -35,6 +35,16 @@ public class Field {
     PARENT,
   }
 
+  enum AggregationType {
+    NONE,
+    SUM,
+    MAX,
+    MIN,
+    AVG,
+    STDDEV,
+    MEDIAN
+  }
+
   protected static final String TAG_PROP_PREFIX = "summary|tagJson#";
 
   private String alias;
@@ -44,6 +54,8 @@ public class Field {
   private String relatedAdapterKind = "VMWARE";
   private RelationshipType relationshipType = RelationshipType.SELF;
   private Kind kind;
+  private int searchDepth = 1;
+  private AggregationType aggregation = AggregationType.AVG;
 
   public Field() {}
 
@@ -83,6 +95,8 @@ public class Field {
       relationshipType = RelationshipType.PARENT;
       localName = m.group(2);
       relatedResourceKind = m.group(1);
+    } else {
+      localName = name;
     }
   }
 
@@ -103,7 +117,7 @@ public class Field {
   }
 
   public void setMetric(final String metric) {
-    name = metric;
+    setName(metric);
     kind = Kind.METRIC;
   }
 
@@ -112,12 +126,12 @@ public class Field {
   }
 
   public void setProp(final String prop) {
-    name = prop;
+    setName(prop);
     kind = Kind.PROPERTY;
   }
 
   public void setTag(final String tag) {
-    name = TAG_PROP_PREFIX + tag;
+    setName(TAG_PROP_PREFIX + tag);
     kind = Kind.TAG;
   }
 
@@ -159,5 +173,25 @@ public class Field {
 
   public String getRelatedAdapterKind() {
     return relatedAdapterKind;
+  }
+
+  public void setRelatedAdapterKind(final String relatedAdapterKind) {
+    this.relatedAdapterKind = relatedAdapterKind;
+  }
+
+  public int getSearchDepth() {
+    return searchDepth;
+  }
+
+  public void setSearchDepth(final int searchDepth) {
+    this.searchDepth = searchDepth;
+  }
+
+  public AggregationType getAggregation() {
+    return aggregation;
+  }
+
+  public void setAggregation(final AggregationType aggregation) {
+    this.aggregation = aggregation;
   }
 }

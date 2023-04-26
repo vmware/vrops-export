@@ -58,13 +58,17 @@ fields:
     prop: $parent:HostSystem.$resName
   # Cluster Name (grandparent)
   - alias: clusterCPU
-    prop: $parent:HostSystem.$parent:ClusterComputeResource.$resName
+    prop: $parent:ClusterComputeResource.$resName
+    searchDepth: 2
   # Cluster CPU
   - alias: clusterCPU
-    metric: $parent:HostSystem.$parent:ClusterComputeResource.cpu|demandmhz
+    metric: $parent:ClusterComputeResource.cpu|demandmhz
+    searchDepth: 2
   # Datacenter cpu (great grandparent)
   - alias: dcCpu
-    metric: $parent:HostSystem.$parent:ClusterComputeResource.$parent:Datacenter.cpu|demandPct
+    metric: $parent:Datacenter.cpu|demandPct
+    searchDepth: 3
   # Datacenter name
   - alias: dcName
-    prop: $parent:HostSystem.$parent:ClusterComputeResource.$parent:Datacenter.$resName
+    prop: $parent:Datacenter.$resName
+    searchDepth: 3

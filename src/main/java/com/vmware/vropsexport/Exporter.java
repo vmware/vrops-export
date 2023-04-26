@@ -470,6 +470,7 @@ public class Exporter implements DataProvider {
                         s.getKey(),
                         Field.Kind.METRIC,
                         null,
+                        null,
                         Field.RelationshipType.SELF))
             .collect(Collectors.toList());
     final Config config = new Config();

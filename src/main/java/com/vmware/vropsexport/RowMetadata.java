@@ -20,16 +20,94 @@ package com.vmware.vropsexport;
 import com.vmware.vropsexport.exceptions.ExporterException;
 
 import java.util.*;
-import java.util.regex.Matcher;
+import java.util.stream.Stream;
 
 public class RowMetadata {
+  public static class FieldSpec {
+    private int index;
+    private Field field;
+
+    public FieldSpec(final int index, final Field field) {
+      this.index = index;
+      this.field = field;
+    }
+
+    public int getIndex() {
+      return index;
+    }
+
+    public void setIndex(final int index) {
+      this.index = index;
+    }
+
+    public Field getField() {
+      return field;
+    }
+
+    public void setField(final Field field) {
+      this.field = field;
+    }
+  }
+
+  public static class RelationshipSpec {
+    private String adapterKind;
+    private String resourceKind;
+    private final int searchDepth;
+
+    public RelationshipSpec(
+        final String adapterKind, final String resourceKind, final int searchDepth) {
+      this.adapterKind = adapterKind;
+      this.resourceKind = resourceKind;
+      this.searchDepth = searchDepth;
+    }
+
+    public String getAdapterKind() {
+      return adapterKind;
+    }
+
+    public void setAdapterKind(final String adapterKind) {
+      this.adapterKind = adapterKind;
+    }
+
+    public String getResourceKind() {
+      return resourceKind;
+    }
+
+    public void setResourceKind(final String resourceKind) {
+      this.resourceKind = resourceKind;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      final RelationshipSpec that = (RelationshipSpec) o;
+      return searchDepth == that.searchDepth
+          && Objects.equals(adapterKind, that.adapterKind)
+          && Objects.equals(resourceKind, that.resourceKind);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(adapterKind, resourceKind, searchDepth);
+    }
+  }
+
+  private static final FieldSpec nullField = new FieldSpec(-1, null);
+
+  private final Set<RelationshipSpec> relatedResourceTypes = new HashSet<>();
+
   private final String resourceKind;
 
   private final String adapterKind;
 
-  private final Map<String, Integer> metricMap = new HashMap<>();
+  private final Map<String, FieldSpec> metricMap = new HashMap<>();
 
-  private final Map<String, Integer> propMap = new HashMap<>();
+  private final Map<String, FieldSpec> propMap = new HashMap<>();
 
   private final Map<String, String> propNameToAlias = new HashMap<>();
 
@@ -51,7 +129,17 @@ public class RowMetadata {
     final NameSanitizer ns = conf.createNameSanitizer();
     int mp = 0;
     for (final String metricName : metricNames) {
-      metricMap.put(metricName, mp);
+      metricMap.put(
+          metricName,
+          new FieldSpec(
+              mp,
+              new Field(
+                  metricName,
+                  metricName,
+                  Field.Kind.METRIC,
+                  null,
+                  null,
+                  Field.RelationshipType.SELF)));
       metricAliasMap.put(metricName, mp++);
       metricNameToAlias.put(metricName, ns.transform(metricName));
     }
@@ -71,7 +159,7 @@ public class RowMetadata {
           throw new ExporterException(
               "Repeated metrics are not supported. Offending metric: " + metricKey);
         }
-        metricMap.put(metricKey, mp);
+        metricMap.put(metricKey, new FieldSpec(mp, fld));
         metricAliasMap.put(fld.getAlias(), mp++);
         metricNameToAlias.put(fld.getMetric(), fld.getAlias());
       } else {
@@ -81,7 +169,7 @@ public class RowMetadata {
             throw new ExporterException(
                 "Repeated properties are not supported. Offending property: " + propKey);
           }
-          propMap.put(fld.getProp(), pp);
+          propMap.put(fld.getProp(), new FieldSpec(pp, fld));
           propAliasMap.put(fld.getAlias(), pp++);
           propNameToAlias.put(fld.getProp(), fld.getAlias());
           pip.add(mp);
@@ -94,50 +182,56 @@ public class RowMetadata {
     }
   }
 
-  private RowMetadata(final RowMetadata origin) throws ExporterException {
+  private RowMetadata(final RowMetadata origin, final String resourceKind, final String adapterKind)
+      throws ExporterException {
     propInsertionPoints = origin.propInsertionPoints;
-    String t = null;
-    for (final Map.Entry<String, Integer> e : origin.propMap.entrySet()) {
-      final String p = e.getKey();
-      final Matcher m = Patterns.parentPattern.matcher(p);
-      if (m.matches()) {
-        if (t == null) {
-          t = m.group(1);
-        } else if (!t.equals(m.group(1))) {
-          throw new ExporterException("Only one parent type is currently supported");
-        }
-        propMap.put(m.group(2), e.getValue());
-      } else {
-        propMap.put("_placeholder_" + p, e.getValue());
+    for (final Map.Entry<String, FieldSpec> e : origin.getPropMap().entrySet()) {
+      final FieldSpec fs = e.getValue();
+      final Field f = fs.getField();
+      if (f.getRelationshipType() == Field.RelationshipType.SELF) {
+        propMap.put("_placeholder_" + f.getLocalName(), fs);
+        continue;
       }
+      propMap.put(f.getLocalName(), fs);
     }
-    for (final Map.Entry<String, Integer> e : origin.metricMap.entrySet()) {
-      final String mt = e.getKey();
-      final Matcher m = Patterns.parentPattern.matcher(mt);
-      if (m.matches()) {
-        if (t == null) {
-          t = m.group(1);
-        } else if (!t.equals(m.group(1))) {
-          throw new ExporterException("Only one parent type is currently supported");
-        }
-        metricMap.put(m.group(2), e.getValue());
-      } else {
-        metricMap.put("_placeholder_" + mt, e.getValue());
+
+    for (final Map.Entry<String, FieldSpec> e : origin.metricMap.entrySet()) {
+      final FieldSpec fs = e.getValue();
+      final Field f = fs.getField();
+      if (f.getRelationshipType() == Field.RelationshipType.SELF) {
+        metricMap.put("_placeholder_" + f.getLocalName(), fs);
+        continue;
       }
+      metricMap.put(f.getLocalName(), fs);
     }
-    resourceKind = t;
-    adapterKind = null; // TODO: It should be possible to specify adapter type as well!
+    this.resourceKind = resourceKind;
+    this.adapterKind = adapterKind; // TODO: It should be possible to specify adapter type as well!
   }
 
-  public RowMetadata forRelated() throws ExporterException {
-    return new RowMetadata(this);
+  public Map<RelationshipSpec, RowMetadata> forRelated() throws ExporterException {
+    final Stream<RelationshipSpec> relations =
+        Stream.concat(propMap.values().stream(), metricMap.values().stream())
+            .filter((p) -> p.field.getRelationshipType() != Field.RelationshipType.SELF)
+            .map(
+                (p) ->
+                    new RelationshipSpec(
+                        p.field.getRelatedAdapterKind(),
+                        p.field.getRelatedResourceKind(),
+                        p.field.getSearchDepth()))
+            .distinct();
+    final Map<RelationshipSpec, RowMetadata> result = new HashMap<>();
+    for (final Iterator<RelationshipSpec> itor = relations.iterator(); itor.hasNext(); ) {
+      final RelationshipSpec rs = itor.next();
+      result.put(rs, new RowMetadata(this, rs.resourceKind, rs.adapterKind));
+    }
+    return result;
   }
 
-  public Map<String, Integer> getMetricMap() {
+  public Map<String, FieldSpec> getMetricMap() {
     return metricMap;
   }
 
-  public Map<String, Integer> getPropMap() {
+  public Map<String, FieldSpec> getPropMap() {
     return propMap;
   }
 
@@ -146,11 +240,11 @@ public class RowMetadata {
   }
 
   public int getMetricIndex(final String metric) {
-    return metricMap.getOrDefault(metric, -1);
+    return metricMap.getOrDefault(metric, nullField).index;
   }
 
   public int getPropertyIndex(final String property) {
-    return propMap.getOrDefault(property, -1);
+    return propMap.getOrDefault(property, nullField).index;
   }
 
   public int getTagIndex(final String tag) {

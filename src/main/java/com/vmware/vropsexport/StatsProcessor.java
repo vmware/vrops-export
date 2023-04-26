@@ -212,8 +212,8 @@ public class StatsProcessor {
         }
 
         // Splice in data from parent
-        final RowMetadata pMeta = meta.forRelated();
-        if (pMeta.isValid()) {
+        final Map<RowMetadata.RelationshipSpec, RowMetadata> pMetaList = meta.forRelated();
+        for (final RowMetadata pMeta : pMetaList.values()) {
           final long now = System.currentTimeMillis();
           final NamedResource parent =
               dataProvider.getParentOf(resourceId, pMeta.getResourceKind());

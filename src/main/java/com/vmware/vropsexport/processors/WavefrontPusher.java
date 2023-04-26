@@ -1,22 +1,17 @@
 package com.vmware.vropsexport.processors;
 
-import com.vmware.vropsexport.Config;
-import com.vmware.vropsexport.DataProvider;
-import com.vmware.vropsexport.Row;
-import com.vmware.vropsexport.RowMetadata;
-import com.vmware.vropsexport.Rowset;
-import com.vmware.vropsexport.RowsetProcessor;
-import com.vmware.vropsexport.RowsetProcessorFacotry;
+import com.vmware.vropsexport.*;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
 import com.wavefront.sdk.common.WavefrontSender;
 import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
 import com.wavefront.sdk.proxy.WavefrontProxyClient;
+import org.apache.http.HttpException;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.http.HttpException;
 
 @SuppressWarnings("WeakerAccess")
 public class WavefrontPusher implements RowsetProcessor {
@@ -79,18 +74,19 @@ public class WavefrontPusher implements RowsetProcessor {
       for (final Row r : rowset.getRows().values()) {
         final long ts = r.getTimestamp();
         final String resourceName = dp.getResourceName(rowset.getResourceId());
-        for (final Map.Entry<String, Integer> metric : meta.getMetricMap().entrySet()) {
+        for (final Map.Entry<String, RowMetadata.FieldSpec> metric :
+            meta.getMetricMap().entrySet()) {
 
           // Build string on the format <metricName> <metricValue> [<timestamp>] source=<source>
           // [pointTags]
           //
-          final Double d = r.getMetric(metric.getValue());
+          final Double d = r.getMetric(metric.getValue().getIndex());
           if (d == null) {
             continue;
           }
           final Map<String, String> tags = new HashMap<>(meta.getPropMap().size());
-          for (final Map.Entry<String, Integer> prop : meta.getPropMap().entrySet()) {
-            final Integer p = prop.getValue();
+          for (final Map.Entry<String, RowMetadata.FieldSpec> prop : meta.getPropMap().entrySet()) {
+            final Integer p = prop.getValue().getIndex();
             if (p == null) {
               continue;
             }
