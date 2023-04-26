@@ -19,9 +19,11 @@ package com.vmware.vropsexport.opsql.console;
 
 import com.vmware.vropsexport.Metadata;
 import com.vmware.vropsexport.models.AdapterKind;
-import com.vmware.vropsexport.models.StatKeysResponse;
+import com.vmware.vropsexport.models.ResourceAttributeResponse;
 import com.vmware.vropsexport.opsql.Constants;
 import org.apache.http.HttpException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
@@ -31,6 +33,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Completer implements org.jline.reader.Completer {
+  private static final Logger log = LogManager.getLogger(Completer.class);
+
   @FunctionalInterface
   interface Resolver {
     List<Candidate> apply(Completer completer, ParsedLine parsedLine, String pattern);
@@ -42,15 +46,20 @@ public class Completer implements org.jline.reader.Completer {
 
   static {
     resolvers.put("resource", Completer::resolveResourceType);
-    resolvers.put("fields", Completer::resolveStatKey);
+    resolvers.put("fields", Completer::resolveStatOrPropKey);
     resolvers.put("whereMetrics", Completer::resolveStatKey);
+    resolvers.put("whereProperties", Completer::resolvePropertyKey);
   }
 
   private final List<Candidate> resourceKinds;
 
   private final Set<String> resourceKindLookup;
 
-  private final Map<String, List<StatKeysResponse.StatKey>> statCache = new HashMap<>();
+  private final Map<String, List<ResourceAttributeResponse.ResourceAttribute>> statCache =
+      new HashMap<>();
+
+  private final Map<String, List<ResourceAttributeResponse.ResourceAttribute>> propCache =
+      new HashMap<>();
 
   public Completer(final Metadata backend) {
     this.backend = backend;
@@ -93,11 +102,38 @@ public class Completer implements org.jline.reader.Completer {
     final List<Candidate> result = new ArrayList<>();
     final List<String> resourceKinds = inferResourceKind(parsedLine, completer);
     for (final String resourceKind : resourceKinds) {
-      final List<StatKeysResponse.StatKey> keys =
+      final List<ResourceAttributeResponse.ResourceAttribute> keys =
           completer.statCache.computeIfAbsent(
-              resourceKind, (k) -> loadStatkeys(completer.backend, resourceKind));
+              resourceKind, (k) -> loadStatKeys(completer.backend, resourceKind));
       result.addAll(
-          keys.stream().map((k) -> makeCandidate(k.getKey())).collect(Collectors.toList()));
+          keys.stream()
+              .map((k) -> makeCandidate(k.getKey(), k.getName()))
+              .collect(Collectors.toList()));
+    }
+    return result;
+  }
+
+  private static List<Candidate> resolveStatOrPropKey(
+      final Completer completer, final ParsedLine parsedLine, final String pattern) {
+    if (pattern.startsWith("@")) {
+      return resolvePropertyKey(completer, parsedLine, pattern);
+    } else {
+      return resolveStatKey(completer, parsedLine, pattern);
+    }
+  }
+
+  private static List<Candidate> resolvePropertyKey(
+      final Completer completer, final ParsedLine parsedLine, final String pattern) {
+    final List<Candidate> result = new ArrayList<>();
+    final List<String> resourceKinds = inferResourceKind(parsedLine, completer);
+    for (final String resourceKind : resourceKinds) {
+      final List<ResourceAttributeResponse.ResourceAttribute> keys =
+          completer.propCache.computeIfAbsent(
+              resourceKind, (k) -> loadPropKeys(completer.backend, resourceKind));
+      result.addAll(
+          keys.stream()
+              .map((k) -> makeCandidate("@" + k.getKey(), k.getName()))
+              .collect(Collectors.toList()));
     }
     return result;
   }
@@ -117,7 +153,7 @@ public class Completer implements org.jline.reader.Completer {
     return result;
   }
 
-  private static List<StatKeysResponse.StatKey> loadStatkeys(
+  private static List<ResourceAttributeResponse.ResourceAttribute> loadStatKeys(
       final Metadata metadata, final String qualifiedResourceKind) {
     final int p = qualifiedResourceKind.indexOf(":");
     final String adapterKind = p != -1 ? qualifiedResourceKind.substring(0, p) : "VMWARE";
@@ -127,6 +163,22 @@ public class Completer implements org.jline.reader.Completer {
       return metadata.getStatKeysForResourceKind(adapterKind, resourceKind);
     } catch (final IOException | HttpException e) {
       // Just return an empty list. We don't want any error messages cluttering the console
+      log.debug("Error while looking up stat keys", e);
+      return Collections.emptyList();
+    }
+  }
+
+  private static List<ResourceAttributeResponse.ResourceAttribute> loadPropKeys(
+      final Metadata metadata, final String qualifiedResourceKind) {
+    final int p = qualifiedResourceKind.indexOf(":");
+    final String adapterKind = p != -1 ? qualifiedResourceKind.substring(0, p) : "VMWARE";
+    final String resourceKind =
+        p != -1 ? qualifiedResourceKind.substring(p + 1) : qualifiedResourceKind;
+    try {
+      return metadata.getPropertyKeysForResourceKind(adapterKind, resourceKind);
+    } catch (final IOException | HttpException e) {
+      // Just return an empty list. We don't want any error messages cluttering the console
+      log.debug("Error while looking up property keys", e);
       return Collections.emptyList();
     }
   }
@@ -136,7 +188,7 @@ public class Completer implements org.jline.reader.Completer {
   }
 
   private static Candidate makeCandidate(final String key, final String name) {
-    return new Candidate(key, name, null, null, "(", null, false, 0);
+    return new Candidate(key, key, null, name, "(", null, false, 0);
   }
 
   private static List<String> inferResourceKind(final ParsedLine p, final Completer completer) {

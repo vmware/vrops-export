@@ -158,7 +158,7 @@ public class Exporter implements DataProvider {
                 conf,
                 metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
                     .stream()
-                    .map(StatKeysResponse.StatKey::getKey)
+                    .map(ResourceAttributeResponse.ResourceAttribute::getKey)
                     .collect(Collectors.toList()))
             : new RowMetadata(conf);
     final RowsetProcessor rsp = rspFactory.makeFromConfig(out, conf, this);
@@ -434,15 +434,15 @@ public class Exporter implements DataProvider {
       adapterKind = m.group(1);
       resourceKind = m.group(2);
     }
-    final StatKeysResponse response =
+    final ResourceAttributeResponse response =
         client.getJson(
             "/suite-api/api/adapterkinds/"
                 + Exporter.urlencode(adapterKind)
                 + "/resourcekinds/"
                 + Exporter.urlencode(resourceKind)
                 + "/statkeys",
-            StatKeysResponse.class);
-    for (final StatKeysResponse.StatKey key : response.getStatKeys()) {
+            ResourceAttributeResponse.class);
+    for (final ResourceAttributeResponse.ResourceAttribute key : response.getResourceAttributes()) {
       out.println("Key  : " + key.getKey());
       out.println("Name : " + key.getName());
       out.println();
@@ -459,7 +459,7 @@ public class Exporter implements DataProvider {
       resourceKind = m.group(2);
     }
 
-    final List<StatKeysResponse.StatKey> metrics =
+    final List<ResourceAttributeResponse.ResourceAttribute> metrics =
         metadata.getStatKeysForResourceKind(adapterKind, resourceKind);
     final List<Config.Field> fields =
         metrics.stream()

@@ -18,10 +18,11 @@
 package com.vmware.vropsexport.models;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+
 import java.util.List;
 
-public class StatKeysResponse {
-  public static class StatKey {
+public class ResourceAttributeResponse {
+  public static class ResourceAttribute {
     String key;
 
     String name;
@@ -44,13 +45,13 @@ public class StatKeysResponse {
   }
 
   @JsonAlias("resourceTypeAttributes")
-  private List<StatKey> statKeys;
+  private List<ResourceAttribute> resourceAttributes;
 
-  public List<StatKey> getStatKeys() {
-    return statKeys;
+  public List<ResourceAttribute> getResourceAttributes() {
+    return resourceAttributes;
   }
 
-  public void setStatKeys(final List<StatKey> statKeys) {
-    this.statKeys = statKeys;
+  public void setResourceAttributes(final List<ResourceAttribute> resourceAttributes) {
+    this.resourceAttributes = resourceAttributes;
   }
 }

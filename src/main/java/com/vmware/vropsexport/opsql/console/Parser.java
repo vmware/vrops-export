@@ -96,7 +96,8 @@ public class Parser implements org.jline.reader.Parser {
     }
   }
 
-  private static final Pattern wordPattern = Pattern.compile("\"?[A-Za-z_|$:][A-Za-z_0-9|$:]*\"?");
+  private static final Pattern wordPattern =
+      Pattern.compile("\"?@?[A-Za-z_|$:][A-Za-z_0-9|$:]*\"?");
 
   @Override
   public ParsedLine parse(final String s, final int i, final ParseContext parseContext)

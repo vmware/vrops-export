@@ -29,7 +29,7 @@ public class Metadata {
         .getResourceKinds();
   }
 
-  public List<StatKeysResponse.StatKey> getStatKeysForResourceKind(
+  public List<ResourceAttributeResponse.ResourceAttribute> getStatKeysForResourceKind(
       final String adapterKind, final String resourceKind) throws IOException, HttpException {
     return client
         .getJson(
@@ -38,8 +38,21 @@ public class Metadata {
                 + "/resourcekinds/"
                 + Exporter.urlencode(resourceKind)
                 + "/statkeys",
-            StatKeysResponse.class)
-        .getStatKeys();
+            ResourceAttributeResponse.class)
+        .getResourceAttributes();
+  }
+
+  public List<ResourceAttributeResponse.ResourceAttribute> getPropertyKeysForResourceKind(
+      final String adapterKind, final String resourceKind) throws IOException, HttpException {
+    return client
+        .getJson(
+            "/suite-api/api/adapterkinds/"
+                + Exporter.urlencode(adapterKind)
+                + "/resourcekinds/"
+                + Exporter.urlencode(resourceKind)
+                + "/properties",
+            ResourceAttributeResponse.class)
+        .getResourceAttributes();
   }
 
   public List<String> getStatKeysForResource(final String resourceId)
