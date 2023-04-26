@@ -17,7 +17,7 @@
  */
 package com.vmware.vropsexport.opsql;
 
-import com.vmware.vropsexport.Config;
+import com.vmware.vropsexport.Field;
 import com.vmware.vropsexport.models.ResourceRequest;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -74,22 +74,22 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     }
   }
 
-  private static class IdentifierResolver extends OpsqlBaseVisitor<Config.Field> {
+  private static class IdentifierResolver extends OpsqlBaseVisitor<Field> {
 
-    public static Config.Field resolveAny(final ParseTree ctx) {
+    public static Field resolveAny(final ParseTree ctx) {
       return ctx.accept(new IdentifierResolver());
     }
 
-    public static Config.Field resolveProperty(final ParseTree ctx) {
-      final Config.Field f = resolveAny(ctx);
+    public static Field resolveProperty(final ParseTree ctx) {
+      final Field f = resolveAny(ctx);
       if (!f.hasProp()) {
         throw new RuntimeException("Expected property, got metric");
       }
       return f;
     }
 
-    public static Config.Field resolveMetric(final ParseTree ctx) {
-      final Config.Field f = resolveAny(ctx);
+    public static Field resolveMetric(final ParseTree ctx) {
+      final Field f = resolveAny(ctx);
       if (!f.hasMetric()) {
         throw new RuntimeException("Expected metric, got property");
       }
@@ -99,15 +99,15 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     public IdentifierResolver() {}
 
     @Override
-    public Config.Field visitMetricIdentifier(final OpsqlParser.MetricIdentifierContext ctx) {
-      final Config.Field f = new Config.Field();
+    public Field visitMetricIdentifier(final OpsqlParser.MetricIdentifierContext ctx) {
+      final Field f = new Field();
       f.setMetric(ctx.Identifier().getText());
       return f;
     }
 
     @Override
-    public Config.Field visitPropertyIdentifier(final OpsqlParser.PropertyIdentifierContext ctx) {
-      final Config.Field f = new Config.Field();
+    public Field visitPropertyIdentifier(final OpsqlParser.PropertyIdentifierContext ctx) {
+      final Field f = new Field();
       f.setProp(ctx.PropertyIdentifier().getText().substring(1));
       return f;
     }
@@ -212,7 +212,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitSimpleField(final OpsqlParser.SimpleFieldContext ctx) {
-    final Config.Field f = IdentifierResolver.resolveAny(ctx);
+    final Field f = IdentifierResolver.resolveAny(ctx);
     f.setAlias(f.getName());
     query.getFields().add(f);
     return super.visitSimpleField(ctx);
@@ -220,7 +220,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitAliasedField(final OpsqlParser.AliasedFieldContext ctx) {
-    final Config.Field f = IdentifierResolver.resolveAny(ctx.field);
+    final Field f = IdentifierResolver.resolveAny(ctx.field);
     f.setAlias(ctx.alias.getText());
     query.getFields().add(f);
     return super.visitAliasedField(ctx);

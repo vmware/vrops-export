@@ -24,6 +24,9 @@ public class Patterns {
   public static final Pattern parentPattern =
       Pattern.compile("^\\$parent:([_A-Za-z][_A-Za-z0-9\\s]*)\\.(.+)$");
 
+  public static final Pattern childPattern =
+      Pattern.compile("^\\$child:([_A-Za-z][_A-Za-z0-9\\s]*)\\.(.+)$");
+
   public static final Pattern parentSpecPattern =
       Pattern.compile("^([_\\-A-Za-z][_\\-A-Za-z0-9\\s]*):(.+)$");
 

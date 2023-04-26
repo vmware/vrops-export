@@ -18,6 +18,7 @@
 package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.Config;
+import com.vmware.vropsexport.Field;
 import com.vmware.vropsexport.models.ResourceRequest;
 
 import java.util.LinkedList;
@@ -27,14 +28,14 @@ import java.util.Objects;
 public class Query {
   final ResourceRequest resourceRequest;
 
-  final List<Config.Field> fields;
+  final List<Field> fields;
 
   public Query() {
     resourceRequest = new ResourceRequest();
     fields = new LinkedList<>();
   }
 
-  public Query(final ResourceRequest resourceRequest, final List<Config.Field> fields) {
+  public Query(final ResourceRequest resourceRequest, final List<Field> fields) {
     this.resourceRequest = resourceRequest;
     this.fields = fields;
   }
@@ -43,7 +44,7 @@ public class Query {
     return resourceRequest;
   }
 
-  public List<Config.Field> getFields() {
+  public List<Field> getFields() {
     return fields;
   }
 

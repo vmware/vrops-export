@@ -23,7 +23,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.NamedResource;
-import com.vmware.vropsexport.processors.ParentSplicer;
+import com.vmware.vropsexport.processors.RowSplicer;
 import org.apache.http.HttpException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -212,7 +212,7 @@ public class StatsProcessor {
         }
 
         // Splice in data from parent
-        final RowMetadata pMeta = meta.forParent();
+        final RowMetadata pMeta = meta.forRelated();
         if (pMeta.isValid()) {
           final long now = System.currentTimeMillis();
           final NamedResource parent =
@@ -229,7 +229,7 @@ public class StatsProcessor {
                 log.debug(
                     "Cache hit for parent " + cacheKey + " " + parent.getResourceKey().get("name"));
               }
-              ParentSplicer.spliceRows(rs, cached);
+              RowSplicer.spliceRows(rs, cached);
             } else {
               // Not in cache. Fetch it the hard (and slow) way!
               if (verbose) {
@@ -244,8 +244,7 @@ public class StatsProcessor {
                       conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
               try (final InputStream pIs =
                   dataProvider.fetchMetricStream(new NamedResource[] {parent}, pMeta, begin, end)) {
-                parentProcessor.process(
-                    pIs, new ParentSplicer(rs, rowsetCache, cacheKey), begin, end);
+                parentProcessor.process(pIs, new RowSplicer(rs, rowsetCache, cacheKey), begin, end);
               }
             }
           }

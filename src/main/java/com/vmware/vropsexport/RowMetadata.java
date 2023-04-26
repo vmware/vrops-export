@@ -18,10 +18,8 @@
 package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.exceptions.ExporterException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.regex.Matcher;
 
 public class RowMetadata {
@@ -40,6 +38,10 @@ public class RowMetadata {
   private final Map<String, String> metricNameToAlias = new HashMap<>();
 
   private final Map<String, Integer> propAliasMap = new HashMap<>();
+
+  private final Set<String> parents = new HashSet<>();
+
+  private final Set<String> children = new HashSet<>();
 
   private final int[] propInsertionPoints;
 
@@ -62,7 +64,7 @@ public class RowMetadata {
     int mp = 0;
     int pp = 0;
     final List<Integer> pip = new ArrayList<>();
-    for (final Config.Field fld : conf.getFields()) {
+    for (final Field fld : conf.getFields()) {
       if (fld.hasMetric()) {
         final String metricKey = fld.getMetric();
         if (metricMap.containsKey(metricKey)) {
@@ -92,10 +94,10 @@ public class RowMetadata {
     }
   }
 
-  private RowMetadata(final RowMetadata child) throws ExporterException {
-    propInsertionPoints = child.propInsertionPoints;
+  private RowMetadata(final RowMetadata origin) throws ExporterException {
+    propInsertionPoints = origin.propInsertionPoints;
     String t = null;
-    for (final Map.Entry<String, Integer> e : child.propMap.entrySet()) {
+    for (final Map.Entry<String, Integer> e : origin.propMap.entrySet()) {
       final String p = e.getKey();
       final Matcher m = Patterns.parentPattern.matcher(p);
       if (m.matches()) {
@@ -109,7 +111,7 @@ public class RowMetadata {
         propMap.put("_placeholder_" + p, e.getValue());
       }
     }
-    for (final Map.Entry<String, Integer> e : child.metricMap.entrySet()) {
+    for (final Map.Entry<String, Integer> e : origin.metricMap.entrySet()) {
       final String mt = e.getKey();
       final Matcher m = Patterns.parentPattern.matcher(mt);
       if (m.matches()) {
@@ -120,14 +122,14 @@ public class RowMetadata {
         }
         metricMap.put(m.group(2), e.getValue());
       } else {
-        metricMap.put("_placholder_" + mt, e.getValue());
+        metricMap.put("_placeholder_" + mt, e.getValue());
       }
     }
     resourceKind = t;
     adapterKind = null; // TODO: It should be possible to specify adapter type as well!
   }
 
-  public RowMetadata forParent() throws ExporterException {
+  public RowMetadata forRelated() throws ExporterException {
     return new RowMetadata(this);
   }
 
@@ -152,7 +154,7 @@ public class RowMetadata {
   }
 
   public int getTagIndex(final String tag) {
-    return getPropertyIndex(Config.Field.TAG_PROP_PREFIX + tag);
+    return getPropertyIndex(Field.TAG_PROP_PREFIX + tag);
   }
 
   public int getMetricIndexByAlias(final String metric) {

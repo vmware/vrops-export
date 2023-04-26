@@ -461,9 +461,16 @@ public class Exporter implements DataProvider {
 
     final List<ResourceAttributeResponse.ResourceAttribute> metrics =
         metadata.getStatKeysForResourceKind(adapterKind, resourceKind);
-    final List<Config.Field> fields =
+    final List<Field> fields =
         metrics.stream()
-            .map(s -> new Config.Field(s.getKey(), s.getKey(), Config.Field.Kind.METRIC))
+            .map(
+                s ->
+                    new Field(
+                        s.getKey(),
+                        s.getKey(),
+                        Field.Kind.METRIC,
+                        null,
+                        Field.RelationshipType.SELF))
             .collect(Collectors.toList());
     final Config config = new Config();
     config.setFields(fields);

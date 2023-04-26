@@ -17,15 +17,10 @@
  */
 package com.vmware.vropsexport.processors;
 
-import com.vmware.vropsexport.Config;
-import com.vmware.vropsexport.LRUCache;
-import com.vmware.vropsexport.Row;
-import com.vmware.vropsexport.RowMetadata;
-import com.vmware.vropsexport.Rowset;
-import com.vmware.vropsexport.RowsetProcessor;
+import com.vmware.vropsexport.*;
 import com.vmware.vropsexport.exceptions.ExporterException;
 
-public class ParentSplicer implements RowsetProcessor {
+public class RowSplicer implements RowsetProcessor {
 
   private final Rowset childRowset;
 
@@ -33,7 +28,7 @@ public class ParentSplicer implements RowsetProcessor {
 
   private final String cacheKey;
 
-  public ParentSplicer(
+  public RowSplicer(
       final Rowset childRowset, final LRUCache<String, Rowset> rowsetCache, final String cacheKey) {
     super();
     this.childRowset = childRowset;
