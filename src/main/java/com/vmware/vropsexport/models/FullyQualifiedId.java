@@ -67,4 +67,19 @@ public class FullyQualifiedId {
   public int hashCode() {
     return Objects.hash(adapterKind, resourceKind, id);
   }
+
+  @Override
+  public String toString() {
+    return "FullyQualifiedId{"
+        + "adapterKind='"
+        + adapterKind
+        + '\''
+        + ", resourceKind='"
+        + resourceKind
+        + '\''
+        + ", id='"
+        + id
+        + '\''
+        + '}';
+  }
 }

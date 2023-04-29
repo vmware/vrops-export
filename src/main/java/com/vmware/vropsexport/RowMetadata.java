@@ -195,7 +195,7 @@ public class RowMetadata {
       if (f.isRelatedTo(adapterKind, resourceKind)) {
         propMap.put(f.getLocalName(), fs);
       } else {
-        propMap.put("_placeholder_" + f.getLocalName(), fs);
+        propMap.put("_placeholder_" + f.getName(), fs);
       }
     }
     for (final Map.Entry<String, FieldSpec> e : origin.metricMap.entrySet()) {
@@ -204,7 +204,7 @@ public class RowMetadata {
       if (f.isRelatedTo(adapterKind, resourceKind)) {
         metricMap.put(f.getLocalName(), fs);
       } else {
-        metricMap.put("_placeholder_" + f.getLocalName(), fs);
+        metricMap.put("_placeholder_" + f.getName(), fs);
       }
     }
     this.resourceKind = resourceKind;

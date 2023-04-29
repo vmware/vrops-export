@@ -399,40 +399,45 @@ public class Exporter implements DataProvider {
   private void getParentsOf(
       final FullyQualifiedId key, final int maxDepth, final List<NamedResource> list)
       throws HttpException, IOException {
-    synchronized (parentCache) {
-      final List<NamedResource> p = parentCache.get(key);
-      if (p != null) {
-        list.addAll(p);
-        return;
+    // Prevent multiple threads from looking for the same resource. This can cause lots of redundant
+    // API calls.
+    synchronized (IndexedLocks.instance.getLock(key)) {
+      synchronized (parentCache) {
+        final List<NamedResource> p = parentCache.get(key);
+        if (p != null) {
+          list.addAll(p);
+          return;
+        }
       }
-    }
-    if (verbose) {
-      log.debug("Parent cache miss for id: " + key.getId());
-    }
-    final PageOfResources page =
-        client.getJson(
-            "/suite-api/api/resources/" + key.getId() + "/relationships",
-            PageOfResources.class,
-            "relationshipType=PARENT");
+      if (verbose) {
+        log.debug("Parent cache miss for: " + key);
+      }
+      final PageOfResources page =
+          client.getJson(
+              "/suite-api/api/resources/" + key.getId() + "/relationships",
+              PageOfResources.class,
+              "relationshipType=PARENT");
 
-    // Correct resource type? Add it to the list!
-    final int size = list.size();
-    for (final NamedResource res : page.getResourceList()) {
-      if (res.getResourceKey().get("adapterKindKey").equals(key.getAdapterKind())
-          && res.getResourceKey().get("resourceKindKey").equals(key.getResourceKind())) {
-        list.add(res);
-        continue;
+      // Correct resource type? Add it to the list!
+      final int size = list.size();
+      for (final NamedResource res : page.getResourceList()) {
+        if (res.getResourceKey().get("adapterKindKey").equals(key.getAdapterKind())
+            && res.getResourceKey().get("resourceKindKey").equals(key.getResourceKind())) {
+          list.add(res);
+          continue;
+        }
+        // Not the right resource. Recursively search until we've hit the max depth
+        if (maxDepth > 0) {
+          getParentsOf(
+              new FullyQualifiedId(
+                  key.getAdapterKind(), key.getResourceKind(), res.getIdentifier()),
+              maxDepth - 1,
+              list);
+        }
       }
-      // Not the right resource. Recursively search until we've hit the max depth
-      if (maxDepth > 0) {
-        getParentsOf(
-            new FullyQualifiedId(key.getAdapterKind(), key.getResourceKind(), res.getIdentifier()),
-            maxDepth - 1,
-            list);
+      synchronized (parentCache) {
+        parentCache.put(key, new ArrayList<>(list.subList(size, list.size())));
       }
-    }
-    synchronized (parentCache) {
-      parentCache.put(key, new ArrayList<>(list.subList(size, list.size())));
     }
   }
 
@@ -445,13 +450,7 @@ public class Exporter implements DataProvider {
       throws IOException, HttpException {
     final FullyQualifiedId key = new FullyQualifiedId(parentAdapterKind, parentResourceKind, id);
     final List<NamedResource> list = new ArrayList<>();
-    final Set<String> deadEnds = new HashSet<>();
-
-    // Prevent multiple threads from looking for the same resource. This can cause lots of redundant
-    // API calls.
-    synchronized (IndexedLocks.instance.getLock(key)) {
-      getParentsOf(key, maxDepth, list);
-    }
+    getParentsOf(key, maxDepth, list);
 
     // There might be multiple paths to some objects, so let's make sure we only return unique
     // objects.
