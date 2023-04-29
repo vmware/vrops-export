@@ -69,7 +69,7 @@ public class Exporter implements DataProvider {
 
   private final LRUCache<String, Map<String, String>> propCache = new LRUCache<>(1000);
 
-  private final LRUCache<String, NamedResource> parentCache = new LRUCache<>(1000);
+  private final LRUCache<FullyQualifiedId, List<NamedResource>> parentCache = new LRUCache<>(1000);
 
   private final Client client;
 
@@ -156,7 +156,8 @@ public class Exporter implements DataProvider {
         conf.isAllMetrics()
             ? new RowMetadata(
                 conf,
-                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
+                metadata
+                    .getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
                     .stream()
                     .map(ResourceAttributeResponse.ResourceAttribute::getKey)
                     .collect(Collectors.toList()))
@@ -395,34 +396,66 @@ public class Exporter implements DataProvider {
     return response;
   }
 
-  @Override
-  public NamedResource getParentOf(final String id, final String parentType)
-      throws IOException, HttpException {
+  private void getParentsOf(
+      final FullyQualifiedId key, final int maxDepth, final List<NamedResource> list)
+      throws HttpException, IOException {
     synchronized (parentCache) {
-      final NamedResource p = parentCache.get(id + parentType);
+      final List<NamedResource> p = parentCache.get(key);
       if (p != null) {
-        return p;
+        list.addAll(p);
+        return;
       }
     }
     if (verbose) {
-      log.debug("Parent cache miss for id: " + id);
+      log.debug("Parent cache miss for id: " + key.getId());
     }
     final PageOfResources page =
         client.getJson(
-            "/suite-api/api/resources/" + id + "/relationships",
+            "/suite-api/api/resources/" + key.getId() + "/relationships",
             PageOfResources.class,
             "relationshipType=PARENT");
-    final NamedResource res =
-        page.getResourceList().stream()
-            .filter(r -> r.getResourceKey().get("resourceKindKey").equals(parentType))
-            .findFirst()
-            .orElse(null);
-    if (res != null) {
-      synchronized (parentCache) {
-        parentCache.put(id + parentType, res);
+
+    // Correct resource type? Add it to the list!
+    final int size = list.size();
+    for (final NamedResource res : page.getResourceList()) {
+      if (res.getResourceKey().get("adapterKindKey").equals(key.getAdapterKind())
+          && res.getResourceKey().get("resourceKindKey").equals(key.getResourceKind())) {
+        list.add(res);
+        continue;
+      }
+      // Not the right resource. Recursively search until we've hit the max depth
+      if (maxDepth > 0) {
+        getParentsOf(
+            new FullyQualifiedId(key.getAdapterKind(), key.getResourceKind(), res.getIdentifier()),
+            maxDepth - 1,
+            list);
       }
     }
-    return res;
+    synchronized (parentCache) {
+      parentCache.put(key, new ArrayList<>(list.subList(size, list.size())));
+    }
+  }
+
+  @Override
+  public List<NamedResource> getParentsOf(
+      final String id,
+      final String parentAdapterKind,
+      final String parentResourceKind,
+      final int maxDepth)
+      throws IOException, HttpException {
+    final FullyQualifiedId key = new FullyQualifiedId(parentAdapterKind, parentResourceKind, id);
+    final List<NamedResource> list = new ArrayList<>();
+    final Set<String> deadEnds = new HashSet<>();
+
+    // Prevent multiple threads from looking for the same resource. This can cause lots of redundant
+    // API calls.
+    synchronized (IndexedLocks.instance.getLock(key)) {
+      getParentsOf(key, maxDepth, list);
+    }
+
+    // There might be multiple paths to some objects, so let's make sure we only return unique
+    // objects.
+    return list.stream().distinct().collect(Collectors.toList());
   }
 
   public void printResourceMetadata(final String adapterAndResourceKind, final PrintStream out)

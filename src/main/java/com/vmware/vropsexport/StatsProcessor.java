@@ -213,43 +213,64 @@ public class StatsProcessor {
 
         // Splice in data from parent
         final Map<RowMetadata.RelationshipSpec, RowMetadata> pMetaList = meta.forRelated();
-        for (final RowMetadata pMeta : pMetaList.values()) {
+        for (final Map.Entry<RowMetadata.RelationshipSpec, RowMetadata> e : pMetaList.entrySet()) {
+          final RowMetadata pMeta = e.getValue();
+          final RowMetadata.RelationshipSpec relSpec = e.getKey();
           final long now = System.currentTimeMillis();
-          final NamedResource parent =
-              dataProvider.getParentOf(resourceId, pMeta.getResourceKind());
-          if (parent != null) {
+          final List<NamedResource> parents =
+              dataProvider.getParentsOf(
+                  resourceId,
+                  pMeta.getAdapterKind(),
+                  pMeta.getResourceKind(),
+                  relSpec.getSearchDepth());
+          if (!parents.isEmpty()) {
+            if (parents.size() > 1) {
+              throw new ExporterException(
+                  "Multiple parents were found for " + resourceId + ". Not yet supported!");
+            }
+            final NamedResource parent = parents.get(0);
             final Rowset cached;
             final String cacheKey = parent.getIdentifier() + "|" + begin + "|" + end;
-            synchronized (rowsetCache) {
-              cached = rowsetCache.get(cacheKey);
+
+            // We don't want more than one thread at a time to load a specific rowset since it would
+            // result in lots of redundant API calls. So we lock on this cache key specifically
+            synchronized (IndexedLocks.instance.getLock(cacheKey)) {
+              synchronized (rowsetCache) {
+                cached = rowsetCache.get(cacheKey);
+              }
+              // Try cache first! Chances are we've seen this parent many times.
+              if (cached != null) {
+                if (verbose) {
+                  log.debug(
+                      "Rowset cache hit for parent "
+                          + cacheKey
+                          + " "
+                          + parent.getResourceKey().get("name"));
+                }
+                RowSplicer.spliceRows(rs, cached);
+              } else {
+                // Not in cache. Fetch it the hard (and slow) way!
+                if (verbose) {
+                  log.debug(
+                      "Rowset cache miss for parent "
+                          + cacheKey
+                          + " "
+                          + parent.getResourceKey().get("name"));
+                }
+                final StatsProcessor parentProcessor =
+                    new StatsProcessor(
+                        conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
+                try (final InputStream pIs =
+                    dataProvider.fetchMetricStream(
+                        new NamedResource[] {parent}, pMeta, begin, end)) {
+                  parentProcessor.process(
+                      pIs, new RowSplicer(rs, rowsetCache, cacheKey), begin, end);
+                }
+              }
             }
-            // Try cache first! Chances are we've seen this parent many times.
-            if (cached != null) {
-              if (verbose) {
-                log.debug(
-                    "Cache hit for parent " + cacheKey + " " + parent.getResourceKey().get("name"));
-              }
-              RowSplicer.spliceRows(rs, cached);
-            } else {
-              // Not in cache. Fetch it the hard (and slow) way!
-              if (verbose) {
-                log.debug(
-                    "Cache miss for parent "
-                        + cacheKey
-                        + " "
-                        + parent.getResourceKey().get("name"));
-              }
-              final StatsProcessor parentProcessor =
-                  new StatsProcessor(
-                      conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
-              try (final InputStream pIs =
-                  dataProvider.fetchMetricStream(new NamedResource[] {parent}, pMeta, begin, end)) {
-                parentProcessor.process(pIs, new RowSplicer(rs, rowsetCache, cacheKey), begin, end);
-              }
+            if (verbose) {
+              log.debug("Parent processing took " + (System.currentTimeMillis() - now));
             }
-          }
-          if (verbose) {
-            log.debug("Parent processing took " + (System.currentTimeMillis() - now));
           }
         }
       }

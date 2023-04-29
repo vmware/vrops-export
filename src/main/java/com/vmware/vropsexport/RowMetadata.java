@@ -91,6 +91,10 @@ public class RowMetadata {
           && Objects.equals(resourceKind, that.resourceKind);
     }
 
+    public int getSearchDepth() {
+      return searchDepth;
+    }
+
     @Override
     public int hashCode() {
       return Objects.hash(adapterKind, resourceKind, searchDepth);
@@ -182,33 +186,32 @@ public class RowMetadata {
     }
   }
 
-  private RowMetadata(final RowMetadata origin, final String resourceKind, final String adapterKind)
-      throws ExporterException {
+  private RowMetadata(
+      final RowMetadata origin, final String resourceKind, final String adapterKind) {
     propInsertionPoints = origin.propInsertionPoints;
     for (final Map.Entry<String, FieldSpec> e : origin.getPropMap().entrySet()) {
       final FieldSpec fs = e.getValue();
       final Field f = fs.getField();
-      if (f.getRelationshipType() == Field.RelationshipType.SELF) {
+      if (f.isRelatedTo(adapterKind, resourceKind)) {
+        propMap.put(f.getLocalName(), fs);
+      } else {
         propMap.put("_placeholder_" + f.getLocalName(), fs);
-        continue;
       }
-      propMap.put(f.getLocalName(), fs);
     }
-
     for (final Map.Entry<String, FieldSpec> e : origin.metricMap.entrySet()) {
       final FieldSpec fs = e.getValue();
       final Field f = fs.getField();
-      if (f.getRelationshipType() == Field.RelationshipType.SELF) {
+      if (f.isRelatedTo(adapterKind, resourceKind)) {
+        metricMap.put(f.getLocalName(), fs);
+      } else {
         metricMap.put("_placeholder_" + f.getLocalName(), fs);
-        continue;
       }
-      metricMap.put(f.getLocalName(), fs);
     }
     this.resourceKind = resourceKind;
-    this.adapterKind = adapterKind; // TODO: It should be possible to specify adapter type as well!
+    this.adapterKind = adapterKind;
   }
 
-  public Map<RelationshipSpec, RowMetadata> forRelated() throws ExporterException {
+  public Map<RelationshipSpec, RowMetadata> forRelated() {
     final Stream<RelationshipSpec> relations =
         Stream.concat(propMap.values().stream(), metricMap.values().stream())
             .filter((p) -> p.field.getRelationshipType() != Field.RelationshipType.SELF)

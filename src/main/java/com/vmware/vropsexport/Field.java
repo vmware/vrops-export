@@ -20,6 +20,7 @@
 
 package com.vmware.vropsexport;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 
 public class Field {
@@ -193,5 +194,11 @@ public class Field {
 
   public void setAggregation(final AggregationType aggregation) {
     this.aggregation = aggregation;
+  }
+
+  public boolean isRelatedTo(final String adapterKind, final String resourceKind) {
+    return relationshipType != RelationshipType.SELF
+        && Objects.equals(adapterKind, relatedAdapterKind)
+        && Objects.equals(resourceKind, relatedResourceKind);
   }
 }

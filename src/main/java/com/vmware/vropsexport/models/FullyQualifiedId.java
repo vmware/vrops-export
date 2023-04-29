@@ -1,4 +1,5 @@
 /*
+ *
  * Copyright 2017-2023 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
@@ -14,31 +15,38 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
+
 package com.vmware.vropsexport.models;
 
-import java.util.Map;
 import java.util.Objects;
 
-public class NamedResource {
-  private String identifier;
+public class FullyQualifiedId {
+  private String adapterKind;
+  private final String resourceKind;
+  private final String id;
 
-  private Map<String, Object> resourceKey;
-
-  public String getIdentifier() {
-    return identifier;
+  public FullyQualifiedId(final String adapterKind, final String resourceKind, final String id) {
+    this.adapterKind = adapterKind;
+    this.resourceKind = resourceKind;
+    this.id = id;
   }
 
-  public void setIdentifier(final String identifier) {
-    this.identifier = identifier;
+  public String getAdapterKind() {
+    return adapterKind;
   }
 
-  public Map<String, Object> getResourceKey() {
-    return resourceKey;
+  public void setAdapterKind(final String adapterKind) {
+    this.adapterKind = adapterKind;
   }
 
-  public void setResourceKey(final Map<String, Object> resourceKey) {
-    this.resourceKey = resourceKey;
+  public String getResourceKind() {
+    return resourceKind;
+  }
+
+  public String getId() {
+    return id;
   }
 
   @Override
@@ -49,13 +57,14 @@ public class NamedResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    final NamedResource that = (NamedResource) o;
-    return Objects.equals(identifier, that.identifier)
-        && Objects.equals(resourceKey, that.resourceKey);
+    final FullyQualifiedId that = (FullyQualifiedId) o;
+    return Objects.equals(adapterKind, that.adapterKind)
+        && Objects.equals(resourceKind, that.resourceKind)
+        && Objects.equals(id, that.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(identifier, resourceKey);
+    return Objects.hash(adapterKind, resourceKind, id);
   }
 }

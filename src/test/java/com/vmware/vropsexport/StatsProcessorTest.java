@@ -17,12 +17,6 @@
  */
 package com.vmware.vropsexport;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
@@ -30,22 +24,18 @@ import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.JsonPrinter;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.*;
+import java.util.*;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class StatsProcessorTest {
 
@@ -162,16 +152,22 @@ public class StatsProcessorTest {
     Assert.assertEquals(wanted, actual);
   }
 
-  private byte[] runTest(final String definition, final RowsetProcessorFacotry factory)
-      throws IOException, ExporterException, HttpException, ValidationException {
+  private DataProvider getMockedDataProvider() throws HttpException, IOException {
     final DataProvider dp = mock(DataProvider.class);
     when(dp.getResourceName(any())).thenReturn("vm-01");
-    when(dp.getParentOf(eq(VM_ID), eq("HostSystem"))).thenReturn(hostResource);
+    when(dp.getParentsOf(eq(VM_ID), eq("VMWARE"), eq("HostSystem"), eq(1)))
+        .thenReturn(Collections.singletonList(hostResource));
     when(dp.fetchMetricStream(any(), any(RowMetadata.class), anyLong(), anyLong()))
         .then((inv) -> new FileInputStream("src/test/resources/hoststats.json"));
     when(dp.fetchProps(eq(HOST_ID))).thenReturn(hostProperties);
     when(dp.fetchProps(eq(VM_ID))).thenReturn(vmProperties);
     when(dp.getStatKeysForResource(eq(VM_ID))).thenReturn(statKeys);
+    return dp;
+  }
+
+  private byte[] runTest(final String definition, final RowsetProcessorFacotry factory)
+      throws IOException, ExporterException, HttpException, ValidationException {
+    final DataProvider dp = getMockedDataProvider();
 
     final Config conf = ConfigLoader.parse(new FileReader("src/test/resources/" + definition));
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
