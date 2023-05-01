@@ -69,7 +69,8 @@ public class Exporter implements DataProvider {
 
   private final LRUCache<String, Map<String, String>> propCache = new LRUCache<>(1000);
 
-  private final LRUCache<FullyQualifiedId, List<NamedResource>> parentCache = new LRUCache<>(1000);
+  private final LRUCache<FullyQualifiedId, List<NamedResource>> relativesCache =
+      new LRUCache<>(10000);
 
   private final Client client;
 
@@ -396,27 +397,30 @@ public class Exporter implements DataProvider {
     return response;
   }
 
-  private void getParentsOf(
-      final FullyQualifiedId key, final int maxDepth, final List<NamedResource> list)
+  private void getRelativesOf(
+      final Field.RelationshipType type,
+      final FullyQualifiedId key,
+      final int maxDepth,
+      final List<NamedResource> list)
       throws HttpException, IOException {
     // Prevent multiple threads from looking for the same resource. This can cause lots of redundant
     // API calls.
     synchronized (IndexedLocks.instance.getLock(key)) {
-      synchronized (parentCache) {
-        final List<NamedResource> p = parentCache.get(key);
+      synchronized (relativesCache) {
+        final List<NamedResource> p = relativesCache.get(key);
         if (p != null) {
           list.addAll(p);
           return;
         }
       }
       if (verbose) {
-        log.debug("Parent cache miss for: " + key);
+        log.debug("Relatives cache miss for: " + key);
       }
       final PageOfResources page =
           client.getJson(
               "/suite-api/api/resources/" + key.getId() + "/relationships",
               PageOfResources.class,
-              "relationshipType=PARENT");
+              "relationshipType=" + type.name());
 
       // Correct resource type? Add it to the list!
       final int size = list.size();
@@ -428,21 +432,23 @@ public class Exporter implements DataProvider {
         }
         // Not the right resource. Recursively search until we've hit the max depth
         if (maxDepth > 0) {
-          getParentsOf(
+          getRelativesOf(
+              type,
               new FullyQualifiedId(
                   key.getAdapterKind(), key.getResourceKind(), res.getIdentifier()),
               maxDepth - 1,
               list);
         }
       }
-      synchronized (parentCache) {
-        parentCache.put(key, new ArrayList<>(list.subList(size, list.size())));
+      synchronized (relativesCache) {
+        relativesCache.put(key, new ArrayList<>(list.subList(size, list.size())));
       }
     }
   }
 
   @Override
-  public List<NamedResource> getParentsOf(
+  public List<NamedResource> getRelativesOf(
+      final Field.RelationshipType type,
       final String id,
       final String parentAdapterKind,
       final String parentResourceKind,
@@ -450,7 +456,7 @@ public class Exporter implements DataProvider {
       throws IOException, HttpException {
     final FullyQualifiedId key = new FullyQualifiedId(parentAdapterKind, parentResourceKind, id);
     final List<NamedResource> list = new ArrayList<>();
-    getParentsOf(key, maxDepth, list);
+    getRelativesOf(type, key, maxDepth, list);
 
     // There might be multiple paths to some objects, so let's make sure we only return unique
     // objects.

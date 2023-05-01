@@ -155,7 +155,8 @@ public class StatsProcessorTest {
   private DataProvider getMockedDataProvider() throws HttpException, IOException {
     final DataProvider dp = mock(DataProvider.class);
     when(dp.getResourceName(any())).thenReturn("vm-01");
-    when(dp.getParentsOf(eq(VM_ID), eq("VMWARE"), eq("HostSystem"), eq(1)))
+    when(dp.getRelativesOf(
+            eq(Field.RelationshipType.PARENT), eq(VM_ID), eq("VMWARE"), eq("HostSystem"), eq(1)))
         .thenReturn(Collections.singletonList(hostResource));
     when(dp.fetchMetricStream(any(), any(RowMetadata.class), anyLong(), anyLong()))
         .then((inv) -> new FileInputStream("src/test/resources/hoststats.json"));

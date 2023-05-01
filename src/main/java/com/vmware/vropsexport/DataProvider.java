@@ -28,8 +28,12 @@ import java.util.Map;
 public interface DataProvider {
   Map<String, String> fetchProps(String id) throws IOException, HttpException;
 
-  List<NamedResource> getParentsOf(
-      String id, String parentAdapterKind, String parentResourceKind, int maxDepth)
+  List<NamedResource> getRelativesOf(
+      Field.RelationshipType type,
+      String id,
+      String parentAdapterKind,
+      String parentResourceKind,
+      int maxDepth)
       throws IOException, HttpException;
 
   InputStream fetchMetricStream(NamedResource[] resList, RowMetadata meta, long begin, long end)

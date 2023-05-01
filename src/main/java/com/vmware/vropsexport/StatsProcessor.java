@@ -218,7 +218,8 @@ public class StatsProcessor {
           final RowMetadata.RelationshipSpec relSpec = e.getKey();
           final long now = System.currentTimeMillis();
           final List<NamedResource> parents =
-              dataProvider.getParentsOf(
+              dataProvider.getRelativesOf(
+                  relSpec.getType(),
                   resourceId,
                   pMeta.getAdapterKind(),
                   pMeta.getResourceKind(),

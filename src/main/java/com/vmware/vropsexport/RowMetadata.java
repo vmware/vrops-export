@@ -53,9 +53,14 @@ public class RowMetadata {
     private String adapterKind;
     private String resourceKind;
     private final int searchDepth;
+    private Field.RelationshipType type;
 
     public RelationshipSpec(
-        final String adapterKind, final String resourceKind, final int searchDepth) {
+        final Field.RelationshipType type,
+        final String adapterKind,
+        final String resourceKind,
+        final int searchDepth) {
+      this.type = type;
       this.adapterKind = adapterKind;
       this.resourceKind = resourceKind;
       this.searchDepth = searchDepth;
@@ -77,6 +82,18 @@ public class RowMetadata {
       this.resourceKind = resourceKind;
     }
 
+    public Field.RelationshipType getType() {
+      return type;
+    }
+
+    public void setType(final Field.RelationshipType type) {
+      this.type = type;
+    }
+
+    public int getSearchDepth() {
+      return searchDepth;
+    }
+
     @Override
     public boolean equals(final Object o) {
       if (this == o) {
@@ -88,16 +105,13 @@ public class RowMetadata {
       final RelationshipSpec that = (RelationshipSpec) o;
       return searchDepth == that.searchDepth
           && Objects.equals(adapterKind, that.adapterKind)
-          && Objects.equals(resourceKind, that.resourceKind);
-    }
-
-    public int getSearchDepth() {
-      return searchDepth;
+          && Objects.equals(resourceKind, that.resourceKind)
+          && type == that.type;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(adapterKind, resourceKind, searchDepth);
+      return Objects.hash(adapterKind, resourceKind, searchDepth, type);
     }
   }
 
@@ -218,6 +232,7 @@ public class RowMetadata {
             .map(
                 (p) ->
                     new RelationshipSpec(
+                        p.field.getRelationshipType(),
                         p.field.getRelatedAdapterKind(),
                         p.field.getRelatedResourceKind(),
                         p.field.getSearchDepth()))
