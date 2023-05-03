@@ -212,68 +212,7 @@ public class StatsProcessor {
         }
 
         // Splice in data from parent
-        final Map<RowMetadata.RelationshipSpec, RowMetadata> pMetaList = meta.forRelated();
-        for (final Map.Entry<RowMetadata.RelationshipSpec, RowMetadata> e : pMetaList.entrySet()) {
-          final RowMetadata pMeta = e.getValue();
-          final RowMetadata.RelationshipSpec relSpec = e.getKey();
-          final long now = System.currentTimeMillis();
-          final List<NamedResource> parents =
-              dataProvider.getRelativesOf(
-                  relSpec.getType(),
-                  resourceId,
-                  pMeta.getAdapterKind(),
-                  pMeta.getResourceKind(),
-                  relSpec.getSearchDepth());
-          if (!parents.isEmpty()) {
-            if (parents.size() > 1) {
-              throw new ExporterException(
-                  "Multiple parents were found for " + resourceId + ". Not yet supported!");
-            }
-            final NamedResource parent = parents.get(0);
-            final Rowset cached;
-            final String cacheKey = parent.getIdentifier() + "|" + begin + "|" + end;
-
-            // We don't want more than one thread at a time to load a specific rowset since it would
-            // result in lots of redundant API calls. So we lock on this cache key specifically
-            synchronized (IndexedLocks.instance.getLock(cacheKey)) {
-              synchronized (rowsetCache) {
-                cached = rowsetCache.get(cacheKey);
-              }
-              // Try cache first! Chances are we've seen this parent many times.
-              if (cached != null) {
-                if (verbose) {
-                  log.debug(
-                      "Rowset cache hit for parent "
-                          + cacheKey
-                          + " "
-                          + parent.getResourceKey().get("name"));
-                }
-                RowSplicer.spliceRows(rs, cached);
-              } else {
-                // Not in cache. Fetch it the hard (and slow) way!
-                if (verbose) {
-                  log.debug(
-                      "Rowset cache miss for parent "
-                          + cacheKey
-                          + " "
-                          + parent.getResourceKey().get("name"));
-                }
-                final StatsProcessor parentProcessor =
-                    new StatsProcessor(
-                        conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
-                try (final InputStream pIs =
-                    dataProvider.fetchMetricStream(
-                        new NamedResource[] {parent}, pMeta, begin, end)) {
-                  parentProcessor.process(
-                      pIs, new RowSplicer(rs, rowsetCache, cacheKey), begin, end);
-                }
-              }
-            }
-            if (verbose) {
-              log.debug("Parent processing took " + (System.currentTimeMillis() - now));
-            }
-          }
-        }
+        spliceInParent(resourceId, meta, rs, begin, end);
       }
       if (verbose) {
         log.debug(
@@ -297,6 +236,69 @@ public class StatsProcessor {
     }
     expect(p, JsonToken.END_OBJECT);
     return processedObjects;
+  }
+
+  private void spliceInParent(final String resourceId, final RowMetadata meta, final Rowset rs, final long begin, final long end)
+      throws HttpException, IOException, ExporterException {
+    final Map<RowMetadata.RelationshipSpec, RowMetadata> pMetaList = meta.forRelated();
+    final RowSplicer splicer = new RowSplicer(rs, meta, rowsetCache);
+    for (final Map.Entry<RowMetadata.RelationshipSpec, RowMetadata> e : pMetaList.entrySet()) {
+      final RowMetadata pMeta = e.getValue();
+      final RowMetadata.RelationshipSpec relSpec = e.getKey();
+      final long now = System.currentTimeMillis();
+      final List<NamedResource> parents =
+          dataProvider.getRelativesOf(
+              relSpec.getType(),
+              resourceId,
+              pMeta.getAdapterKind(),
+              pMeta.getResourceKind(),
+              relSpec.getSearchDepth());
+      for (final NamedResource parent : parents) {
+        final Rowset cached;
+        final String cacheKey = parent.getIdentifier() + "|" + begin + "|" + end;
+        splicer.setCacheKey(cacheKey);
+
+        // We don't want more than one thread at a time to load a specific rowset since it
+        // would
+        // result in lots of redundant API calls. So we lock on this cache key specifically
+        synchronized (IndexedLocks.instance.getLock(cacheKey)) {
+          synchronized (rowsetCache) {
+            cached = rowsetCache.get(cacheKey);
+          }
+          // Try cache first! Chances are we've seen this parent many times.
+          if (cached != null) {
+            if (verbose) {
+              log.debug(
+                  "Rowset cache hit for parent "
+                      + cacheKey
+                      + " "
+                      + parent.getResourceKey().get("name"));
+            }
+            splicer.spliceRows(rs, cached);
+          } else {
+            // Not in cache. Fetch it the hard (and slow) way!
+            if (verbose) {
+              log.debug(
+                  "Rowset cache miss for parent "
+                      + cacheKey
+                      + " "
+                      + parent.getResourceKey().get("name"));
+            }
+            final StatsProcessor parentProcessor =
+                new StatsProcessor(
+                    conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
+            try (final InputStream pIs =
+                dataProvider.fetchMetricStream(new NamedResource[] {parent}, pMeta, begin, end)) {
+              parentProcessor.process(pIs, splicer, begin, end);
+            }
+          }
+        }
+        if (verbose) {
+          log.debug("Parent processing took " + (System.currentTimeMillis() - now));
+        }
+      }
+      splicer.finish(rs);
+    }
   }
 
   private Rowset compactify(final Rowset rs, final RowMetadata meta) throws ExporterException {

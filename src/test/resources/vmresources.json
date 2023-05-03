@@ -1,0 +1,186 @@
+[
+  {
+    "creationTime": 1607549811918,
+    "resourceKey": {
+      "name": "vm-01",
+      "adapterKindKey": "VMWARE",
+      "resourceKindKey": "HostSystem",
+      "resourceIdentifiers": [
+        {
+          "identifierType": {
+            "name": "isPingEnabled",
+            "dataType": "STRING",
+            "isPartOfUniqueness": false
+          },
+          "value": ""
+        },
+        {
+          "identifierType": {
+            "name": "VMEntityName",
+            "dataType": "STRING",
+            "isPartOfUniqueness": false
+          },
+          "value": "vm-01"
+        },
+        {
+          "identifierType": {
+            "name": "VMEntityObjectID",
+            "dataType": "STRING",
+            "isPartOfUniqueness": true
+          },
+          "value": "vm-1"
+        },
+        {
+          "identifierType": {
+            "name": "VMEntityVCID",
+            "dataType": "STRING",
+            "isPartOfUniqueness": true
+          },
+          "value": "60508ea6-287b-42be-953c-1554e506cdc1"
+        }
+      ]
+    },
+    "resourceStatusStates": [
+      {
+        "adapterInstanceId": "8eca2eac-aa9d-4b5d-88b8-df28f53dce27",
+        "resourceStatus": "DATA_RECEIVING",
+        "resourceState": "STARTED",
+        "statusMessage": ""
+      }
+    ],
+    "resourceHealth": "GREEN",
+    "resourceHealthValue": 100,
+    "dtEnabled": true,
+    "badges": [
+      {
+        "type": "COMPLIANCE",
+        "color": "GREY",
+        "score": -1
+      },
+      {
+        "type": "WORKLOAD",
+        "color": "GREEN",
+        "score": 59.292086930782226
+      },
+      {
+        "type": "HEALTH",
+        "color": "GREEN",
+        "score": 100
+      },
+      {
+        "type": "RISK",
+        "color": "GREEN",
+        "score": 0
+      },
+      {
+        "type": "CAPACITY_REMAINING",
+        "color": "GREEN",
+        "score": 10.015440353829069
+      },
+      {
+        "type": "TIME_REMAINING",
+        "color": "GREEN",
+        "score": 366
+      },
+      {
+        "type": "EFFICIENCY",
+        "color": "GREEN",
+        "score": 100
+      }
+    ],
+    "relatedResources": [],
+    "identifier": "60508ea6-287b-42be-953c-1554e506cdc1"
+  },
+  {
+    "creationTime": 1607549811918,
+    "resourceKey": {
+      "name": "vm-02",
+      "adapterKindKey": "VMWARE",
+      "resourceKindKey": "HostSystem",
+      "resourceIdentifiers": [
+        {
+          "identifierType": {
+            "name": "isPingEnabled",
+            "dataType": "STRING",
+            "isPartOfUniqueness": false
+          },
+          "value": ""
+        },
+        {
+          "identifierType": {
+            "name": "VMEntityName",
+            "dataType": "STRING",
+            "isPartOfUniqueness": false
+          },
+          "value": "vm-02"
+        },
+        {
+          "identifierType": {
+            "name": "VMEntityObjectID",
+            "dataType": "STRING",
+            "isPartOfUniqueness": true
+          },
+          "value": "vm-2"
+        },
+        {
+          "identifierType": {
+            "name": "VMEntityVCID",
+            "dataType": "STRING",
+            "isPartOfUniqueness": true
+          },
+          "value": "60508ea6-287b-42be-953c-1554e506cdc2"
+        }
+      ]
+    },
+    "resourceStatusStates": [
+      {
+        "adapterInstanceId": "8eca2eac-aa9d-4b5d-88b8-df28f53dce27",
+        "resourceStatus": "DATA_RECEIVING",
+        "resourceState": "STARTED",
+        "statusMessage": ""
+      }
+    ],
+    "resourceHealth": "GREEN",
+    "resourceHealthValue": 100,
+    "dtEnabled": true,
+    "badges": [
+      {
+        "type": "COMPLIANCE",
+        "color": "GREY",
+        "score": -1
+      },
+      {
+        "type": "WORKLOAD",
+        "color": "GREEN",
+        "score": 59.292086930782226
+      },
+      {
+        "type": "HEALTH",
+        "color": "GREEN",
+        "score": 100
+      },
+      {
+        "type": "RISK",
+        "color": "GREEN",
+        "score": 0
+      },
+      {
+        "type": "CAPACITY_REMAINING",
+        "color": "GREEN",
+        "score": 10.015440353829069
+      },
+      {
+        "type": "TIME_REMAINING",
+        "color": "GREEN",
+        "score": 366
+      },
+      {
+        "type": "EFFICIENCY",
+        "color": "GREEN",
+        "score": 100
+      }
+    ],
+    "relatedResources": [],
+    "identifier": "60508ea6-287b-42be-953c-1554e506cdc2"
+  }
+]

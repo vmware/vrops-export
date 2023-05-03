@@ -20,19 +20,33 @@ package com.vmware.vropsexport.processors;
 import com.vmware.vropsexport.*;
 import com.vmware.vropsexport.exceptions.ExporterException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class RowSplicer implements RowsetProcessor {
 
-  private final Rowset childRowset;
+  private final Rowset originRowset;
 
   private final LRUCache<String, Rowset> rowsetCache;
 
-  private final String cacheKey;
+  private String cacheKey;
+
+  private final Map<Long, Aggregator[]> aggregators;
+
+  private final RowMetadata metadata;
 
   public RowSplicer(
-      final Rowset childRowset, final LRUCache<String, Rowset> rowsetCache, final String cacheKey) {
+      final Rowset childRowset,
+      final RowMetadata metadata,
+      final LRUCache<String, Rowset> rowsetCache) {
     super();
-    this.childRowset = childRowset;
+    originRowset = childRowset;
     this.rowsetCache = rowsetCache;
+    aggregators = new HashMap<>();
+    this.metadata = metadata;
+  }
+
+  public void setCacheKey(final String cacheKey) {
     this.cacheKey = cacheKey;
   }
 
@@ -43,7 +57,7 @@ public class RowSplicer implements RowsetProcessor {
 
   @Override
   public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {
-    spliceRows(childRowset, rowset);
+    spliceRows(originRowset, rowset);
     synchronized (rowsetCache) {
       rowsetCache.put(cacheKey, rowset);
     }
@@ -54,14 +68,17 @@ public class RowSplicer implements RowsetProcessor {
     // Nothing to do
   }
 
-  public static void spliceRows(final Rowset child, final Rowset parent) {
-    for (final Row pRow : parent.getRows().values()) {
-      final Row cRow = child.getRows().get(pRow.getTimestamp());
+  public void spliceRows(final Rowset origin, final Rowset related) {
+
+    for (final Row pRow : related.getRows().values()) {
+      final Row cRow = origin.getRows().get(pRow.getTimestamp());
       if (cRow != null) {
+        final Aggregator[] aggs =
+            aggregators.computeIfAbsent(cRow.getTimestamp(), (t) -> metadata.createAggregators());
         for (int j = 0; j < pRow.getNumMetrics(); ++j) {
           final Double d = pRow.getMetric(j);
           if (d != null) {
-            cRow.setMetric(j, d);
+            aggs[j].apply(d);
           }
         }
         for (int j = 0; j < pRow.getNumProps(); ++j) {
@@ -69,6 +86,21 @@ public class RowSplicer implements RowsetProcessor {
           if (s != null) {
             cRow.setProp(j, s);
           }
+        }
+      }
+    }
+  }
+
+  public void finish(final Rowset origin) {
+    for (final Row row : origin.getRows().values()) {
+      final Aggregator[] aggs = aggregators.get(row.getTimestamp());
+      if (aggs == null) {
+        continue;
+      }
+      for (int j = 0; j < row.getNumMetrics(); ++j) {
+        final Aggregator agg = aggs[j];
+        if (agg != null) {
+          row.setMetric(j, agg.getResult());
         }
       }
     }

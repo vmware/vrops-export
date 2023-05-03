@@ -46,4 +46,14 @@ public class RowMetadataTest {
     final List<String> adapterKinds = parseList("VMWARE,VMWARE,VMWARE");
     final List<String> resourceKinds = parseList("ClusterComputeResource,Datacenter,HostSystem");
   }
+
+  @Test
+  public void testChildren() throws FileNotFoundException, ExporterException, ValidationException {
+    final Config conf = ConfigLoader.parse(new FileReader("src/test/resources/children.yaml"));
+    final RowMetadata meta = new RowMetadata(conf);
+    final Aggregator[] aggs = meta.createAggregators();
+    Assert.assertNull(aggs[0]);
+    Assert.assertNotNull(aggs[1]);
+    Assert.assertEquals(Aggregators.Average.class, aggs[1].getClass());
+  }
 }

@@ -1,4 +1,5 @@
 /*
+ *
  * Copyright 2017-2023 VMware, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier:	Apache-2.0
@@ -14,19 +15,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
+
 package com.vmware.vropsexport;
 
-import java.util.regex.Pattern;
+public interface Aggregator {
+  void apply(double v);
 
-public class Patterns {
-
-  public static final Pattern relativePattern =
-      Pattern.compile("^\\$(child|parent):([_A-Za-z][_A-Za-z0-9\\s]*)\\.(.+)$");
-
-  public static final Pattern parentSpecPattern =
-      Pattern.compile("^([_\\-A-Za-z][_\\-A-Za-z0-9\\s]*):(.+)$");
-
-  public static final Pattern adapterAndResourceKindPattern =
-      Pattern.compile("^([_\\-A-Za-z][_\\-A-Za-z0-9\\s]*):(.+)$");
+  double getResult();
 }

@@ -154,14 +154,18 @@ public class RowMetadata {
               new Field(
                   metricName,
                   metricName,
-                  Field.Kind.METRIC,
+                  Field.Kind.metric,
                   null,
                   null,
-                  Field.RelationshipType.SELF)));
+                  Field.RelationshipType.self)));
       metricAliasMap.put(metricName, mp++);
       metricNameToAlias.put(metricName, ns.transform(metricName));
     }
     propInsertionPoints = new int[0];
+  }
+
+  public int getNumMetrics() {
+    return metricMap.size();
   }
 
   public RowMetadata(final Config conf) throws ExporterException {
@@ -228,7 +232,7 @@ public class RowMetadata {
   public Map<RelationshipSpec, RowMetadata> forRelated() {
     final Stream<RelationshipSpec> relations =
         Stream.concat(propMap.values().stream(), metricMap.values().stream())
-            .filter((p) -> p.field.getRelationshipType() != Field.RelationshipType.SELF)
+            .filter((p) -> p.field.getRelationshipType() != Field.RelationshipType.self)
             .map(
                 (p) ->
                     new RelationshipSpec(
@@ -313,7 +317,13 @@ public class RowMetadata {
     return false;
   }
 
-  public boolean isValid() {
-    return resourceKind != null;
+  public Aggregator[] createAggregators() {
+    final Aggregator[] aggs = new Aggregator[metricMap.size()];
+    for (final FieldSpec fs : metricMap.values()) {
+      if (fs.getField().getRelationshipType() != Field.RelationshipType.self) {
+        aggs[fs.index] = Aggregators.forType(fs.field.getAggregation());
+      }
+    }
+    return aggs;
   }
 }

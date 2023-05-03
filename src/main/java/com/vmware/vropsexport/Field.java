@@ -25,25 +25,28 @@ import java.util.regex.Matcher;
 
 public class Field {
   enum Kind {
-    METRIC,
-    PROPERTY,
-    TAG
+    metric,
+    property,
+    tag
   }
 
   enum RelationshipType {
-    SELF,
-    CHILD,
-    PARENT,
+    self,
+    child,
+    parent,
   }
 
   enum AggregationType {
-    NONE,
-    SUM,
-    MAX,
-    MIN,
-    AVG,
-    STDDEV,
-    MEDIAN
+    none,
+    sum,
+    max,
+    min,
+    avg,
+    stddev,
+    median,
+    variance,
+    first,
+    last
   }
 
   protected static final String TAG_PROP_PREFIX = "summary|tagJson#";
@@ -53,10 +56,10 @@ public class Field {
   private String localName;
   private String relatedResourceKind;
   private String relatedAdapterKind = "VMWARE";
-  private RelationshipType relationshipType = RelationshipType.SELF;
+  private RelationshipType relationshipType = RelationshipType.self;
   private Kind kind;
   private int searchDepth = 1;
-  private AggregationType aggregation = AggregationType.AVG;
+  private AggregationType aggregation = AggregationType.avg;
 
   public Field() {}
 
@@ -73,16 +76,26 @@ public class Field {
     this.relationshipType = relationshipType;
     this.relatedAdapterKind = relatedAdapterKind;
     switch (kind) {
-      case METRIC:
+      case metric:
         setMetric(name);
         break;
-      case PROPERTY:
+      case property:
         setProp(name);
         break;
-      case TAG:
+      case tag:
         setTag(name);
         break;
     }
+  }
+
+  public static Field forRelatedResource(final Field f) {
+    return new Field(
+        f.alias,
+        f.name,
+        f.kind,
+        f.relatedAdapterKind,
+        f.relatedResourceKind,
+        RelationshipType.self);
   }
 
   public String getName() {
@@ -91,11 +104,11 @@ public class Field {
 
   public void setName(final String name) {
     this.name = name;
-    final Matcher m = Patterns.parentPattern.matcher(name);
+    final Matcher m = Patterns.relativePattern.matcher(name);
     if (m.matches()) {
-      relationshipType = RelationshipType.PARENT;
-      localName = m.group(2);
-      relatedResourceKind = m.group(1);
+      relationshipType = RelationshipType.valueOf(m.group(1));
+      localName = m.group(3);
+      relatedResourceKind = m.group(2);
     } else {
       localName = name;
     }
@@ -114,12 +127,12 @@ public class Field {
   }
 
   public boolean hasMetric() {
-    return kind == Kind.METRIC;
+    return kind == Kind.metric;
   }
 
   public void setMetric(final String metric) {
     setName(metric);
-    kind = Kind.METRIC;
+    kind = Kind.metric;
   }
 
   public String getProp() {
@@ -128,16 +141,16 @@ public class Field {
 
   public void setProp(final String prop) {
     setName(prop);
-    kind = Kind.PROPERTY;
+    kind = Kind.property;
   }
 
   public void setTag(final String tag) {
     setName(TAG_PROP_PREFIX + tag);
-    kind = Kind.TAG;
+    kind = Kind.tag;
   }
 
   public boolean hasProp() {
-    return kind == Kind.PROPERTY;
+    return kind == Kind.property;
   }
 
   public String getLocalName() {
@@ -197,7 +210,7 @@ public class Field {
   }
 
   public boolean isRelatedTo(final String adapterKind, final String resourceKind) {
-    return relationshipType != RelationshipType.SELF
+    return relationshipType != RelationshipType.self
         && Objects.equals(adapterKind, relatedAdapterKind)
         && Objects.equals(resourceKind, relatedResourceKind);
   }

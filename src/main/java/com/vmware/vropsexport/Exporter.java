@@ -506,10 +506,10 @@ public class Exporter implements DataProvider {
                     new Field(
                         s.getKey(),
                         s.getKey(),
-                        Field.Kind.METRIC,
+                        Field.Kind.metric,
                         null,
                         null,
-                        Field.RelationshipType.SELF))
+                        Field.RelationshipType.self))
             .collect(Collectors.toList());
     final Config config = new Config();
     config.setFields(fields);
