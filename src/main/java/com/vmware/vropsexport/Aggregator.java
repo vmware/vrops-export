@@ -24,4 +24,6 @@ public interface Aggregator {
   void apply(double v);
 
   double getResult();
+
+  boolean hasResult();
 }

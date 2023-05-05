@@ -212,7 +212,9 @@ public class StatsProcessor {
         }
 
         // Splice in data from parent
-        spliceInParent(resourceId, meta, rs, begin, end);
+        if (meta.hasDeclaredRelationships()) {
+          spliceInRelative(resourceId, meta, rs, begin, end);
+        }
       }
       if (verbose) {
         log.debug(
@@ -238,7 +240,12 @@ public class StatsProcessor {
     return processedObjects;
   }
 
-  private void spliceInParent(final String resourceId, final RowMetadata meta, final Rowset rs, final long begin, final long end)
+  private void spliceInRelative(
+      final String resourceId,
+      final RowMetadata meta,
+      final Rowset rs,
+      final long begin,
+      final long end)
       throws HttpException, IOException, ExporterException {
     final Map<RowMetadata.RelationshipSpec, RowMetadata> pMetaList = meta.forRelated();
     final RowSplicer splicer = new RowSplicer(rs, meta, rowsetCache);
@@ -253,6 +260,19 @@ public class StatsProcessor {
               pMeta.getAdapterKind(),
               pMeta.getResourceKind(),
               relSpec.getSearchDepth());
+      if (verbose) {
+        log.debug(
+            "Looked up "
+                + relSpec.getType()
+                + " of type "
+                + relSpec.getType()
+                + " "
+                + meta.getResourceKind()
+                + "("
+                + resourceId
+                + "). Found "
+                + parents.size());
+      }
       for (final NamedResource parent : parents) {
         final Rowset cached;
         final String cacheKey = parent.getIdentifier() + "|" + begin + "|" + end;

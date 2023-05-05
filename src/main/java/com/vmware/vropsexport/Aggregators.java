@@ -20,10 +20,10 @@
 
 package com.vmware.vropsexport;
 
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 public class Aggregators {
   private static final Map<Field.AggregationType, AggregatorFactory> nameLookup = new HashMap<>();
@@ -63,19 +63,32 @@ public class Aggregators {
     public double getResult() {
       return sum / (double) count;
     }
+
+    @Override
+    public boolean hasResult() {
+      return count > 0;
+    }
   }
 
   public static class Sum implements Aggregator {
     private double sum;
 
+    private boolean valid;
+
     @Override
     public void apply(final double v) {
       sum += v;
+      valid = true;
     }
 
     @Override
     public double getResult() {
       return sum;
+    }
+
+    @Override
+    public boolean hasResult() {
+      return valid;
     }
   }
 
@@ -93,6 +106,11 @@ public class Aggregators {
     public double getResult() {
       return min;
     }
+
+    @Override
+    public boolean hasResult() {
+      return min != Double.POSITIVE_INFINITY;
+    }
   }
 
   public static class Max implements Aggregator {
@@ -109,20 +127,46 @@ public class Aggregators {
     public double getResult() {
       return max;
     }
+
+    @Override
+    public boolean hasResult() {
+      return max != Double.NEGATIVE_INFINITY;
+    }
   }
 
   public static class Median implements Aggregator {
-    List<Double> values = new ArrayList<>();
+    private final PriorityQueue<Double> minHeap = new PriorityQueue<>();
+    private final PriorityQueue<Double> maxHeap = new PriorityQueue<>(Comparator.reverseOrder());
+    private int count;
 
     @Override
     public void apply(final double v) {
-      values.add(v);
+      if (minHeap.size() == maxHeap.size()) {
+        maxHeap.offer(v);
+        minHeap.offer(maxHeap.poll());
+      } else {
+        minHeap.offer(v);
+        maxHeap.offer(minHeap.poll());
+      }
+      count++;
     }
 
     @Override
+    @SuppressWarnings("ConstantConditions")
     public double getResult() {
-      values.sort(Double::compareTo);
-      return values.get(values.size() / 2);
+      if (minHeap.size() == 0 && maxHeap.size() == 0) {
+        return 0;
+      }
+      if (minHeap.size() == maxHeap.size()) {
+        return (maxHeap.peek() + minHeap.peek()) / 2.0;
+      } else {
+        return minHeap.peek();
+      }
+    }
+
+    @Override
+    public boolean hasResult() {
+      return count > 0;
     }
   }
 
@@ -148,6 +192,11 @@ public class Aggregators {
     public double getResult() {
       return count > 1 ? vAcc / (count - 1) : 0;
     }
+
+    @Override
+    public boolean hasResult() {
+      return count > 0;
+    }
   }
 
   public static class StdDev extends Aggregators.Variance {
@@ -171,10 +220,15 @@ public class Aggregators {
     public double getResult() {
       return first;
     }
+
+    @Override
+    public boolean hasResult() {
+      return first != null;
+    }
   }
 
   public static class Last implements Aggregator {
-    private double last;
+    private double last = Double.NaN;
 
     @Override
     public void apply(final double v) {
@@ -184,6 +238,11 @@ public class Aggregators {
     @Override
     public double getResult() {
       return last;
+    }
+
+    @Override
+    public boolean hasResult() {
+      return !Double.isNaN(last);
     }
   }
 }

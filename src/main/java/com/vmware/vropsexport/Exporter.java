@@ -157,8 +157,7 @@ public class Exporter implements DataProvider {
         conf.isAllMetrics()
             ? new RowMetadata(
                 conf,
-                metadata
-                    .getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
+                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
                     .stream()
                     .map(ResourceAttributeResponse.ResourceAttribute::getKey)
                     .collect(Collectors.toList()))
@@ -420,7 +419,7 @@ public class Exporter implements DataProvider {
           client.getJson(
               "/suite-api/api/resources/" + key.getId() + "/relationships",
               PageOfResources.class,
-              "relationshipType=" + type.name());
+              "relationshipType=" + type.name().toUpperCase());
 
       // Correct resource type? Add it to the list!
       final int size = list.size();

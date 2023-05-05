@@ -47,6 +47,18 @@ public class RowMetadata {
     public void setField(final Field field) {
       this.field = field;
     }
+
+    public FieldSpec stripRelationships() {
+      return new FieldSpec(
+          index,
+          new Field(
+              field.getAlias(),
+              field.getLocalName(),
+              field.getKind(),
+              null,
+              null,
+              Field.RelationshipType.self));
+    }
   }
 
   public static class RelationshipSpec {
@@ -211,18 +223,18 @@ public class RowMetadata {
       final FieldSpec fs = e.getValue();
       final Field f = fs.getField();
       if (f.isRelatedTo(adapterKind, resourceKind)) {
-        propMap.put(f.getLocalName(), fs);
+        propMap.put(f.getLocalName(), fs.stripRelationships());
       } else {
-        propMap.put("_placeholder_" + f.getName(), fs);
+        propMap.put("_placeholder_" + f.getName(), fs.stripRelationships());
       }
     }
     for (final Map.Entry<String, FieldSpec> e : origin.metricMap.entrySet()) {
       final FieldSpec fs = e.getValue();
       final Field f = fs.getField();
       if (f.isRelatedTo(adapterKind, resourceKind)) {
-        metricMap.put(f.getLocalName(), fs);
+        metricMap.put(f.getLocalName(), fs.stripRelationships());
       } else {
-        metricMap.put("_placeholder_" + f.getName(), fs);
+        metricMap.put("_placeholder_" + f.getName(), fs.stripRelationships());
       }
     }
     this.resourceKind = resourceKind;
@@ -325,5 +337,19 @@ public class RowMetadata {
       }
     }
     return aggs;
+  }
+
+  public boolean hasDeclaredRelationships() {
+    for (final FieldSpec fs : metricMap.values()) {
+      if (fs.getField().getRelationshipType() != Field.RelationshipType.self) {
+        return true;
+      }
+    }
+    for (final FieldSpec fs : propMap.values()) {
+      if (fs.getField().getRelationshipType() != Field.RelationshipType.self) {
+        return true;
+      }
+    }
+    return false;
   }
 }
