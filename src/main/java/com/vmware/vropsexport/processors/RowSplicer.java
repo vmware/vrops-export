@@ -19,6 +19,7 @@ package com.vmware.vropsexport.processors;
 
 import com.vmware.vropsexport.*;
 import com.vmware.vropsexport.exceptions.ExporterException;
+import com.vmware.vropsexport.utils.LRUCache;
 
 import java.util.HashMap;
 import java.util.Map;

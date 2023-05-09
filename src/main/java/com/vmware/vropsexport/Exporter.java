@@ -20,6 +20,8 @@ package com.vmware.vropsexport;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.*;
 import com.vmware.vropsexport.processors.*;
+import com.vmware.vropsexport.utils.IndexedLocks;
+import com.vmware.vropsexport.utils.LRUCache;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.NoHttpResponseException;
@@ -157,7 +159,8 @@ public class Exporter implements DataProvider {
         conf.isAllMetrics()
             ? new RowMetadata(
                 conf,
-                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
+                metadata
+                    .getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
                     .stream()
                     .map(ResourceAttributeResponse.ResourceAttribute::getKey)
                     .collect(Collectors.toList()))

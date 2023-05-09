@@ -25,6 +25,7 @@ import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.JsonPrinter;
+import com.vmware.vropsexport.utils.LRUCache;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpException;
 import org.junit.Assert;

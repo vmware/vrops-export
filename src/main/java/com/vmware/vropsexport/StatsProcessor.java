@@ -20,10 +20,13 @@ package com.vmware.vropsexport;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.NamedResource;
 import com.vmware.vropsexport.processors.RowSplicer;
+import com.vmware.vropsexport.utils.IndexedLocks;
+import com.vmware.vropsexport.utils.LRUCache;
 import org.apache.http.HttpException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -197,7 +200,8 @@ public class StatsProcessor {
             final String tags = props.get("summary|tagJson");
             if (tags != null && !"none".equals(tags)) {
               final ObjectMapper om = new ObjectMapper();
-              final List<Map<String, String>> parsed = om.readValue(tags, List.class);
+              final List<Map<String, String>> parsed =
+                  om.readValue(tags, new TypeReference<List<Map<String, String>>>() {});
               for (final Map<String, String> tag : parsed) {
                 final int idx = meta.getTagIndex(tag.get("category"));
                 if (idx != -1) {
@@ -253,7 +257,7 @@ public class StatsProcessor {
       final RowMetadata pMeta = e.getValue();
       final RowMetadata.RelationshipSpec relSpec = e.getKey();
       final long now = System.currentTimeMillis();
-      final List<NamedResource> parents =
+      final List<NamedResource> relatives =
           dataProvider.getRelativesOf(
               relSpec.getType(),
               resourceId,
@@ -271,11 +275,18 @@ public class StatsProcessor {
                 + "("
                 + resourceId
                 + "). Found "
-                + parents.size());
+                + relatives.size());
       }
-      for (final NamedResource parent : parents) {
+      // If we have a single relative, it's more efficient to try to use the rowset cache. If we're
+      // dealing with multiple relatives, we load their rowsets in bulk.
+      for (final NamedResource relative : relatives) {
         final Rowset cached;
-        final String cacheKey = parent.getIdentifier() + "|" + begin + "|" + end;
+        final String cacheKey =
+            relative.getIdentifier()
+                + relSpec.getType().name()
+                + relSpec.getSearchDepth()
+                + begin
+                + end;
         splicer.setCacheKey(cacheKey);
 
         // We don't want more than one thread at a time to load a specific rowset since it
@@ -289,26 +300,26 @@ public class StatsProcessor {
           if (cached != null) {
             if (verbose) {
               log.debug(
-                  "Rowset cache hit for parent "
+                  "Rowset cache hit for relative "
                       + cacheKey
                       + " "
-                      + parent.getResourceKey().get("name"));
+                      + relative.getResourceKey().get("name"));
             }
             splicer.spliceRows(rs, cached);
           } else {
             // Not in cache. Fetch it the hard (and slow) way!
             if (verbose) {
               log.debug(
-                  "Rowset cache miss for parent "
+                  "Rowset cache miss for relative "
                       + cacheKey
                       + " "
-                      + parent.getResourceKey().get("name"));
+                      + relative.getResourceKey().get("name"));
             }
             final StatsProcessor parentProcessor =
                 new StatsProcessor(
                     conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
             try (final InputStream pIs =
-                dataProvider.fetchMetricStream(new NamedResource[] {parent}, pMeta, begin, end)) {
+                dataProvider.fetchMetricStream(new NamedResource[] {relative}, pMeta, begin, end)) {
               parentProcessor.process(pIs, splicer, begin, end);
             }
           }

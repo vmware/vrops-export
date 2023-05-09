@@ -17,6 +17,7 @@
 resourceType: VMWARE:HostSystem
 rollupType: AVG
 rollupMinutes: 5
+outputFormat: json
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
   # CPU fields

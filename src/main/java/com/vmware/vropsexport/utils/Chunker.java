@@ -18,18 +18,20 @@
  *
  */
 
-package com.vmware.vropsexport;
+package com.vmware.vropsexport.utils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.function.Consumer;
 
-public class IndexedLocks {
-
-  public static IndexedLocks instance = new IndexedLocks();
-
-  private final Map<Object, Object> locks = new HashMap<>();
-
-  public synchronized Object getLock(final Object key) {
-    return locks.computeIfAbsent(key, (k) -> new Object());
+public class Chunker {
+  public static <T> void chunkify(
+      final List<T> list, final int chunkSize, final Consumer<List<T>> task) {
+    int nChunks = list.size() / chunkSize;
+    if (list.size() % nChunks != 0) {
+      nChunks++;
+    }
+    for (int i = 0; i < nChunks; ++i) {
+      task.accept(list.subList(i * chunkSize, Math.min(list.size(), i * chunkSize + chunkSize)));
+    }
   }
 }
