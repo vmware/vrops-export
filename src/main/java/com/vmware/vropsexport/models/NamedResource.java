@@ -58,4 +58,9 @@ public class NamedResource {
   public int hashCode() {
     return Objects.hash(identifier, resourceKey);
   }
+
+  public boolean isSameType(final String adapterKind, final String resourceKind) {
+    return ((String) getResourceKey().get("resourceKindKey")).equalsIgnoreCase(resourceKind)
+        && ((String) getResourceKey().get("adapterKindKey")).equalsIgnoreCase(adapterKind);
+  }
 }

@@ -20,8 +20,10 @@
 
 package com.vmware.vropsexport.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class Chunker {
   public static <T> void chunkify(
@@ -32,6 +34,22 @@ public class Chunker {
     }
     for (int i = 0; i < nChunks; ++i) {
       task.accept(list.subList(i * chunkSize, Math.min(list.size(), i * chunkSize + chunkSize)));
+    }
+  }
+
+  public static <T> void chunkify(
+      final Stream<T> stream, final int chunkSize, final Consumer<List<T>> task) {
+    final List<T> chunk = new ArrayList<>(chunkSize);
+    stream.forEach(
+        (r) -> {
+          chunk.add(r);
+          if (chunk.size() == chunkSize) {
+            task.accept(new ArrayList<>(chunk));
+            chunk.clear();
+          }
+        });
+    if (!chunk.isEmpty()) {
+      task.accept(chunk);
     }
   }
 }

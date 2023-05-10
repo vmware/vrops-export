@@ -36,7 +36,7 @@ public interface DataProvider {
       int maxDepth)
       throws IOException, HttpException;
 
-  InputStream fetchMetricStream(NamedResource[] resList, RowMetadata meta, long begin, long end)
+  InputStream fetchMetricStream(List<NamedResource> resList, RowMetadata meta, long begin, long end)
       throws IOException, HttpException;
 
   String getResourceName(String resourceId) throws IOException, HttpException;

@@ -33,10 +33,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 @SuppressWarnings("SameParameterValue")
 public class StatsProcessor {
@@ -277,9 +274,13 @@ public class StatsProcessor {
                 + "). Found "
                 + relatives.size());
       }
+      final StatsProcessor relProcessor =
+          new StatsProcessor(conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
+
       // If we have a single relative, it's more efficient to try to use the rowset cache. If we're
       // dealing with multiple relatives, we load their rowsets in bulk.
-      for (final NamedResource relative : relatives) {
+      if (relatives.size() == 1) {
+        final NamedResource relative = relatives.get(0);
         final Rowset cached;
         final String cacheKey =
             relative.getIdentifier()
@@ -315,17 +316,20 @@ public class StatsProcessor {
                       + " "
                       + relative.getResourceKey().get("name"));
             }
-            final StatsProcessor parentProcessor =
-                new StatsProcessor(
-                    conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
             try (final InputStream pIs =
-                dataProvider.fetchMetricStream(new NamedResource[] {relative}, pMeta, begin, end)) {
-              parentProcessor.process(pIs, splicer, begin, end);
+                dataProvider.fetchMetricStream(
+                    Collections.singletonList(relative), pMeta, begin, end)) {
+              relProcessor.process(pIs, splicer, begin, end);
             }
           }
         }
         if (verbose) {
           log.debug("Parent processing took " + (System.currentTimeMillis() - now));
+        }
+      } else {
+        // Multiple relatives. Faster to do them in bulk while ignoring the cache
+        try (final InputStream pIs = dataProvider.fetchMetricStream(relatives, pMeta, begin, end)) {
+          relProcessor.process(pIs, splicer, begin, end);
         }
       }
       splicer.finish(rs);

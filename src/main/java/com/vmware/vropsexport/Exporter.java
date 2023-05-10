@@ -20,6 +20,7 @@ package com.vmware.vropsexport;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.*;
 import com.vmware.vropsexport.processors.*;
+import com.vmware.vropsexport.utils.Chunker;
 import com.vmware.vropsexport.utils.IndexedLocks;
 import com.vmware.vropsexport.utils.LRUCache;
 import org.apache.commons.io.IOUtils;
@@ -43,6 +44,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("SameParameterValue")
 public class Exporter implements DataProvider {
@@ -159,8 +161,7 @@ public class Exporter implements DataProvider {
         conf.isAllMetrics()
             ? new RowMetadata(
                 conf,
-                metadata
-                    .getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
+                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
                     .stream()
                     .map(ResourceAttributeResponse.ResourceAttribute::getKey)
                     .collect(Collectors.toList()))
@@ -227,27 +228,20 @@ public class Exporter implements DataProvider {
       if (verbose) {
         log.debug("Adjusted chunk size is " + chunkSize + " resources");
       }
-      int i = 0;
-      ArrayList<NamedResource> chunk = new ArrayList<>(chunkSize);
-      for (final NamedResource res : resources) {
-        chunk.add(res);
-        if (chunk.size() >= chunkSize || i == resources.size() - 1) {
+      final Progress finalProgress = progress;
+      // Child relationships may return objects of the wrong type, so we have
+      // to check the type here.
+      final Stream<NamedResource> filteredResources =
+          resources.stream()
+              .filter((r) -> r.isSameType(conf.getAdapterKind(), conf.getResourceKind()));
+      Chunker.chunkify(
+          filteredResources,
+          chunkSize,
+          (chunk) -> {
+            startChunkJob(chunk, rsp, meta, begin, end, finalProgress);
+          });
 
-          // Child relationships may return objects of the wrong type, so we have
-          // to check the type here.
-          final Map<String, Object> rKey = res.getResourceKey();
-          if (!((String) rKey.get("resourceKindKey")).equalsIgnoreCase(conf.getResourceKind())) {
-            continue;
-          }
-          if (conf.getAdapterKind() != null
-              && !((String) rKey.get("adapterKindKey")).equalsIgnoreCase(conf.getAdapterKind())) {
-            continue;
-          }
-          startChunkJob(chunk, rsp, meta, begin, end, progress);
-          chunk = new ArrayList<>(chunkSize);
-        }
-        ++i;
-      }
+      final ArrayList<NamedResource> chunk = new ArrayList<>(chunkSize);
     }
     executor.shutdown();
     try {
@@ -325,19 +319,19 @@ public class Exporter implements DataProvider {
 
   @Override
   public InputStream fetchMetricStream(
-      final NamedResource[] resList, final RowMetadata meta, final long begin, final long end)
+      final List<NamedResource> resList, final RowMetadata meta, final long begin, final long end)
       throws IOException, HttpException {
     return conf.getRollupType().equals("LATEST")
         ? fetchLatestMetrics(resList, meta)
         : queryMetrics(resList, meta, begin, end);
   }
 
-  private InputStream fetchLatestMetrics(final NamedResource[] resList, final RowMetadata meta)
+  private InputStream fetchLatestMetrics(final List<NamedResource> resList, final RowMetadata meta)
       throws IOException, HttpException {
     final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
     final MetricsRequest q =
         new MetricsRequest(
-            Arrays.stream(resList).map(NamedResource::getIdentifier).collect(Collectors.toList()),
+            resList.stream().map(NamedResource::getIdentifier).collect(Collectors.toList()),
             true,
             "LATEST",
             "MINUTES",
@@ -350,12 +344,12 @@ public class Exporter implements DataProvider {
   }
 
   private InputStream queryMetrics(
-      final NamedResource[] resList, final RowMetadata meta, final long begin, final long end)
+      final List<NamedResource> resList, final RowMetadata meta, final long begin, final long end)
       throws IOException, HttpException {
     final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
     final MetricsRequest q =
         new MetricsRequest(
-            Arrays.stream(resList).map(NamedResource::getIdentifier).collect(Collectors.toList()),
+            resList.stream().map(NamedResource::getIdentifier).collect(Collectors.toList()),
             false,
             conf.getRollupType(),
             "MINUTES",
@@ -570,7 +564,7 @@ public class Exporter implements DataProvider {
     InputStream content;
     try {
       final long start = System.currentTimeMillis();
-      content = fetchMetricStream(resList.toArray(new NamedResource[0]), meta, begin, end);
+      content = fetchMetricStream(resList, meta, begin, end);
       if (verbose) {
         log.debug("Metric request call took " + (System.currentTimeMillis() - start) + " ms");
       }
