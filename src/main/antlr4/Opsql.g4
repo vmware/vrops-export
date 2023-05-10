@@ -5,8 +5,12 @@ grammar Opsql;
 }
 
 query
-    : Resource '(' resource=Identifier ')' ('.' filter)* '.' Fields '(' fieldList ')'   # queryStatement
-    | Set Identifier '=' literal                                                        # setStatement
+    : Resource '(' resource=Identifier ')'
+        parentsDeclaration?
+        childrenDeclaration?
+        ('.' filter)*
+        '.' Fields '(' fieldList ')'                            # queryStatement
+    | Set Identifier '=' literal                                # setStatement
     ;
 
 fieldList
@@ -16,6 +20,22 @@ fieldList
 fieldSpecifier
     : propertyOrMetricIdentifier                                 # simpleField
     | field=propertyOrMetricIdentifier As? alias=Identifier      # aliasedField
+    ;
+
+parentsDeclaration
+    : ('.' Parents '(' relatives=relationshipList ')' )
+    ;
+
+childrenDeclaration
+    : ('.' Children '(' relatives=relationshipList ')' )
+    ;
+
+relationshipList
+    : relationshipSpecifier (',' relationshipSpecifier)*
+    ;
+
+relationshipSpecifier
+    : resourceType=Identifier ('(' depth=PositiveInteger ')')? As? alias=Identifier
     ;
 
 filter
@@ -53,6 +73,8 @@ literal
 propertyOrMetricIdentifier
     : PropertyIdentifier                                        # propertyIdentifier
     | Identifier                                                # metricIdentifier
+    | aggregation '(' resource=Identifier '.' field=Identifier ')' # relativeMetricIdentifier
+    | aggregation '(' resource=Identifier '.' field=PropertyIdentifier ')' # relativePropertyIdentifier
     ;
 
 booleanOperator
@@ -66,36 +88,57 @@ booleanOperator
     | 'in'
     ;
 
+aggregation
+    : Avg
+    | Sum
+    | Min
+    | Max
+    | StdDev
+    | Variance
+    | First
+    | Last
+    | Median
+    ;
+
 /// Reserved words
+And:                'and';
+As:                 'as';
+Avg:                'avg';
+Child:              'child';
+Children:           'children';
+Fields:             'fields';
+First:              'first';
+From:               'from';
+Health:             'health';
+Id:                 'id';
+Last:               'last';
+Max:                'max';
+Median:             'median';
+Metrics:            'metrics';
+Min:                'min';
+Name:               'name';
+Not:                'not';
+Or:                 'or';
+Parent:             'parent';
+Parents:            'parents';
+Properties:         'properties';
+RegEx:              'regex';
 Resource:           'resource';
+Select:             'select';
+Set:                'set';
+State:              'state';
+Status:             'status';
+StdDev:             'stddev';
+Sum:                'sum';
+Tag:                'tag';
+Variance:           'variance';
+Where:              'where';
+WhereHealth:        'whereHealth';
 WhereMetrics:       'whereMetrics';
 WhereProperties:    'whereProperties';
-WhereHealth:        'whereHealth';
 WhereState:         'whereState';
 WhereStatus:        'whereStatus';
 WhereTags:          'whereTags';
-Fields:             'fields';
-RegEx:              'regex';
-
-
-Select:     'select';
-From:       'from';
-Where:      'where';
-And:        'and';
-Or:         'or';
-Not:        'not';
-Parent:     'parent';
-Child:      'child';
-Name:       'name';
-Id:         'id';
-Tag:        'tag';
-Health:     'health';
-Status:     'status';
-State:      'state';
-As:         'as';
-Metrics:    'metrics';
-Properties: 'properties';
-Set:        'set';
 
 PropertyIdentifier
     : '@' Identifier
@@ -163,6 +206,10 @@ fragment SChar
 ScientificNumber
    : Sign? Number ((E1 | E2) Sign? Number)?
    ;
+
+PositiveInteger
+    : ('0' .. '9')+
+    ;
 
 
 fragment Number

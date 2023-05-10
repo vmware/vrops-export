@@ -46,6 +46,8 @@ public class Completer implements org.jline.reader.Completer {
 
   static {
     resolvers.put("resource", Completer::resolveResourceType);
+    resolvers.put("parents", Completer::resolveResourceType);
+    resolvers.put("children", Completer::resolveResourceType);
     resolvers.put("fields", Completer::resolveStatOrPropKey);
     resolvers.put("whereMetrics", Completer::resolveStatKey);
     resolvers.put("whereProperties", Completer::resolvePropertyKey);

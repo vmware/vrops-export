@@ -24,17 +24,28 @@ import java.util.Set;
 public class Constants {
   public static final String[] keywords =
       new String[] {
-        "resource",
-        "name",
+        "avg",
+        "children",
+        "fields",
+        "first",
         "id",
+        "last",
+        "max",
+        "median",
+        "min",
+        "name",
+        "parents",
         "regex",
-        "whereStatus",
+        "resource",
+        "stddev",
+        "sum",
+        "variance",
         "whereHealth",
-        "whereState",
-        "whereTags",
-        "whereProperties",
         "whereMetrics",
-        "fields"
+        "whereProperties",
+        "whereState",
+        "whereStatus",
+        "whereTags"
       };
 
   public static final Set<String> keywordSet = new HashSet<>(Arrays.asList(keywords));

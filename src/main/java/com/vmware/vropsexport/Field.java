@@ -24,19 +24,19 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 
 public class Field {
-  enum Kind {
+  public enum Kind {
     metric,
     property,
     tag
   }
 
-  enum RelationshipType {
+  public enum RelationshipType {
     self,
     child,
     parent,
   }
 
-  enum AggregationType {
+  public enum AggregationType {
     none,
     sum,
     max,

@@ -49,6 +49,27 @@ public class ChunkerTest {
   }
 
   @Test
+  public void testAlignedStreamChunker() {
+    final List<Integer> list = new ArrayList<>();
+    for (int i = 0; i < 64; ++i) {
+      list.add(i);
+    }
+    final List<List<Integer>> chunks = new ArrayList<>();
+    Chunker.chunkify(
+        list.stream(),
+        8,
+        (i) -> {
+          chunks.add(i);
+        });
+    Assert.assertEquals(8, chunks.size());
+    for (int i = 0; i < 8; ++i) {
+      Assert.assertEquals(8, chunks.get(i).size());
+      Assert.assertEquals(i * 8, chunks.get(i).get(0).longValue());
+      Assert.assertEquals(i * 8 + 7, chunks.get(i).get(7).longValue());
+    }
+  }
+
+  @Test
   public void testUnalignedChunker() {
     final List<Integer> list = new ArrayList<>();
     for (int i = 0; i < 65; ++i) {
@@ -57,6 +78,29 @@ public class ChunkerTest {
     final List<List<Integer>> chunks = new ArrayList<>();
     Chunker.chunkify(
         list,
+        8,
+        (i) -> {
+          chunks.add(i);
+        });
+    Assert.assertEquals(9, chunks.size());
+    for (int i = 0; i < 8; ++i) {
+      Assert.assertEquals(8, chunks.get(i).size());
+      Assert.assertEquals(i * 8, chunks.get(i).get(0).longValue());
+      Assert.assertEquals(i * 8 + 7, chunks.get(i).get(7).longValue());
+    }
+    Assert.assertEquals(1, chunks.get(8).size());
+    Assert.assertEquals(64, chunks.get(8).get(0).longValue());
+  }
+
+  @Test
+  public void testUnalignedStreamChunker() {
+    final List<Integer> list = new ArrayList<>();
+    for (int i = 0; i < 65; ++i) {
+      list.add(i);
+    }
+    final List<List<Integer>> chunks = new ArrayList<>();
+    Chunker.chunkify(
+        list.stream(),
         8,
         (i) -> {
           chunks.add(i);

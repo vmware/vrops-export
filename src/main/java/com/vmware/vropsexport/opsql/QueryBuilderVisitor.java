@@ -19,11 +19,30 @@ package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.Field;
 import com.vmware.vropsexport.models.ResourceRequest;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.*;
 
 public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
+
+  private static class Relationship {
+    private String adapterKind;
+    private final String resourceKind;
+    private final Field.RelationshipType type;
+    private final int depth;
+
+    public Relationship(
+        final String resourceKind, final Field.RelationshipType type, final int depth) {
+      this.type = type;
+      this.depth = depth;
+      final int p = resourceKind.indexOf(":");
+      if (p == -1) {
+        this.resourceKind = resourceKind;
+      } else {
+        adapterKind = resourceKind.substring(0, p);
+        this.resourceKind = resourceKind.substring(p + 1);
+      }
+    }
+  }
 
   private static final Map<String, String> toInternalOp = new HashMap<>();
 
@@ -74,28 +93,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     }
   }
 
-  private static class IdentifierResolver extends OpsqlBaseVisitor<Field> {
-
-    public static Field resolveAny(final ParseTree ctx) {
-      return ctx.accept(new IdentifierResolver());
-    }
-
-    public static Field resolveProperty(final ParseTree ctx) {
-      final Field f = resolveAny(ctx);
-      if (!f.hasProp()) {
-        throw new RuntimeException("Expected property, got metric");
-      }
-      return f;
-    }
-
-    public static Field resolveMetric(final ParseTree ctx) {
-      final Field f = resolveAny(ctx);
-      if (!f.hasMetric()) {
-        throw new RuntimeException("Expected metric, got property");
-      }
-      return f;
-    }
-
+  private class IdentifierResolver extends OpsqlBaseVisitor<Field> {
     public IdentifierResolver() {}
 
     @Override
@@ -106,14 +104,44 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     }
 
     @Override
+    public Field visitRelativeMetricIdentifier(
+        final OpsqlParser.RelativeMetricIdentifierContext ctx) {
+      final Field f = new Field();
+      f.setMetric(ctx.field.getText());
+      final Relationship rel = relationshipAliases.get(ctx.resource.getText());
+      if (rel == null) {
+        throw new OpsqlException("Reference to unknown alias '" + ctx.resource.getText() + "'");
+      }
+      f.setAggregation(Field.AggregationType.valueOf(ctx.aggregation().getText()));
+      f.setSearchDepth(rel.depth);
+      f.setRelationshipType(rel.type);
+      return f;
+    }
+
+    @Override
     public Field visitPropertyIdentifier(final OpsqlParser.PropertyIdentifierContext ctx) {
       final Field f = new Field();
       f.setProp(ctx.PropertyIdentifier().getText().substring(1));
       return f;
     }
+
+    @Override
+    public Field visitRelativePropertyIdentifier(
+        final OpsqlParser.RelativePropertyIdentifierContext ctx) {
+      final Field f = new Field();
+      f.setProp(ctx.field.getText());
+      final Relationship rel = relationshipAliases.get(ctx.resource.getText());
+      if (rel == null) {
+        throw new OpsqlException("Reference to unknown alias '" + ctx.resource.getText() + "'");
+      }
+      f.setAggregation(Field.AggregationType.valueOf(ctx.aggregation().getText()));
+      f.setSearchDepth(rel.depth);
+      f.setRelationshipType(rel.type);
+      return f;
+    }
   }
 
-  private static class BooleanExpressionVisitor extends OpsqlBaseVisitor<Object> {
+  private class BooleanExpressionVisitor extends OpsqlBaseVisitor<Object> {
     private final ResourceRequest.FilterSpec spec = new ResourceRequest.FilterSpec();
 
     public BooleanExpressionVisitor() {
@@ -141,7 +169,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     @Override
     public Object visitNormalComparison(final OpsqlParser.NormalComparisonContext ctx) {
       final ResourceRequest.Condition cond = new ResourceRequest.Condition();
-      cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
+      cond.setKey(ctx.propertyOrMetricIdentifier().accept(new IdentifierResolver()).getName());
       cond.setOperator(toInternalOp.get(ctx.booleanOperator().getText()));
       ctx.accept(new LiteralResolver(cond));
       spec.getConditions().add(cond);
@@ -151,7 +179,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     @Override
     public Object visitNegatedComparison(final OpsqlParser.NegatedComparisonContext ctx) {
       final ResourceRequest.Condition cond = new ResourceRequest.Condition();
-      cond.setKey(IdentifierResolver.resolveAny(ctx.propertyOrMetricIdentifier()).getName());
+      cond.setKey(ctx.propertyOrMetricIdentifier().accept(new IdentifierResolver()).getName());
       cond.setOperator(operatorNegations.get(toInternalOp.get(ctx.booleanOperator().getText())));
       ctx.accept(new LiteralResolver(cond));
       spec.getConditions().add(cond);
@@ -161,15 +189,11 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     public ResourceRequest.FilterSpec getSpec() {
       return spec;
     }
-
-    public static ResourceRequest.FilterSpec resolveFilter(final OpsqlParser.FilterContext ctx) {
-      final BooleanExpressionVisitor v = new BooleanExpressionVisitor();
-      ctx.accept(v);
-      return v.getSpec();
-    }
   }
 
   private final Query query = new Query();
+
+  private final Map<String, Relationship> relationshipAliases = new HashMap<>();
 
   public QueryBuilderVisitor() {
     super();
@@ -193,6 +217,40 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     return s;
   }
 
+  private ResourceRequest.FilterSpec resolveFilter(final OpsqlParser.FilterContext ctx) {
+    final BooleanExpressionVisitor v = new BooleanExpressionVisitor();
+    ctx.accept(v);
+    return v.getSpec();
+  }
+
+  @Override
+  public Object visitChildrenDeclaration(final OpsqlParser.ChildrenDeclarationContext ctx) {
+    for (final OpsqlParser.RelationshipSpecifierContext rel :
+        ctx.relatives.relationshipSpecifier()) {
+      relationshipAliases.put(
+          rel.alias.getText(),
+          new Relationship(
+              rel.resourceType.getText(),
+              Field.RelationshipType.child,
+              rel.depth != null ? Integer.parseInt(rel.depth.getText()) : 1));
+    }
+    return null; // No need to go deeper
+  }
+
+  @Override
+  public Object visitParentsDeclaration(final OpsqlParser.ParentsDeclarationContext ctx) {
+    for (final OpsqlParser.RelationshipSpecifierContext rel :
+        ctx.relatives.relationshipSpecifier()) {
+      relationshipAliases.put(
+          rel.alias.getText(),
+          new Relationship(
+              rel.resourceType.getText(),
+              Field.RelationshipType.parent,
+              rel.depth != null ? Integer.parseInt(rel.depth.getText()) : 1));
+    }
+    return null; // No need to go deeper
+  }
+
   @Override
   public Object visitQueryStatement(final OpsqlParser.QueryStatementContext ctx) {
     final String resource = ctx.resource.getText();
@@ -212,7 +270,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitSimpleField(final OpsqlParser.SimpleFieldContext ctx) {
-    final Field f = IdentifierResolver.resolveAny(ctx);
+    final Field f = ctx.accept(new IdentifierResolver());
     f.setAlias(f.getName());
     query.getFields().add(f);
     return super.visitSimpleField(ctx);
@@ -220,7 +278,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitAliasedField(final OpsqlParser.AliasedFieldContext ctx) {
-    final Field f = IdentifierResolver.resolveAny(ctx.field);
+    final Field f = ctx.field.accept(new IdentifierResolver());
     f.setAlias(ctx.alias.getText());
     query.getFields().add(f);
     return super.visitAliasedField(ctx);
@@ -260,13 +318,13 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitWhereMetrics(final OpsqlParser.WhereMetricsContext ctx) {
-    query.resourceRequest.setStatConditions(BooleanExpressionVisitor.resolveFilter(ctx));
+    query.resourceRequest.setStatConditions(resolveFilter(ctx));
     return super.visitWhereMetrics(ctx);
   }
 
   @Override
   public Object visitWhereProperties(final OpsqlParser.WherePropertiesContext ctx) {
-    query.resourceRequest.setPropertyConditions(BooleanExpressionVisitor.resolveFilter(ctx));
+    query.resourceRequest.setPropertyConditions(resolveFilter(ctx));
     return super.visitWhereProperties(ctx);
   }
 
