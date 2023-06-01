@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.models.NamedResource;
+import com.vmware.vropsexport.opsql.Query;
+import com.vmware.vropsexport.opsql.QueryCompiler;
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.JsonPrinter;
 import com.vmware.vropsexport.utils.LRUCache;
@@ -187,6 +189,15 @@ public class StatsProcessorTest {
     runJSONTest("children", "hoststats");
   }
 
+  @Test
+  public void testChildQuery()
+      throws ValidationException, ExporterException, HttpException, IOException {
+    runQueryTest(
+        "resource(VMWARE:HostSystem).children(VMWARE:VirtualMachine vm).fields(cpu|demandPct cpuDemand, avg(vm.cpu|demandmhz) vmCpuDemand)",
+        "children",
+        "hoststats");
+  }
+
   @SuppressWarnings("unchecked")
   private void runJSONTest(final String name, final String metricInput)
       throws HttpException, IOException, ExporterException, ValidationException {
@@ -198,11 +209,28 @@ public class StatsProcessorTest {
     Assert.assertEquals(wanted, actual);
   }
 
+  private void runQueryTest(final String query, final String name, final String metricInput)
+      throws HttpException, IOException, ExporterException, ValidationException {
+    final Query q = QueryCompiler.compile(query);
+    final byte[] data = runTest(q.toConfig(), metricInput, new JsonPrinter.Factory());
+    final ObjectMapper om = new ObjectMapper();
+    final Map<String, Object> wanted =
+        om.readValue(new File("src/test/resources/" + name + "-output.json"), Map.class);
+    final Map<String, Object> actual = om.readValue(data, Map.class);
+    Assert.assertEquals(wanted, actual);
+  }
+
   private byte[] runTest(
       final String definition, final String metricInput, final RowsetProcessorFacotry factory)
       throws IOException, ExporterException, HttpException, ValidationException {
-
     final Config conf = ConfigLoader.parse(new FileReader("src/test/resources/" + definition));
+    return runTest(conf, metricInput, factory);
+  }
+
+  private byte[] runTest(
+      final Config conf, final String metricInput, final RowsetProcessorFacotry factory)
+      throws IOException, ExporterException, HttpException, ValidationException {
+
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     final RowMetadata meta =
         conf.isAllMetrics()

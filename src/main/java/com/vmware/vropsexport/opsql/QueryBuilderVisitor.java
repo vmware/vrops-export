@@ -107,14 +107,8 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     public Field visitRelativeMetricIdentifier(
         final OpsqlParser.RelativeMetricIdentifierContext ctx) {
       final Field f = new Field();
-      f.setMetric(ctx.field.getText());
-      final Relationship rel = relationshipAliases.get(ctx.resource.getText());
-      if (rel == null) {
-        throw new OpsqlException("Reference to unknown alias '" + ctx.resource.getText() + "'");
-      }
-      f.setAggregation(Field.AggregationType.valueOf(ctx.aggregation().getText()));
-      f.setSearchDepth(rel.depth);
-      f.setRelationshipType(rel.type);
+      f.setMetric(ctx.resource.getText() + "." + ctx.field.getText());
+      fillInField(f, ctx.resource.getText(), ctx.field.getText(), ctx.aggregation().getText());
       return f;
     }
 
@@ -129,16 +123,24 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     public Field visitRelativePropertyIdentifier(
         final OpsqlParser.RelativePropertyIdentifierContext ctx) {
       final Field f = new Field();
-      f.setProp(ctx.field.getText());
-      final Relationship rel = relationshipAliases.get(ctx.resource.getText());
-      if (rel == null) {
-        throw new OpsqlException("Reference to unknown alias '" + ctx.resource.getText() + "'");
-      }
-      f.setAggregation(Field.AggregationType.valueOf(ctx.aggregation().getText()));
-      f.setSearchDepth(rel.depth);
-      f.setRelationshipType(rel.type);
+      f.setProp(ctx.resource.getText() + "." + ctx.field.getText());
+      fillInField(f, ctx.resource.getText(), ctx.field.getText(), ctx.aggregation().getText());
       return f;
     }
+  }
+
+  private void fillInField(
+      final Field f, final String resourceAlias, final String fieldName, final String aggregation) {
+    f.setLocalName(fieldName);
+    final Relationship rel = relationshipAliases.get(resourceAlias);
+    if (rel == null) {
+      throw new OpsqlException("Reference to unknown alias '" + resourceAlias + "'");
+    }
+    f.setAggregation(Field.AggregationType.valueOf(aggregation));
+    f.setSearchDepth(rel.depth);
+    f.setRelationshipType(rel.type);
+    f.setRelatedAdapterKind(rel.adapterKind);
+    f.setRelatedResourceKind(rel.resourceKind);
   }
 
   private class BooleanExpressionVisitor extends OpsqlBaseVisitor<Object> {

@@ -26,3 +26,4 @@ fields:
   # Child fields
   - alias: vmCpuDemand
     metric: $child:VirtualMachine.cpu|demandmhz
+    aggregation: avg

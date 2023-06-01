@@ -130,11 +130,11 @@ public class StatsProcessor {
 
         // Process data[ ...
         expect(p, JsonToken.START_ARRAY);
-        final int metricIdx = meta.getMetricIndex(statKey);
+        final List<Integer> metricIndices = meta.getMetricIndex(statKey);
         int i = 0;
         while (p.nextToken() != JsonToken.END_ARRAY) {
           final double d = p.getDoubleValue();
-          if (metricIdx != -1) {
+          for (final int metricIdx : metricIndices) {
             if (i >= timestamps.size()) {
               log.warn(
                   "More data than timestamps (index="
@@ -274,6 +274,9 @@ public class StatsProcessor {
                 + "). Found "
                 + relatives.size());
       }
+      if (relatives.isEmpty()) {
+        return;
+      }
       final StatsProcessor relProcessor =
           new StatsProcessor(conf, pMeta, dataProvider, rowsetCache, new NullProgress(), verbose);
 
@@ -323,16 +326,18 @@ public class StatsProcessor {
             }
           }
         }
-        if (verbose) {
-          log.debug("Parent processing took " + (System.currentTimeMillis() - now));
-        }
+
       } else {
         // Multiple relatives. Faster to do them in bulk while ignoring the cache
         try (final InputStream pIs = dataProvider.fetchMetricStream(relatives, pMeta, begin, end)) {
+          splicer.setCacheKey(null);
           relProcessor.process(pIs, splicer, begin, end);
         }
       }
       splicer.finish(rs);
+      if (verbose) {
+        log.debug("Parent processing took " + (System.currentTimeMillis() - now));
+      }
     }
   }
 

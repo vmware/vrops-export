@@ -59,7 +59,7 @@ public class Config implements Validatable {
   private String resourceType;
   private String rollupType = "AVG";
   private long rollupMinutes = 5;
-  private String dateFormat = "yyyy-MM-dd HH:mm";
+  private String dateFormat = "yyyy-MM-dd HH:mm:ss";
   private String outputFormat = "csv";
   private SQLConfig sqlConfig;
   private WavefrontConfig wavefrontConfig;

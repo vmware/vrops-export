@@ -18,8 +18,12 @@
 package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.exceptions.ExporterException;
+import com.vmware.vropsexport.utils.IntKeyMap;
+import org.apache.commons.collections4.ListValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RowMetadata {
@@ -129,13 +133,13 @@ public class RowMetadata {
 
   private static final FieldSpec nullField = new FieldSpec(-1, null);
 
-  private final Set<RelationshipSpec> relatedResourceTypes = new HashSet<>();
-
   private final String resourceKind;
 
   private final String adapterKind;
 
-  private final Map<String, FieldSpec> metricMap = new HashMap<>();
+  private final ListValuedMap<String, FieldSpec> metricMap = new ArrayListValuedHashMap<>();
+
+  private final List<Field> fields;
 
   private final Map<String, FieldSpec> propMap = new HashMap<>();
 
@@ -143,13 +147,9 @@ public class RowMetadata {
 
   private final Map<String, Integer> metricAliasMap = new HashMap<>();
 
-  private final Map<String, String> metricNameToAlias = new HashMap<>();
+  private final IntKeyMap<String> metricIndexToAlias = new IntKeyMap<>();
 
   private final Map<String, Integer> propAliasMap = new HashMap<>();
-
-  private final Set<String> parents = new HashSet<>();
-
-  private final Set<String> children = new HashSet<>();
 
   private final int[] propInsertionPoints;
 
@@ -170,8 +170,9 @@ public class RowMetadata {
                   null,
                   null,
                   Field.RelationshipType.self)));
-      metricAliasMap.put(metricName, mp++);
-      metricNameToAlias.put(metricName, ns.transform(metricName));
+      metricAliasMap.put(metricName, mp);
+      metricIndexToAlias.put(mp, ns.transform(metricName));
+      mp++;
     }
     propInsertionPoints = new int[0];
   }
@@ -194,8 +195,9 @@ public class RowMetadata {
               "Repeated metrics are not supported. Offending metric: " + metricKey);
         }
         metricMap.put(metricKey, new FieldSpec(mp, fld));
-        metricAliasMap.put(fld.getAlias(), mp++);
-        metricNameToAlias.put(fld.getMetric(), fld.getAlias());
+        metricAliasMap.put(fld.getAlias(), mp);
+        metricIndexToAlias.put(mp, fld.getAlias());
+        mp++;
       } else {
         if (fld.hasProp()) {
           final String propKey = fld.getProp();
@@ -204,8 +206,9 @@ public class RowMetadata {
                 "Repeated properties are not supported. Offending property: " + propKey);
           }
           propMap.put(fld.getProp(), new FieldSpec(pp, fld));
-          propAliasMap.put(fld.getAlias(), pp++);
+          propAliasMap.put(fld.getAlias(), pp);
           propNameToAlias.put(fld.getProp(), fld.getAlias());
+          pp++;
           pip.add(mp);
         }
       }
@@ -228,7 +231,7 @@ public class RowMetadata {
         propMap.put("_placeholder_" + f.getName(), fs.stripRelationships());
       }
     }
-    for (final Map.Entry<String, FieldSpec> e : origin.metricMap.entrySet()) {
+    for (final Map.Entry<String, FieldSpec> e : origin.metricMap.entries()) {
       final FieldSpec fs = e.getValue();
       final Field f = fs.getField();
       if (f.isRelatedTo(adapterKind, resourceKind)) {
@@ -261,7 +264,7 @@ public class RowMetadata {
     return result;
   }
 
-  public Map<String, FieldSpec> getMetricMap() {
+  public ListValuedMap<String, FieldSpec> getMetricMap() {
     return metricMap;
   }
 
@@ -273,8 +276,12 @@ public class RowMetadata {
     return propInsertionPoints;
   }
 
-  public int getMetricIndex(final String metric) {
-    return metricMap.getOrDefault(metric, nullField).index;
+  public List<Integer> getMetricIndex(final String metric) {
+    final List<FieldSpec> specs = metricMap.get(metric);
+    if (specs == null) {
+      return Collections.emptyList();
+    }
+    return specs.stream().map(FieldSpec::getIndex).collect(Collectors.toList());
   }
 
   public int getPropertyIndex(final String property) {
@@ -297,8 +304,8 @@ public class RowMetadata {
     return propNameToAlias.get(name);
   }
 
-  public String getAliasForMetric(final String name) {
-    return metricNameToAlias.get(name);
+  public String getAliasForMetricIndex(final int index) {
+    return metricIndexToAlias.get(index);
   }
 
   public Row newRow(final long timestamp) {

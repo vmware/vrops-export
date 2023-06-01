@@ -110,7 +110,7 @@ public class QueryCompilerTest {
   @Test
   public void testChildQuery() throws IOException {
     runQuery(
-        "resource(VMWARE:HostSystem).children(VMWARE:VirtualMachine h).fields(cpu|demandmhz, avg(h.cpu|demandmhz))",
-        "MixedFieldQueryResult");
+        "resource(VMWARE:HostSystem).children(VMWARE:VirtualMachine h).fields(cpu|demandmhz, stddev(h.cpu|demandmhz))",
+        "ChildQueryResult");
   }
 }

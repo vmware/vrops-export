@@ -48,7 +48,7 @@ public class QueryRunner extends Command {
   public void executeQuery(final String query, final OutputStream out) throws ExporterException {
     final Query q = QueryCompiler.compile(query);
     final Config conf = q.toConfig();
-    final Exporter exporter = new Exporter(client, threads, conf, false, true, maxRows, maxRes);
+    final Exporter exporter = new Exporter(client, threads, conf, verbose, true, maxRows, maxRes);
     try {
       exporter.exportTo(out, begin, end, null, true);
     } catch (final IOException | HttpException e) {

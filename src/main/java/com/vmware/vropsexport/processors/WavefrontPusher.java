@@ -75,11 +75,10 @@ public class WavefrontPusher implements RowsetProcessor {
         final long ts = r.getTimestamp();
         final String resourceName = dp.getResourceName(rowset.getResourceId());
         for (final Map.Entry<String, RowMetadata.FieldSpec> metric :
-            meta.getMetricMap().entrySet()) {
+            meta.getMetricMap().entries()) {
 
           // Build string on the format <metricName> <metricValue> [<timestamp>] source=<source>
           // [pointTags]
-          //
           final Double d = r.getMetric(metric.getValue().getIndex());
           if (d == null) {
             continue;
@@ -93,7 +92,11 @@ public class WavefrontPusher implements RowsetProcessor {
             tags.put(meta.getAliasForProp(prop.getKey()), r.getProp(p));
           }
           sender.sendMetric(
-              meta.getAliasForMetric(metric.getKey()), d, ts / 1000, resourceName, tags);
+              meta.getAliasForMetricIndex(metric.getValue().getIndex()),
+              d,
+              ts / 1000,
+              resourceName,
+              tags);
         }
       }
     } catch (final IOException | HttpException e) {

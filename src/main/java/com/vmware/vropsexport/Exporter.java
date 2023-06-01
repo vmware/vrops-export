@@ -421,7 +421,8 @@ public class Exporter implements DataProvider {
       // Correct resource type? Add it to the list!
       final int size = list.size();
       for (final NamedResource res : page.getResourceList()) {
-        if (res.getResourceKey().get("adapterKindKey").equals(key.getAdapterKind())
+        if ((key.getAdapterKind() == null
+                || res.getResourceKey().get("adapterKindKey").equals(key.getAdapterKind()))
             && res.getResourceKey().get("resourceKindKey").equals(key.getResourceKind())) {
           list.add(res);
           continue;
@@ -452,7 +453,7 @@ public class Exporter implements DataProvider {
       throws IOException, HttpException {
     final FullyQualifiedId key = new FullyQualifiedId(parentAdapterKind, parentResourceKind, id);
     final List<NamedResource> list = new ArrayList<>();
-    getRelativesOf(type, key, maxDepth, list);
+    getRelativesOf(type, key, maxDepth - 1, list);
 
     // There might be multiple paths to some objects, so let's make sure we only return unique
     // objects.

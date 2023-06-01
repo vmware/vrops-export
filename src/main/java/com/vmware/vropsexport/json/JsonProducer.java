@@ -23,11 +23,12 @@ import com.vmware.vropsexport.Row;
 import com.vmware.vropsexport.RowMetadata;
 import com.vmware.vropsexport.Rowset;
 import com.vmware.vropsexport.exceptions.ExporterException;
+import org.apache.http.HttpException;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Map;
-import org.apache.http.HttpException;
 
 public class JsonProducer {
   private final JsonGenerator generator;
@@ -90,13 +91,12 @@ public class JsonProducer {
 
     // Metrics
     generator.writeArrayFieldStart("metrics");
-    for (final String metricName : meta.getMetricMap().keySet()) {
+    for (int i = 0; i < meta.getNumMetrics(); ++i) {
       generator.writeStartObject();
-      final int metricIndex = meta.getMetricIndex(metricName);
-      generator.writeStringField("name", meta.getAliasForMetric(metricName));
+      generator.writeStringField("name", meta.getAliasForMetricIndex(i));
       generator.writeArrayFieldStart("samples");
       for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
-        final Double v = row.getValue().getMetric(metricIndex);
+        final Double v = row.getValue().getMetric(i);
         if (v == null) {
           continue;
         }
@@ -115,16 +115,15 @@ public class JsonProducer {
   public void produceChatty(final Rowset rowset, final RowMetadata meta)
       throws IOException, HttpException {
     for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
-      for (final String metricName : meta.getMetricMap().keySet()) {
-        final int metricIndex = meta.getMetricIndex(metricName);
-        final Double v = row.getValue().getMetric(metricIndex);
+      for (int i = 0; i < meta.getNumMetrics(); ++i) {
+        final Double v = row.getValue().getMetric(i);
         if (v == null) {
           continue;
         }
         generator.writeStartObject();
         generator.writeStringField("t", toDate(row.getKey()));
         generator.writeStringField("resourceName", dp.getResourceName(rowset.getResourceId()));
-        generator.writeStringField("metric", meta.getAliasForMetric(metricName));
+        generator.writeStringField("metric", meta.getAliasForMetricIndex(i));
         generator.writeNumberField("v", v);
         generator.writeEndObject();
       }
@@ -144,13 +143,12 @@ public class JsonProducer {
     generator.writeStartObject();
     generator.writeStringField("resourceName", dp.getResourceName(resourceId));
     generator.writeStringField("t", toDate(timestamp));
-    for (final String metricName : meta.getMetricMap().keySet()) {
-      final int metricIndex = meta.getMetricIndex(metricName);
-      final Double v = row.getMetric(metricIndex);
+    for (int i = 0; i < meta.getNumMetrics(); ++i) {
+      final Double v = row.getMetric(i);
       if (v == null) {
         continue;
       }
-      generator.writeNumberField(meta.getAliasForMetric(metricName), v);
+      generator.writeNumberField(meta.getAliasForMetricIndex(i), v);
     }
     generator.writeEndObject();
   }

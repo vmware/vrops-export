@@ -59,6 +59,9 @@ public class RowSplicer implements RowsetProcessor {
   @Override
   public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {
     spliceRows(originRowset, rowset);
+    if (cacheKey == null) {
+      return;
+    }
     synchronized (rowsetCache) {
       rowsetCache.put(cacheKey, rowset);
     }
@@ -70,7 +73,6 @@ public class RowSplicer implements RowsetProcessor {
   }
 
   public void spliceRows(final Rowset origin, final Rowset related) {
-
     for (final Row pRow : related.getRows().values()) {
       final Row cRow = origin.getRows().get(pRow.getTimestamp());
       if (cRow != null) {

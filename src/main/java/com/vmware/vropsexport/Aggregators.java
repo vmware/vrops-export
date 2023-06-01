@@ -118,7 +118,7 @@ public class Aggregators {
 
     @Override
     public void apply(final double v) {
-      if (v < max) {
+      if (v > max) {
         max = v;
       }
     }
