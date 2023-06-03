@@ -328,7 +328,6 @@ public class Exporter implements DataProvider {
 
   private InputStream fetchLatestMetrics(final List<NamedResource> resList, final RowMetadata meta)
       throws IOException, HttpException {
-    final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
     final MetricsRequest q =
         new MetricsRequest(
             resList.stream().map(NamedResource::getIdentifier).collect(Collectors.toList()),
@@ -339,14 +338,13 @@ public class Exporter implements DataProvider {
             1,
             null,
             null,
-            stats);
+            meta.getMetrics().stream().map(Field::getLocalName).collect(Collectors.toList()));
     return client.postJsonReturnStream("/suite-api/api/resources/stats/latest/query", q);
   }
 
   private InputStream queryMetrics(
       final List<NamedResource> resList, final RowMetadata meta, final long begin, final long end)
       throws IOException, HttpException {
-    final List<String> stats = new ArrayList<>(meta.getMetricMap().keySet());
     final MetricsRequest q =
         new MetricsRequest(
             resList.stream().map(NamedResource::getIdentifier).collect(Collectors.toList()),
@@ -357,7 +355,7 @@ public class Exporter implements DataProvider {
             null,
             begin,
             end,
-            stats);
+            meta.getMetrics().stream().map(Field::getLocalName).collect(Collectors.toList()));
     // log.debug("Metric query: " + new ObjectMapper().writeValueAsString(q));
     return client.postJsonReturnStream("/suite-api/api/resources/stats/query", q);
   }

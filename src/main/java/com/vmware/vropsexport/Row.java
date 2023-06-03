@@ -72,9 +72,7 @@ public class Row {
   }
 
   private class Iterator implements java.util.Iterator<Object> {
-    private int mc;
-
-    private int pc;
+    private int pos;
 
     private final RowMetadata meta;
 
@@ -84,7 +82,7 @@ public class Row {
 
     @Override
     public boolean hasNext() {
-      return pc < props.length || mc < metrics.length;
+      return pos >= meta.getFields().size();
     }
 
     @Override
@@ -92,10 +90,13 @@ public class Row {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
-      if (pc < props.length && meta.getPropInsertionPoints()[pc] == mc) {
-        return getProp(pc++);
+      final int current = pos;
+      final Field f = meta.getFields().get(pos++);
+      if (f.hasMetric()) {
+        return getProp(meta.getPropertyIndex(f.getLocalName()));
+      } else {
+        return getMetric(meta.getMetricIndex(current));
       }
-      return getMetric(mc++);
     }
   }
 

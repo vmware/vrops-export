@@ -82,13 +82,11 @@ public class CSVPrinter implements RowsetProcessor {
   public void preamble(final RowMetadata meta, final Config conf) throws ExporterException {
     // If header is suppressed, do nothing...
     // If all metrics are exported, header is pointless.
-    //
     if (!csvConfig.isHeader() || conf.isAllMetrics()) {
       return;
     }
     try {
       // Output table header
-      //
       bw.write("timestamp,resName");
       for (final Field fld : conf.getFields()) {
         bw.write(",");

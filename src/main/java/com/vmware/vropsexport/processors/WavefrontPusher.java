@@ -74,29 +74,25 @@ public class WavefrontPusher implements RowsetProcessor {
       for (final Row r : rowset.getRows().values()) {
         final long ts = r.getTimestamp();
         final String resourceName = dp.getResourceName(rowset.getResourceId());
-        for (final Map.Entry<String, RowMetadata.FieldSpec> metric :
-            meta.getMetricMap().entries()) {
+        final Map<String, String> tags = new HashMap<>(meta.getPropMap().size());
 
-          // Build string on the format <metricName> <metricValue> [<timestamp>] source=<source>
-          // [pointTags]
-          final Double d = r.getMetric(metric.getValue().getIndex());
+        // Collect properties to be used as tags
+        for (final Field f : meta.getFields()) {
+          if (f.hasProp()) {
+            final int pi = meta.getPropertyIndex(f.getLocalName());
+            if (pi == -1) {
+              continue;
+            }
+            tags.put(f.getAlias(), r.getProp(pi));
+          }
+        }
+        int i = 0;
+        for (final Field f : meta.getFields()) {
+          final Double d = r.getMetric(meta.getMetricIndex(i++));
           if (d == null) {
             continue;
           }
-          final Map<String, String> tags = new HashMap<>(meta.getPropMap().size());
-          for (final Map.Entry<String, RowMetadata.FieldSpec> prop : meta.getPropMap().entrySet()) {
-            final Integer p = prop.getValue().getIndex();
-            if (p == null) {
-              continue;
-            }
-            tags.put(meta.getAliasForProp(prop.getKey()), r.getProp(p));
-          }
-          sender.sendMetric(
-              meta.getAliasForMetricIndex(metric.getValue().getIndex()),
-              d,
-              ts / 1000,
-              resourceName,
-              tags);
+          sender.sendMetric(f.getAlias(), d, ts / 1000, resourceName, tags);
         }
       }
     } catch (final IOException | HttpException e) {

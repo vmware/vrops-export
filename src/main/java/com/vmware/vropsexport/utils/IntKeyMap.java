@@ -37,10 +37,19 @@ public class IntKeyMap<V> {
   }
 
   public void put(final int key, final V value) {
-    if (key >= array.length) {
-      array = Arrays.copyOf(array, key + slack);
-    }
+    makeSpace(key);
     array[key] = value;
+  }
+
+  private void makeSpace(final int wanted) {
+    if (wanted >= array.length) {
+      array = Arrays.copyOf(array, wanted + slack);
+    }
+  }
+
+  public void addAll(final IntKeyMap<V> map) {
+    makeSpace(map.array.length);
+    System.arraycopy(map.array, 0, array, 0, map.array.length);
   }
 
   public V get(final int key) {

@@ -130,28 +130,35 @@ public class StatsProcessor {
 
         // Process data[ ...
         expect(p, JsonToken.START_ARRAY);
-        final List<Integer> metricIndices = meta.getMetricIndex(statKey);
-        int i = 0;
+        int ti = 0;
         while (p.nextToken() != JsonToken.END_ARRAY) {
+          if (ti >= timestamps.size()) {
+            log.warn(
+                "More data than timestamps (index="
+                    + ti
+                    + ") for metric "
+                    + statKey
+                    + " on "
+                    + meta.getResourceKind()
+                    + " id: "
+                    + resourceId);
+            continue; // Skip this sample!
+          }
           final double d = p.getDoubleValue();
-          for (final int metricIdx : metricIndices) {
-            if (i >= timestamps.size()) {
-              log.warn(
-                  "More data than timestamps (index="
-                      + i
-                      + ") for metric "
-                      + statKey
-                      + " on "
-                      + meta.getResourceKind()
-                      + " id: "
-                      + resourceId);
-              continue; // Skip this sample!
+          final long ts = timestamps.get(ti);
+
+          // Enter the value on every field that matches kind and name
+          int mi = 0;
+          for (final Field f : meta.getFields()) {
+            if (!(f.hasMetric() && f.getLocalName().equals(statKey))) {
+              continue;
             }
-            final long ts = timestamps.get(i++);
             final RowMetadata m = meta;
             final Row r = rows.computeIfAbsent(ts, k -> m.newRow(ts));
-            r.setMetric(metricIdx, d);
+            r.setMetric(meta.getMetricIndex(mi), d);
+            ++mi;
           }
+          ++ti;
         }
         expect(p, JsonToken.END_OBJECT);
       }
@@ -200,7 +207,7 @@ public class StatsProcessor {
               final List<Map<String, String>> parsed =
                   om.readValue(tags, new TypeReference<List<Map<String, String>>>() {});
               for (final Map<String, String> tag : parsed) {
-                final int idx = meta.getTagIndex(tag.get("category"));
+                final int idx = meta.getPropertyIndex(tag.get("category"));
                 if (idx != -1) {
                   final String tagValue = tag.get("name");
                   for (final Row row : rs.getRows().values()) {

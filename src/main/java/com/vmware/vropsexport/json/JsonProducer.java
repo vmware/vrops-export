@@ -18,10 +18,7 @@
 package com.vmware.vropsexport.json;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.vmware.vropsexport.DataProvider;
-import com.vmware.vropsexport.Row;
-import com.vmware.vropsexport.RowMetadata;
-import com.vmware.vropsexport.Rowset;
+import com.vmware.vropsexport.*;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import org.apache.http.HttpException;
 
@@ -91,11 +88,13 @@ public class JsonProducer {
 
     // Metrics
     generator.writeArrayFieldStart("metrics");
-    for (int i = 0; i < meta.getNumMetrics(); ++i) {
+    int i = 0;
+    for (final Field f : meta.getFields()) {
       generator.writeStartObject();
-      generator.writeStringField("name", meta.getAliasForMetricIndex(i));
+      generator.writeStringField("name", f.getAlias());
       generator.writeArrayFieldStart("samples");
       for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
+        final int metricIndex = meta.getMetricIndex(i);
         final Double v = row.getValue().getMetric(i);
         if (v == null) {
           continue;
@@ -110,12 +109,14 @@ public class JsonProducer {
     }
     generator.writeEndArray();
     generator.writeEndObject();
+    ++i;
   }
 
   public void produceChatty(final Rowset rowset, final RowMetadata meta)
       throws IOException, HttpException {
     for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
-      for (int i = 0; i < meta.getNumMetrics(); ++i) {
+      int i = 0;
+      for (final Field f : meta.getFields()) {
         final Double v = row.getValue().getMetric(i);
         if (v == null) {
           continue;
@@ -123,9 +124,10 @@ public class JsonProducer {
         generator.writeStartObject();
         generator.writeStringField("t", toDate(row.getKey()));
         generator.writeStringField("resourceName", dp.getResourceName(rowset.getResourceId()));
-        generator.writeStringField("metric", meta.getAliasForMetricIndex(i));
+        generator.writeStringField("metric", f.getAlias());
         generator.writeNumberField("v", v);
         generator.writeEndObject();
+        i++;
       }
     }
   }
@@ -143,12 +145,14 @@ public class JsonProducer {
     generator.writeStartObject();
     generator.writeStringField("resourceName", dp.getResourceName(resourceId));
     generator.writeStringField("t", toDate(timestamp));
-    for (int i = 0; i < meta.getNumMetrics(); ++i) {
+    int i = 0;
+    for (final Field f : meta.getFields()) {
       final Double v = row.getMetric(i);
       if (v == null) {
         continue;
       }
-      generator.writeNumberField(meta.getAliasForMetricIndex(i), v);
+      generator.writeNumberField(f.getAlias(), v);
+      i++;
     }
     generator.writeEndObject();
   }
