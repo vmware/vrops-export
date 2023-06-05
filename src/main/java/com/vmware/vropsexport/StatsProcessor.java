@@ -148,15 +148,13 @@ public class StatsProcessor {
           final long ts = timestamps.get(ti);
 
           // Enter the value on every field that matches kind and name
-          int mi = 0;
           for (final Field f : meta.getFields()) {
             if (!(f.hasMetric() && f.getLocalName().equals(statKey))) {
               continue;
             }
             final RowMetadata m = meta;
             final Row r = rows.computeIfAbsent(ts, k -> m.newRow(ts));
-            r.setMetric(meta.getMetricIndex(mi), d);
-            ++mi;
+            r.setMetric(f.getRowIndex(), d);
           }
           ++ti;
         }
@@ -173,19 +171,19 @@ public class StatsProcessor {
       if (dataProvider != null) {
         if (meta.hasProperties()) {
           // Put in resource id if requested.
-          final int idIdx = meta.getPropertyIndex("$resId");
-          if (idIdx != -1) {
+          Field prop = meta.getProperty("$resId");
+          if (prop != null) {
             for (final Row row : rs.getRows().values()) {
-              row.setProp(idIdx, resourceId);
+              row.setProp(prop.getRowIndex(), resourceId);
             }
           }
 
           // Put in name if requested
-          final int nameIdx = meta.getPropertyIndex("$resName");
-          if (nameIdx != -1) {
+          prop = meta.getProperty("$resName");
+          if (prop != null) {
             final String name = dataProvider.getResourceName(resourceId);
             for (final Row row : rs.getRows().values()) {
-              row.setProp(nameIdx, name);
+              row.setProp(prop.getRowIndex(), name);
             }
           }
 
@@ -193,10 +191,10 @@ public class StatsProcessor {
           if (meta.needsPropertyLoad()) {
             final Map<String, String> props = dataProvider.fetchProps(resourceId);
             for (final Map.Entry<String, String> e : props.entrySet()) {
-              final int idx = meta.getPropertyIndex(e.getKey());
-              if (idx != -1) {
+              final Field f = meta.getProperty(e.getKey());
+              if (f != null) {
                 for (final Row row : rs.getRows().values()) {
-                  row.setProp(idx, e.getValue());
+                  row.setProp(f.getRowIndex(), e.getValue());
                 }
               }
             }
@@ -207,11 +205,11 @@ public class StatsProcessor {
               final List<Map<String, String>> parsed =
                   om.readValue(tags, new TypeReference<List<Map<String, String>>>() {});
               for (final Map<String, String> tag : parsed) {
-                final int idx = meta.getPropertyIndex(tag.get("category"));
-                if (idx != -1) {
+                final Field f = meta.getProperty(tag.get("category"));
+                if (f != null) {
                   final String tagValue = tag.get("name");
                   for (final Row row : rs.getRows().values()) {
-                    row.setProp(idx, tagValue);
+                    row.setProp(f.getRowIndex(), tagValue);
                   }
                 }
               }

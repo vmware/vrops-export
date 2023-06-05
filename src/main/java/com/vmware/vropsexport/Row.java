@@ -17,14 +17,12 @@
  */
 package com.vmware.vropsexport;
 
-import java.util.BitSet;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 @SuppressWarnings("WeakerAccess")
 public class Row {
   private final long timestamp;
-
-  private final BitSet definedMetrics;
 
   private final double[] metrics;
 
@@ -35,15 +33,15 @@ public class Row {
     this.timestamp = timestamp;
     metrics = new double[nMetrics];
     props = new String[nProps];
-    definedMetrics = new BitSet(nMetrics);
+    Arrays.fill(metrics, Double.NaN);
   }
 
   public long getTimestamp() {
     return timestamp;
   }
 
-  public Double getMetric(final int i) {
-    return definedMetrics.get(i) ? metrics[i] : null;
+  public double getMetric(final int i) {
+    return metrics[i];
   }
 
   public String getProp(final int i) {
@@ -52,7 +50,6 @@ public class Row {
 
   public void setMetric(final int i, final double m) {
     metrics[i] = m;
-    definedMetrics.set(i);
   }
 
   public void setProp(final int i, final String prop) {
@@ -90,28 +87,25 @@ public class Row {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
-      final int current = pos;
       final Field f = meta.getFields().get(pos++);
       if (f.hasMetric()) {
-        return getProp(meta.getPropertyIndex(f.getLocalName()));
+        return getProp(f.getRowIndex());
       } else {
-        return getMetric(meta.getMetricIndex(current));
+        return getMetric(f.getRowIndex());
       }
     }
   }
 
   public void merge(final Row r) {
     // Merge metrics
-    //
     for (int i = 0; i < r.getNumMetrics(); ++i) {
       final Double d = r.getMetric(i);
       if (d != null) {
-        setMetric(i, d); // Don't be tempted to just set metrics[i]! Won't update the bitmap.
+        metrics[i] = i;
       }
     }
 
     // Merge properties
-    //
     for (int i = 0; i < r.getNumProps(); ++i) {
       final String p = r.getProp(i);
       if (p != null) {

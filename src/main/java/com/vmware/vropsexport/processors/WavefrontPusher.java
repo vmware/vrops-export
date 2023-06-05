@@ -79,17 +79,15 @@ public class WavefrontPusher implements RowsetProcessor {
         // Collect properties to be used as tags
         for (final Field f : meta.getFields()) {
           if (f.hasProp()) {
-            final int pi = meta.getPropertyIndex(f.getLocalName());
-            if (pi == -1) {
-              continue;
-            }
-            tags.put(f.getAlias(), r.getProp(pi));
+            tags.put(f.getAlias(), r.getProp(f.getRowIndex()));
           }
         }
-        int i = 0;
         for (final Field f : meta.getFields()) {
-          final Double d = r.getMetric(meta.getMetricIndex(i++));
-          if (d == null) {
+          if (!f.hasMetric()) {
+            continue;
+          }
+          final double d = r.getMetric(f.getRowIndex());
+          if (Double.isNaN(d)) {
             continue;
           }
           sender.sendMetric(f.getAlias(), d, ts / 1000, resourceName, tags);

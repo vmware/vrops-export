@@ -72,14 +72,13 @@ public class JsonProducer {
     if (!rowset.getRows().isEmpty()) {
       final Row firstRow = rowset.getRows().firstEntry().getValue();
       generator.writeArrayFieldStart("properties");
-      for (final String propertyName : meta.getPropMap().keySet()) {
-        final int propIndex = meta.getPropertyIndex(propertyName);
-        final String v = firstRow.getProp(propIndex);
+      for (final Field f : meta.getPropertiesIterable()) {
+        final String v = firstRow.getProp(f.getRowIndex());
         if (v == null) {
           continue;
         }
         generator.writeStartObject();
-        generator.writeStringField("k", meta.getAliasForProp(propertyName));
+        generator.writeStringField("k", f.getAlias());
         generator.writeStringField("v", v);
         generator.writeEndObject();
       }
@@ -88,15 +87,13 @@ public class JsonProducer {
 
     // Metrics
     generator.writeArrayFieldStart("metrics");
-    int i = 0;
-    for (final Field f : meta.getFields()) {
+    for (final Field f : meta.getMetricsIterable()) {
       generator.writeStartObject();
       generator.writeStringField("name", f.getAlias());
       generator.writeArrayFieldStart("samples");
       for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
-        final int metricIndex = meta.getMetricIndex(i);
-        final Double v = row.getValue().getMetric(i);
-        if (v == null) {
+        final double v = row.getValue().getMetric(f.getRowIndex());
+        if (Double.isNaN(v)) {
           continue;
         }
         generator.writeStartObject();
@@ -109,16 +106,14 @@ public class JsonProducer {
     }
     generator.writeEndArray();
     generator.writeEndObject();
-    ++i;
   }
 
   public void produceChatty(final Rowset rowset, final RowMetadata meta)
       throws IOException, HttpException {
     for (final Map.Entry<Long, Row> row : rowset.getRows().entrySet()) {
-      int i = 0;
-      for (final Field f : meta.getFields()) {
-        final Double v = row.getValue().getMetric(i);
-        if (v == null) {
+      for (final Field f : meta.getMetricsIterable()) {
+        final double v = row.getValue().getMetric(f.getRowIndex());
+        if (Double.isNaN(v)) {
           continue;
         }
         generator.writeStartObject();
@@ -127,7 +122,6 @@ public class JsonProducer {
         generator.writeStringField("metric", f.getAlias());
         generator.writeNumberField("v", v);
         generator.writeEndObject();
-        i++;
       }
     }
   }
@@ -145,14 +139,12 @@ public class JsonProducer {
     generator.writeStartObject();
     generator.writeStringField("resourceName", dp.getResourceName(resourceId));
     generator.writeStringField("t", toDate(timestamp));
-    int i = 0;
-    for (final Field f : meta.getFields()) {
-      final Double v = row.getMetric(i);
-      if (v == null) {
+    for (final Field f : meta.getMetricsIterable()) {
+      final double v = row.getMetric(f.getRowIndex());
+      if (Double.isNaN(v)) {
         continue;
       }
       generator.writeNumberField(f.getAlias(), v);
-      i++;
     }
     generator.writeEndObject();
   }

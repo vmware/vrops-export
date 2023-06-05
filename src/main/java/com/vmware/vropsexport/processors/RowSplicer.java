@@ -79,9 +79,20 @@ public class RowSplicer implements RowsetProcessor {
         final Aggregator[] aggs =
             aggregators.computeIfAbsent(cRow.getTimestamp(), (t) -> metadata.createAggregators());
         for (int j = 0; j < pRow.getNumMetrics(); ++j) {
-          final Double d = pRow.getMetric(j);
-          if (d != null) {
-            aggs[j].apply(d);
+          final double d = pRow.getMetric(j);
+          if (!Double.isNaN(d)) {
+            final Aggregator agg = aggs[j];
+            if (agg != null) {
+              agg.apply(d);
+            } else {
+              cRow.setMetric(j, d);
+            }
+          }
+        }
+        // Apply the result of all aggregators
+        for (int j = 0; j < aggs.length; ++j) {
+          if (aggs[j] != null) {
+            cRow.setMetric(j, aggs[j].getResult());
           }
         }
         for (int j = 0; j < pRow.getNumProps(); ++j) {

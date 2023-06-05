@@ -18,13 +18,13 @@
 package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.exceptions.ExporterException;
-import com.vmware.vropsexport.utils.IntKeyMap;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RowMetadata {
+
   public static class RelationshipSpec {
     private String adapterKind;
     private String resourceKind;
@@ -97,15 +97,11 @@ public class RowMetadata {
 
   private final List<Field> fields;
 
-  private final Map<String, Integer> propMap = new HashMap<>();
+  /** Property name to Field */
+  private final Map<String, Field> propMap = new HashMap<>();
 
-  private final Map<String, Integer> metricAliasMap = new HashMap<>();
-
-  private final Map<String, Integer> propAliasMap = new HashMap<>();
-
-  private final IntKeyMap<Integer> metricIndices = new IntKeyMap<>();
-
-  private final IntKeyMap<Integer> propertyIndices = new IntKeyMap<>();
+  /** Metric alias to index in the fields list */
+  private final Map<String, Field> aliasToField = new HashMap<>();
 
   public RowMetadata(final Config conf, final List<String> metricNames) throws ExporterException {
     resourceKind = conf.getResourceKind();
@@ -113,48 +109,35 @@ public class RowMetadata {
     fields = new ArrayList<>();
     final NameSanitizer ns = conf.createNameSanitizer();
     for (final String metricName : metricNames) {
-      fields.add(
+      final Field f =
           new Field(
-              metricName, metricName, Field.Kind.metric, null, null, Field.RelationshipType.self));
-      final int index = fields.size() - 1;
-      metricAliasMap.put(metricName, index);
-      metricIndices.put(index, index);
+              metricName,
+              ns.transform(metricName),
+              Field.Kind.metric,
+              null,
+              null,
+              Field.RelationshipType.self);
+      fields.add(f);
+      aliasToField.put(metricName, f);
     }
-  }
-
-  private int getNumMetrics() {
-    return (int) fields.stream().filter(Field::hasMetric).count();
-  }
-
-  public List<Field> getFields() {
-    return fields;
+    initialize();
   }
 
   public RowMetadata(final Config conf) throws ExporterException {
     resourceKind = conf.getResourceKind();
     adapterKind = conf.getAdapterKind();
     fields = conf.getFields();
-    int pi = 0;
-    int mi = 0;
-    for (int i = 0; i < fields.size(); ++i) {
-      final Field fld = fields.get(i);
-      if (fld.hasMetric()) {
-        metricAliasMap.put(fld.getAlias(), i);
-        metricIndices.put(mi++, i);
-      } else {
-        if (fld.hasProp()) {
-          propMap.put(fld.getProp(), i);
-          propAliasMap.put(fld.getAlias(), i);
-          propertyIndices.put(i, pi++);
-        }
+    for (final Field f : conf.getFields()) {
+      aliasToField.put(f.getAlias(), f);
+      if (f.hasProp()) {
+        propMap.put(f.getProp(), f);
       }
     }
+    initialize();
   }
 
   private RowMetadata(
       final RowMetadata origin, final String resourceKind, final String adapterKind) {
-    propertyIndices.addAll(origin.propertyIndices);
-    metricIndices.addAll(origin.metricIndices);
     fields =
         origin.fields.stream()
             .map(
@@ -167,14 +150,34 @@ public class RowMetadata {
                         null,
                         Field.RelationshipType.self))
             .collect(Collectors.toList());
-    int i = 0;
     for (final Field f : fields) {
       if (f.isRelatedTo(adapterKind, resourceKind)) {
-        propMap.put(f.getLocalName(), i++);
+        propMap.put(f.getLocalName(), f);
       }
     }
     this.resourceKind = resourceKind;
     this.adapterKind = adapterKind;
+    initialize();
+  }
+
+  private void initialize() {
+    int mi = 0;
+    int pi = 0;
+    for (final Field f : fields) {
+      if (f.hasMetric()) {
+        f.setRowIndex(mi++);
+      } else {
+        f.setRowIndex(pi++);
+      }
+    }
+  }
+
+  private int getNumMetrics() {
+    return (int) fields.stream().filter(Field::hasMetric).count();
+  }
+
+  public List<Field> getFields() {
+    return fields;
   }
 
   public Map<RelationshipSpec, RowMetadata> forRelated() {
@@ -197,20 +200,8 @@ public class RowMetadata {
     return result;
   }
 
-  public Map<String, Integer> getPropMap() {
+  public Map<String, Field> getPropMap() {
     return propMap;
-  }
-
-  public int getPropertyIndex(final String property) {
-    final int idx = propMap.getOrDefault(property, -1);
-    if (idx == -1) {
-      return -1;
-    }
-    return propertyIndices.get(idx);
-  }
-
-  public int getMetricIndex(final int idx) {
-    return metricIndices.get(idx);
   }
 
   public List<Field> getMetrics() {
@@ -220,21 +211,16 @@ public class RowMetadata {
   /*
 
   public int getTagIndex(final String tag) {
-    return getPropertyIndex(Field.TAG_PROP_PREFIX + tag);
+    return getPropertyIndex(Field.TAG_PROP_PREFIX + tag); // TODO: We probably need this!
   }
-
-  public int getMetricIndexByAlias(final String metric) {
-    return metricAliasMap.getOrDefault(metric, -1);
-  }
-
-  public int getPropertyIndexByAlias(final String property) {
-    return propAliasMap.getOrDefault(property, -1);
-  }
-
   */
 
+  public Field getFieldByAlias(final String name) {
+    return aliasToField.get(name);
+  }
+
   public String getAliasForProp(final String name) {
-    return fields.get(propMap.get(name)).getAlias();
+    return propMap.get(name).getAlias();
   }
 
   public Row newRow(final long timestamp) {
@@ -253,6 +239,18 @@ public class RowMetadata {
     return propMap.size() > 0;
   }
 
+  public Field getProperty(final String name) {
+    return propMap.get(name);
+  }
+
+  public Iterable<Field> getPropertiesIterable() {
+    return fields.stream().filter(Field::hasProp)::iterator;
+  }
+
+  public Iterable<Field> getMetricsIterable() {
+    return fields.stream().filter(Field::hasMetric)::iterator;
+  }
+
   public boolean needsPropertyLoad() {
     if (!hasProperties()) {
       return false;
@@ -266,12 +264,13 @@ public class RowMetadata {
   }
 
   public Aggregator[] createAggregators() {
-    final Aggregator[] aggs = new Aggregator[fields.size()];
+    final Aggregator[] aggs = new Aggregator[getNumMetrics()];
     int i = 0;
-    for (final Field f : fields) {
+    for (final Field f : getMetricsIterable()) {
       if (f.getRelationshipType() != Field.RelationshipType.self) {
-        aggs[i++] = Aggregators.forType(f.getAggregation());
+        aggs[i] = Aggregators.forType(f.getAggregation());
       }
+      ++i;
     }
     return aggs;
   }

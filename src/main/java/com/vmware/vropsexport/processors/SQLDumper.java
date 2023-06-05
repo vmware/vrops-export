@@ -17,25 +17,20 @@
  */
 package com.vmware.vropsexport.processors;
 
-import com.vmware.vropsexport.Config;
-import com.vmware.vropsexport.DataProvider;
-import com.vmware.vropsexport.Row;
-import com.vmware.vropsexport.RowMetadata;
-import com.vmware.vropsexport.Rowset;
-import com.vmware.vropsexport.RowsetProcessor;
-import com.vmware.vropsexport.RowsetProcessorFacotry;
+import com.vmware.vropsexport.*;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.sql.NamedParameterStatement;
 import com.vmware.vropsexport.sql.SQLConfig;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.http.HttpException;
+
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.sql.DataSource;
-import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.http.HttpException;
 
 @SuppressWarnings("WeakerAccess")
 public class SQLDumper implements RowsetProcessor {
@@ -165,18 +160,12 @@ public class SQLDumper implements RowsetProcessor {
               stmt.setString("resName", dp.getResourceName(rowset.getResourceId()));
             } else {
               // Does the name refer to a metric?
-              //
-              int p = meta.getMetricIndexByAlias(fld);
-              if (p != -1) {
-                stmt.setObject(fld, row.getMetric(p));
+              final Field f = meta.getFieldByAlias(fld);
+              if (f.hasMetric()) {
+                stmt.setObject(fld, row.getMetric(f.getRowIndex()));
               } else {
                 // Not a metric, so it must be a property then.
-                //
-                p = meta.getPropertyIndexByAlias(fld);
-                if (p == -1) {
-                  throw new ExporterException("Field " + fld + " is not defined");
-                }
-                stmt.setString(fld, row.getProp(p));
+                stmt.setString(fld, row.getProp(f.getRowIndex()));
               }
             }
           }

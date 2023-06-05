@@ -60,6 +60,7 @@ public class Field {
   private Kind kind;
   private int searchDepth = 1;
   private AggregationType aggregation = AggregationType.avg;
+  private int rowIndex = -1;
 
   public Field() {}
 
@@ -112,6 +113,14 @@ public class Field {
     } else {
       localName = name;
     }
+  }
+
+  void setRowIndex(final int i) {
+    rowIndex = i;
+  }
+
+  public int getRowIndex() {
+    return rowIndex;
   }
 
   public String getAlias() {
