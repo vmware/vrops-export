@@ -149,7 +149,9 @@ public class StatsProcessor {
 
           // Enter the value on every field that matches kind and name
           for (final Field f : meta.getFields()) {
-            if (!(f.hasMetric() && f.getLocalName().equals(statKey))) {
+            if (!(f.getRelationshipType() == Field.RelationshipType.self
+                && f.hasMetric()
+                && f.getLocalName().equals(statKey))) {
               continue;
             }
             final RowMetadata m = meta;

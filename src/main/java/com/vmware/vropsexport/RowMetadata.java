@@ -138,21 +138,29 @@ public class RowMetadata {
 
   private RowMetadata(
       final RowMetadata origin, final String resourceKind, final String adapterKind) {
+    // Assign placeholder names to fields from the origin that are not related to us, in order to
+    // avoid name collisions.
     fields =
         origin.fields.stream()
             .map(
                 (f) ->
                     new Field(
                         f.getAlias(),
-                        f.getLocalName(),
+                        f.isRelatedTo(adapterKind, resourceKind)
+                            ? f.getLocalName()
+                            : "__placeholder__" + f.getLocalName(),
                         f.getKind(),
                         null,
                         null,
                         Field.RelationshipType.self))
             .collect(Collectors.toList());
-    for (final Field f : fields) {
-      if (f.isRelatedTo(adapterKind, resourceKind)) {
-        propMap.put(f.getLocalName(), f);
+    for (final Field f : origin.fields) {
+      if (f.hasProp()) {
+        propMap.put(
+            f.isRelatedTo(adapterKind, resourceKind)
+                ? f.getLocalName()
+                : "__placeholder__" + f.getLocalName(),
+            f);
       }
     }
     this.resourceKind = resourceKind;

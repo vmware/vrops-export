@@ -35,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.mockito.AdditionalMatchers.or;
@@ -144,7 +145,8 @@ public class StatsProcessorTest {
     final byte[] data = runTest("vmfields.yaml", "singlevmstats", new CSVPrinter.Factory());
     final byte[] wanted =
         FileUtils.readFileToByteArray(new File("src/test/resources/csv-output.csv"));
-    Assert.assertArrayEquals(wanted, data);
+    Assert.assertEquals(
+        new String(wanted, StandardCharsets.UTF_8), new String(data, StandardCharsets.UTF_8));
   }
 
   @Test

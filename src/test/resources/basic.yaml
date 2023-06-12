@@ -1,0 +1,26 @@
+resourceType: VMWARE:VirtualMachine
+rollupType: AVG
+rollupMinutes: 5
+outputFormat: json
+dateFormat: "yyyy-MM-dd HH:mm:ss"
+jsonConfig:
+  format: chatty
+fields:
+  - alias: resourceId
+    prop: $resId
+  - alias: cpuDemand # 0
+    metric: cpu|demandPct
+  - alias: cpuReady # 1
+    metric: cpu|readyPct
+  - alias: cpuCostop # 2
+    metric: cpu|costopPct
+  - alias: guestName # 3
+    prop: summary|guestFullName
+  - alias: memDemand # 4
+    metric: mem|guest_demand
+  - alias: memSwapOut # 5
+    metric: mem|swapoutRate_average
+  - alias: memSwapIn # 6
+    metric: mem|swapinRate_average
+  - alias: hostName
+    prop: summary|parentHost

@@ -89,16 +89,6 @@ public class Field {
     }
   }
 
-  public static Field forRelatedResource(final Field f) {
-    return new Field(
-        f.alias,
-        f.name,
-        f.kind,
-        f.relatedAdapterKind,
-        f.relatedResourceKind,
-        RelationshipType.self);
-  }
-
   public String getName() {
     return name;
   }

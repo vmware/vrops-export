@@ -37,6 +37,32 @@ public class RowMetadataTest {
     return Arrays.stream(s.split(",")).sorted().collect(Collectors.toList());
   }
 
+  private void testRowIndices(final String confFile)
+      throws ExporterException, FileNotFoundException, ValidationException {
+    final Config conf = ConfigLoader.parse(new FileReader("src/test/resources/" + confFile));
+    final RowMetadata meta = new RowMetadata(conf);
+    int i = 0;
+    for (final Field f : meta.getMetricsIterable()) {
+      Assert.assertEquals(i++, f.getRowIndex());
+    }
+    i = 0;
+    for (final Field f : meta.getPropertiesIterable()) {
+      Assert.assertEquals(i++, f.getRowIndex());
+    }
+  }
+
+  @Test
+  public void testBasicRowIndices()
+      throws ExporterException, FileNotFoundException, ValidationException {
+    testRowIndices("basic.yaml");
+  }
+
+  @Test
+  public void testChildRowIndices()
+      throws ExporterException, FileNotFoundException, ValidationException {
+    testRowIndices("children.yaml");
+  }
+
   @Test
   public void testParent() throws ExporterException, FileNotFoundException, ValidationException {
     final Config conf = ConfigLoader.parse(new FileReader("src/test/resources/grandparent.yaml"));

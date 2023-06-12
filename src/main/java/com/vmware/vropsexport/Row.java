@@ -79,7 +79,7 @@ public class Row {
 
     @Override
     public boolean hasNext() {
-      return pos >= meta.getFields().size();
+      return pos < meta.getFields().size();
     }
 
     @Override
@@ -89,9 +89,10 @@ public class Row {
       }
       final Field f = meta.getFields().get(pos++);
       if (f.hasMetric()) {
-        return getProp(f.getRowIndex());
+        final double d = getMetric(f.getRowIndex());
+        return Double.isNaN(d) ? null : d;
       } else {
-        return getMetric(f.getRowIndex());
+        return getProp(f.getRowIndex());
       }
     }
   }
