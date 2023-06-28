@@ -71,10 +71,10 @@ literal
     ;
 
 propertyOrMetricIdentifier
-    : PropertyIdentifier                                        # propertyIdentifier
+    : resource=Identifier '->' field=PropertyIdentifier         # relativePropertyIdenfifier
+    | aggregation '(' resource=Identifier '->' field=Identifier ')' # relativeMetricIdentifier
+    | PropertyIdentifier                                        # propertyIdentifier
     | Identifier                                                # metricIdentifier
-    | aggregation '(' resource=Identifier '.' field=Identifier ')' # relativeMetricIdentifier
-    | aggregation '(' resource=Identifier '.' field=PropertyIdentifier ')' # relativePropertyIdentifier
     ;
 
 booleanOperator
@@ -157,7 +157,7 @@ Identifier
     ;
 
  fragment SpecialVropIdentifierChars
-    : '|' | ':' | '$'
+    : '|' | ':' | '$' | '.'
     ;
 
 fragment EscapeSequence

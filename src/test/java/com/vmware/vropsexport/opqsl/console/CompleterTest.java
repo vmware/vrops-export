@@ -105,4 +105,12 @@ public class CompleterTest {
     expected.addAll(props.stream().map((r) -> "@" + r.getKey()).collect(Collectors.toList()));
     runTest("resource(VMWARE:VirtualMachine).fields(@summary", 41, expected);
   }
+
+  // @Test
+  public void testParentPropertyExpansion() throws HttpException, IOException {
+    final List<String> expected = new ArrayList<>(keywords);
+    expected.addAll(props.stream().map((r) -> "@" + r.getKey()).collect(Collectors.toList()));
+    runTest(
+        "resource(VMWARE:VirtualMachine).parents(VMWARE:HostSystem h).fields(h->cpu", 64, expected);
+  }
 }

@@ -120,11 +120,11 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     }
 
     @Override
-    public Field visitRelativePropertyIdentifier(
-        final OpsqlParser.RelativePropertyIdentifierContext ctx) {
+    public Field visitRelativePropertyIdenfifier(
+        final OpsqlParser.RelativePropertyIdenfifierContext ctx) {
       final Field f = new Field();
       f.setProp(ctx.resource.getText() + "." + ctx.field.getText());
-      fillInField(f, ctx.resource.getText(), ctx.field.getText(), ctx.aggregation().getText());
+      fillInField(f, ctx.resource.getText(), ctx.field.getText().substring(1), "first");
       return f;
     }
   }

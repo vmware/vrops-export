@@ -110,7 +110,14 @@ public class QueryCompilerTest {
   @Test
   public void testChildQuery() throws IOException {
     runQuery(
-        "resource(VMWARE:HostSystem).children(VMWARE:VirtualMachine h).fields(cpu|demandmhz, stddev(h.cpu|demandmhz))",
+        "resource(VMWARE:HostSystem).children(VMWARE:VirtualMachine h).fields(cpu|demandmhz, stddev(h->cpu|demandmhz))",
         "ChildQueryResult");
+  }
+
+  @Test
+  public void testDottedName() throws Exception {
+    runQuery(
+        "resource(VMWARE:HostSystem).children(VMWARE:VirtualMachine h).fields(cpu|demandmhz.dot.dot, stddev(h->cpu|demandmhz.dot.dot))",
+        "DottedChildQueryResult");
   }
 }

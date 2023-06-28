@@ -61,7 +61,7 @@ public class Aggregators {
 
     @Override
     public double getResult() {
-      return sum / (double) count;
+      return count > 0 ? sum / (double) count : Double.NaN;
     }
 
     @Override
@@ -104,7 +104,7 @@ public class Aggregators {
 
     @Override
     public double getResult() {
-      return min;
+      return hasResult() ? min : Double.NaN;
     }
 
     @Override
@@ -125,7 +125,7 @@ public class Aggregators {
 
     @Override
     public double getResult() {
-      return max;
+      return hasResult() ? max : Double.NaN;
     }
 
     @Override
@@ -155,7 +155,7 @@ public class Aggregators {
     @SuppressWarnings("ConstantConditions")
     public double getResult() {
       if (minHeap.size() == 0 && maxHeap.size() == 0) {
-        return 0;
+        return Double.NaN;
       }
       if (minHeap.size() == maxHeap.size()) {
         return (maxHeap.peek() + minHeap.peek()) / 2.0;
@@ -190,7 +190,7 @@ public class Aggregators {
 
     @Override
     public double getResult() {
-      return count > 1 ? vAcc / (count - 1) : 0;
+      return count > 1 ? vAcc / (count - 1) : Double.NaN;
     }
 
     @Override
@@ -202,16 +202,16 @@ public class Aggregators {
   public static class StdDev extends Aggregators.Variance {
     @Override
     public double getResult() {
-      return Math.sqrt(super.getResult());
+      return hasResult() ? Math.sqrt(super.getResult()) : Double.NaN;
     }
   }
 
   public static class First implements Aggregator {
-    private Double first;
+    private double first = Double.NaN;
 
     @Override
     public void apply(final double v) {
-      if (first == null) {
+      if (Double.isNaN(first)) {
         first = v;
       }
     }
@@ -223,7 +223,7 @@ public class Aggregators {
 
     @Override
     public boolean hasResult() {
-      return first != null;
+      return !Double.isNaN(first);
     }
   }
 

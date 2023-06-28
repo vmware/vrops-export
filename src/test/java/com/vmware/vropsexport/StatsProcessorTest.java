@@ -195,9 +195,18 @@ public class StatsProcessorTest {
   public void testChildQuery()
       throws ValidationException, ExporterException, HttpException, IOException {
     runQueryTest(
-        "resource(VMWARE:HostSystem).children(VMWARE:VirtualMachine vm).fields(cpu|demandPct cpuDemand, avg(vm.cpu|demandmhz) vmCpuDemand)",
+        "resource(VMWARE:HostSystem).children(VMWARE:VirtualMachine vm).fields(cpu|demandPct cpuDemand, avg(vm->cpu|demandmhz) vmCpuDemand)",
         "children",
         "hoststats");
+  }
+
+  @Test
+  public void testParentQuery()
+      throws ValidationException, ExporterException, HttpException, IOException {
+    runQueryTest(
+        "resource(VMWARE:VirtualMachine).parents(VMWARE:HostSystem h).fields(cpu|demandPct cpuDemand, @summary|fullGuestName, avg(h->cpu|demandmhz) hostCpuDemand, h->@cpu|cpuModel)",
+        "parent",
+        "vmstats");
   }
 
   @SuppressWarnings("unchecked")
@@ -219,7 +228,7 @@ public class StatsProcessorTest {
     final Map<String, Object> wanted =
         om.readValue(new File("src/test/resources/" + name + "-output.json"), Map.class);
     final Map<String, Object> actual = om.readValue(data, Map.class);
-    Assert.assertEquals(wanted, actual);
+    Assert.assertEquals(om.writeValueAsString(wanted), om.writeValueAsString(actual));
   }
 
   private byte[] runTest(

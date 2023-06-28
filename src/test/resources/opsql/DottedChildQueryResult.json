@@ -1,0 +1,26 @@
+{
+  "resourceRequest": {
+    "adapterKind": [
+      "VMWARE"
+    ],
+    "resourceKind": [
+      "HostSystem"
+    ]
+  },
+  "fields": [
+    {
+      "metric": "cpu|demandmhz.dot.dot",
+      "alias": "cpu|demandmhz.dot.dot"
+    },
+    {
+      "metric": "h.cpu|demandmhz.dot.dot",
+      "alias": "h.cpu|demandmhz.dot.dot",
+      "localName": "cpu|demandmhz.dot.dot",
+      "relationshipType": "child",
+      "searchDepth": 1,
+      "relatedAdapterKind": "VMWARE",
+      "relatedResourceKind": "VirtualMachine",
+      "aggregation": "stddev"
+    }
+  ]
+}

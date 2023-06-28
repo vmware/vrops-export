@@ -80,4 +80,27 @@ public class AggregatorTest {
   public void testLast() {
     Assert.assertEquals(99, fillWithSequence(new Aggregators.Last(), 100).getResult(), 0.00001);
   }
+
+  private void assertNaN(final Aggregator agg) {
+    Assert.assertFalse(agg.hasResult());
+    Assert.assertTrue(Double.isNaN(agg.getResult()));
+  }
+
+  private void assertZero(final Aggregator agg) {
+    Assert.assertFalse(agg.hasResult());
+    Assert.assertEquals(0, agg.getResult(), 0);
+  }
+
+  @Test
+  public void testEmpty() {
+    assertNaN(new Aggregators.Average());
+    assertNaN(new Aggregators.Min());
+    assertNaN(new Aggregators.Max());
+    assertNaN(new Aggregators.First());
+    assertNaN(new Aggregators.Last());
+    assertNaN(new Aggregators.StdDev());
+    assertNaN(new Aggregators.Median());
+    assertNaN(new Aggregators.Variance());
+    assertZero(new Aggregators.Sum());
+  }
 }
