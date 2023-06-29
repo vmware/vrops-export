@@ -3,7 +3,7 @@ package com.vmware.vropsexport;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.security.CertUtils;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.vmware.vropsexport.utils.ParseUtils;
 import org.apache.commons.cli.*;
 import org.apache.http.HttpException;
 import org.apache.logging.log4j.Level;
@@ -116,31 +116,6 @@ public abstract class Command {
       return true;
     }
     return false;
-  }
-
-  @SuppressFBWarnings("SF_SWITCH_FALLTHROUGH")
-  private static long parseLookback(final String lb) throws ExporterException {
-    long scale = 1;
-    final char unit = lb.charAt(lb.length() - 1);
-    switch (unit) {
-      case 'd':
-        scale *= 24; // fallthru
-      case 'h':
-        scale *= 60; // fallthru
-      case 'm':
-        scale *= 60; // fallthru
-      case 's':
-        scale *= 1000;
-        break;
-      default:
-        throw new ExporterException("Cannot parse time unit");
-    }
-    try {
-      final long t = Long.parseLong(lb.substring(0, lb.length() - 1));
-      return t * scale;
-    } catch (final NumberFormatException e) {
-      throw new ExporterException("Cannot parse time value");
-    }
   }
 
   protected Options defineOptions() {
@@ -277,7 +252,7 @@ public abstract class Command {
     }
     // Deal with start and end dates
     end = System.currentTimeMillis();
-    final long lbMs = lb != null ? parseLookback(lb) : 1000L * 60L * 60L * 24L;
+    final long lbMs = lb != null ? ParseUtils.parseLookback(lb) : 1000L * 60L * 60L * 24L;
     begin = end - lbMs;
     if (startS != null) {
       final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm[:ss]");

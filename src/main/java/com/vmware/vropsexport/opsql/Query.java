@@ -21,6 +21,7 @@ import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.Field;
 import com.vmware.vropsexport.models.ResourceRequest;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -30,14 +31,24 @@ public class Query {
 
   final List<Field> fields;
 
+  Date fromTime;
+
+  Date toTime;
+
   public Query() {
     resourceRequest = new ResourceRequest();
     fields = new LinkedList<>();
   }
 
-  public Query(final ResourceRequest resourceRequest, final List<Field> fields) {
+  public Query(
+      final ResourceRequest resourceRequest,
+      final List<Field> fields,
+      final Date fromTime,
+      final Date toTime) {
     this.resourceRequest = resourceRequest;
     this.fields = fields;
+    this.fromTime = fromTime;
+    this.toTime = toTime;
   }
 
   public ResourceRequest getResourceRequest() {
@@ -46,6 +57,22 @@ public class Query {
 
   public List<Field> getFields() {
     return fields;
+  }
+
+  public Date getFromTime() {
+    return fromTime;
+  }
+
+  public Date getToTime() {
+    return toTime;
+  }
+
+  public void setFromTime(final Date fromTime) {
+    this.fromTime = fromTime;
+  }
+
+  public void setToTime(final Date toTime) {
+    this.toTime = toTime;
   }
 
   @Override

@@ -18,7 +18,9 @@
 package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.Field;
+import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.ResourceRequest;
+import com.vmware.vropsexport.utils.ParseUtils;
 
 import java.util.*;
 
@@ -328,6 +330,18 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
   public Object visitWhereProperties(final OpsqlParser.WherePropertiesContext ctx) {
     query.resourceRequest.setPropertyConditions(resolveFilter(ctx));
     return super.visitWhereProperties(ctx);
+  }
+
+  @Override
+  public Object visitRelativeTimeSpec(final OpsqlParser.RelativeTimeSpecContext ctx) {
+    final long now = System.currentTimeMillis();
+    try {
+      query.setFromTime(new Date(now - ParseUtils.parseLookback(ctx.lookback.getText())));
+    } catch (final ExporterException e) {
+      throw new RuntimeException(
+          "Unexpected exception", e); // This should never happen, since lexer would have caught it
+    }
+    return super.visitRelativeTimeSpec(ctx);
   }
 
   public Query getQuery() {

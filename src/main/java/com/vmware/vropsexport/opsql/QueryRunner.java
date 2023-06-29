@@ -49,6 +49,8 @@ public class QueryRunner extends Command {
     final Query q = QueryCompiler.compile(query);
     final Config conf = q.toConfig();
     final Exporter exporter = new Exporter(client, threads, conf, verbose, true, maxRows, maxRes);
+    final long begin = q.getFromTime() != null ? q.getFromTime().getTime() : this.begin;
+    final long end = q.getToTime() != null ? q.getToTime().getTime() : this.end;
     try {
       exporter.exportTo(out, begin, end, null, true);
     } catch (final IOException | HttpException e) {

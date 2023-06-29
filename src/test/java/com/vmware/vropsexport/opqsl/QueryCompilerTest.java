@@ -5,8 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.opsql.OpsqlException;
 import com.vmware.vropsexport.opsql.Query;
 import com.vmware.vropsexport.opsql.QueryCompiler;
+import com.vmware.vropsexport.utils.ParseUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +30,38 @@ public class QueryCompilerTest {
   @Test
   public void testSimpleQuery() throws IOException {
     runQuery("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz)", "SimpleQueryResult");
+  }
+
+  @Test
+  public void testRelativeTimerangeQuery() throws Exception {
+    final MockedStatic<ParseUtils> mockedUtils = Mockito.mockStatic(ParseUtils.class);
+    mockedUtils.when(() -> ParseUtils.parseLookback("1s")).thenReturn(System.currentTimeMillis());
+    mockedUtils
+        .when(() -> ParseUtils.parseLookback("1s"))
+        .thenReturn(System.currentTimeMillis() + 1000);
+    mockedUtils
+        .when(() -> ParseUtils.parseLookback("1m"))
+        .thenReturn(System.currentTimeMillis() + 60 * 1000);
+    mockedUtils
+        .when(() -> ParseUtils.parseLookback("1h"))
+        .thenReturn(System.currentTimeMillis() + 60 * 60 * 1000);
+    mockedUtils
+        .when(() -> ParseUtils.parseLookback("1d"))
+        .thenReturn(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
+    mockedUtils
+        .when(() -> ParseUtils.parseLookback("1w"))
+        .thenReturn(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000);
+    final QueryCompiler qc = new QueryCompiler();
+    Query q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1s)");
+    Assert.assertEquals(-1000, q.getFromTime().getTime(), 1000);
+    q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1m)");
+    Assert.assertEquals(-60000, q.getFromTime().getTime(), 1000);
+    q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1h)");
+    Assert.assertEquals(-60000 * 60, q.getFromTime().getTime(), 1000);
+    q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1d)");
+    Assert.assertEquals(-60000 * 60 * 24, q.getFromTime().getTime(), 1000);
+    q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1w)");
+    Assert.assertEquals(-60000 * 60 * 24 * 7, q.getFromTime().getTime(), 1000);
   }
 
   @Test

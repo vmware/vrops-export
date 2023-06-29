@@ -28,6 +28,7 @@ import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
+import java.io.File;
 import java.io.IOException;
 
 public class Console {
@@ -47,6 +48,14 @@ public class Console {
                 .highlighter(new Highlighter())
                 .completer(new Completer(backend))
                 .parser(new Parser())
+                .variable(
+                    "history-file",
+                    new File(
+                        System.getProperty("user.home")
+                            + File.separator
+                            + ".opsql"
+                            + File.separator
+                            + "history"))
                 .build();
         for (; ; ) {
           final String query = lineReader.readLine("opsql> ").trim();

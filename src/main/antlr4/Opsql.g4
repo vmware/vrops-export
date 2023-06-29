@@ -9,7 +9,8 @@ query
         parentsDeclaration?
         childrenDeclaration?
         ('.' filter)*
-        '.' Fields '(' fieldList ')'                            # queryStatement
+        '.' Fields '(' fieldList ')'
+        ('.' timeSpec)?                                         # queryStatement
     | Set Identifier '=' literal                                # setStatement
     ;
 
@@ -49,6 +50,15 @@ filter
     | RegEx '(' args=stringLiteralList ')'                      # whereRegex
     ;
 
+timeSpec
+    : Timerange '(' t1=absoluteTime (',' t2=absoluteTime)')'    # absoluteTimeSpec
+    | Latest '(' lookback=RelativeTime ')'                      # relativeTimeSpec
+    ;
+
+absoluteTime
+    : ShortFormTime                                             # shortFormTime
+    | LongFormTime                                              # longFormTime
+    ;
 
 booleanExpression
     : comparison (And comparison)+                              # andExpression
@@ -139,6 +149,32 @@ WhereProperties:    'whereProperties';
 WhereState:         'whereState';
 WhereStatus:        'whereStatus';
 WhereTags:          'whereTags';
+Timerange:          'timerange';
+Latest:             'latest';
+
+RelativeTime
+    : PositiveInteger TimeUnit
+    ;
+
+LongFormTime
+    : QuadDigit '-' DoubleDigit '-' DoubleDigit (' ' ShortFormTime)?
+    ;
+
+ShortFormTime
+    : DoubleDigit ':' DoubleDigit (':' DoubleDigit)?
+    ;
+
+fragment DoubleDigit
+    : DecimalDigit DecimalDigit
+    ;
+
+fragment QuadDigit
+    : DoubleDigit DoubleDigit
+    ;
+
+fragment TimeUnit
+    : 's' | 'm' | 'h' | 'd' | 'w'
+    ;
 
 PropertyIdentifier
     : '@' Identifier
@@ -208,12 +244,12 @@ ScientificNumber
    ;
 
 PositiveInteger
-    : ('0' .. '9')+
+    : DecimalDigit+
     ;
 
 
 fragment Number
-   : ('0' .. '9') + ('.' ('0' .. '9') +)?
+   : DecimalDigit+ ('.' ('0' .. '9') +)?
    ;
 
 fragment E1
@@ -228,6 +264,10 @@ fragment E2
 fragment Sign
    : ('+' | '-')
    ;
+
+fragment DecimalDigit
+    : ('0' .. '9')
+    ;
 
 WS
    : [ \r\n\t] + -> skip
