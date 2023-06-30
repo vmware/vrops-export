@@ -51,13 +51,17 @@ filter
     ;
 
 timeSpec
-    : Timerange '(' t1=absoluteTime (',' t2=absoluteTime)')'    # absoluteTimeSpec
+    : Timerange '(' t1=absoluteTime (',' t2=absoluteTime)? ')'  # absoluteTimeSpec
     | Latest '(' lookback=RelativeTime ')'                      # relativeTimeSpec
     ;
 
 absoluteTime
-    : ShortFormTime                                             # shortFormTime
-    | LongFormTime                                              # longFormTime
+    : dateTime=Date time                                        # dateTime
+    | time                                                      # timeOnly
+    ;
+
+time
+    : Time (TimeZone)?                                          # tzTime
     ;
 
 booleanExpression
@@ -156,11 +160,11 @@ RelativeTime
     : PositiveInteger TimeUnit
     ;
 
-LongFormTime
-    : QuadDigit '-' DoubleDigit '-' DoubleDigit (' ' ShortFormTime)?
+Date
+    : QuadDigit '-' DoubleDigit '-' DoubleDigit
     ;
 
-ShortFormTime
+LocalTime
     : DoubleDigit ':' DoubleDigit (':' DoubleDigit)?
     ;
 
@@ -174,6 +178,11 @@ fragment QuadDigit
 
 fragment TimeUnit
     : 's' | 'm' | 'h' | 'd' | 'w'
+    ;
+
+TimeZone
+    : [A-Za-z][A-Za-z][A-Za-z]
+    | 'UTC' ('+' | '-') DoubleDigit ':' DoubleDigit
     ;
 
 PropertyIdentifier

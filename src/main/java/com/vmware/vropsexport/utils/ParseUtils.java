@@ -23,7 +23,34 @@ package com.vmware.vropsexport.utils;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
+
 public class ParseUtils {
+  private static final String dateTimePattern = "yyyy-MM-dd HH:mm[:ss][ zzz]";
+  private static final String timePattern = "HH:mm[:ss][ zzz]";
+
+  private static final DateTimeFormatter dateTimeFormatter =
+      new DateTimeFormatterBuilder()
+          .append(DateTimeFormatter.ofPattern(dateTimePattern))
+          .parseLenient()
+          .toFormatter()
+          .withZone(ZoneId.systemDefault());
+
+  private static final DateTimeFormatter timeFormatter =
+      new DateTimeFormatterBuilder()
+          .append(DateTimeFormatter.ofPattern(timePattern))
+          .parseLenient()
+          .toFormatter()
+          .withResolverStyle(ResolverStyle.SMART)
+          .withZone(ZoneId.systemDefault());
+
   @SuppressFBWarnings("SF_SWITCH_FALLTHROUGH")
   public static long parseLookback(final String lb) throws ExporterException {
     long scale = 1;
@@ -49,5 +76,18 @@ public class ParseUtils {
     } catch (final NumberFormatException e) {
       throw new ExporterException("Cannot parse time value");
     }
+  }
+
+  public static Date parseDateTime(final String s) {
+    final TemporalAccessor t = dateTimeFormatter.parse(s);
+    final Instant inst = Instant.from(t);
+    return new Date(inst.toEpochMilli());
+  }
+
+  public static Date parseTime(final String s) {
+    final TemporalAccessor t = timeFormatter.parse(s);
+    final ZoneId z = ZoneId.from(t);
+    final ZonedDateTime inst = ZonedDateTime.now()
+    return new Date(inst.toEpochMilli());
   }
 }

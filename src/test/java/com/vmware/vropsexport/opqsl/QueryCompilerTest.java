@@ -65,6 +65,15 @@ public class QueryCompilerTest {
   }
 
   @Test
+  public void testAbsoluteTimeRange() {
+    final QueryCompiler qc = new QueryCompiler();
+    final Query q =
+        qc.compile(
+            "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(1776-07-04 12:00)");
+    Assert.assertEquals(-60000 * 60 * 24 * 7, q.getFromTime().getTime(), 1000);
+  }
+
+  @Test
   public void testSimpleAliasQuery() throws IOException {
     runQuery(
         "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz cpuDemand)",

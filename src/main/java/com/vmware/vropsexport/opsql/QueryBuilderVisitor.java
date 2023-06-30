@@ -344,6 +344,11 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     return super.visitRelativeTimeSpec(ctx);
   }
 
+  @Override
+  public Object visitAbsoluteTimeSpec(final OpsqlParser.AbsoluteTimeSpecContext ctx) {
+    return super.visitAbsoluteTimeSpec(ctx);
+  }
+
   public Query getQuery() {
     return query;
   }
