@@ -56,12 +56,8 @@ timeSpec
     ;
 
 absoluteTime
-    : dateTime=Date time                                        # dateTime
-    | time                                                      # timeOnly
-    ;
-
-time
-    : Time (TimeZone)?                                          # tzTime
+    : date=Date time=LocalTime (timeZone=TimeZone)?
+    | time=LocalTime
     ;
 
 booleanExpression

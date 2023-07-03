@@ -5,14 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.opsql.OpsqlException;
 import com.vmware.vropsexport.opsql.Query;
 import com.vmware.vropsexport.opsql.QueryCompiler;
-import com.vmware.vropsexport.utils.ParseUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public class QueryCompilerTest {
   private static final ObjectMapper om =
@@ -34,43 +35,50 @@ public class QueryCompilerTest {
 
   @Test
   public void testRelativeTimerangeQuery() throws Exception {
-    final MockedStatic<ParseUtils> mockedUtils = Mockito.mockStatic(ParseUtils.class);
-    mockedUtils.when(() -> ParseUtils.parseLookback("1s")).thenReturn(System.currentTimeMillis());
-    mockedUtils
-        .when(() -> ParseUtils.parseLookback("1s"))
-        .thenReturn(System.currentTimeMillis() + 1000);
-    mockedUtils
-        .when(() -> ParseUtils.parseLookback("1m"))
-        .thenReturn(System.currentTimeMillis() + 60 * 1000);
-    mockedUtils
-        .when(() -> ParseUtils.parseLookback("1h"))
-        .thenReturn(System.currentTimeMillis() + 60 * 60 * 1000);
-    mockedUtils
-        .when(() -> ParseUtils.parseLookback("1d"))
-        .thenReturn(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
-    mockedUtils
-        .when(() -> ParseUtils.parseLookback("1w"))
-        .thenReturn(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000);
     final QueryCompiler qc = new QueryCompiler();
     Query q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1s)");
-    Assert.assertEquals(-1000, q.getFromTime().getTime(), 1000);
+    Assert.assertEquals(System.currentTimeMillis() - 1000, q.getFromTime().getTime(), 1000);
     q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1m)");
-    Assert.assertEquals(-60000, q.getFromTime().getTime(), 1000);
+    Assert.assertEquals(System.currentTimeMillis() - 60000, q.getFromTime().getTime(), 1000);
     q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1h)");
-    Assert.assertEquals(-60000 * 60, q.getFromTime().getTime(), 1000);
+    Assert.assertEquals(System.currentTimeMillis() - 60000 * 60, q.getFromTime().getTime(), 1000);
     q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1d)");
-    Assert.assertEquals(-60000 * 60 * 24, q.getFromTime().getTime(), 1000);
+    Assert.assertEquals(
+        System.currentTimeMillis() - 60000 * 60 * 24, q.getFromTime().getTime(), 1000);
     q = qc.compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1w)");
-    Assert.assertEquals(-60000 * 60 * 24 * 7, q.getFromTime().getTime(), 1000);
+    Assert.assertEquals(
+        System.currentTimeMillis() - 60000 * 60 * 24 * 7, q.getFromTime().getTime(), 1000);
   }
 
   @Test
   public void testAbsoluteTimeRange() {
     final QueryCompiler qc = new QueryCompiler();
-    final Query q =
+    final long fromLocal =
+        LocalDateTime.parse("2023-07-04T12:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli();
+    final long toLocal =
+        LocalDateTime.parse("2023-07-05T12:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli();
+    final long fromUTC = Instant.parse("2023-07-04T12:00:00Z").toEpochMilli();
+    final long toUTC = Instant.parse("2023-07-05T12:00:00Z").toEpochMilli();
+    Query q =
         qc.compile(
-            "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(1776-07-04 12:00)");
-    Assert.assertEquals(-60000 * 60 * 24 * 7, q.getFromTime().getTime(), 1000);
+            "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(2023-07-04 12:00)");
+    Assert.assertEquals(fromLocal, q.getFromTime().getTime());
+    q =
+        qc.compile(
+            "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(2023-07-04 12:00, 2023-07-05 12:00)");
+    Assert.assertEquals(fromLocal, q.getFromTime().getTime());
+    Assert.assertEquals(toLocal, q.getToTime().getTime());
+    q =
+        qc.compile(
+            "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(2023-07-04 12:00 UTC, 2023-07-05 12:00 UTC)");
+    Assert.assertEquals(fromUTC, q.getFromTime().getTime());
+    Assert.assertEquals(toUTC, q.getToTime().getTime());
   }
 
   @Test

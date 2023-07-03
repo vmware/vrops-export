@@ -346,7 +346,22 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitAbsoluteTimeSpec(final OpsqlParser.AbsoluteTimeSpecContext ctx) {
+    query.setFromTime(parseDateTime(ctx.t1));
+    if (ctx.t2 != null) {
+      query.setToTime(parseDateTime(ctx.t2));
+    }
     return super.visitAbsoluteTimeSpec(ctx);
+  }
+
+  private Date parseDateTime(final OpsqlParser.AbsoluteTimeContext ctx) {
+    if (ctx.date != null) {
+      String d = ctx.date.getText() + " " + ctx.time.getText();
+      if (ctx.timeZone != null) {
+        d += " " + ctx.timeZone.getText();
+      }
+      return ParseUtils.parseDateTime(d);
+    }
+    return ParseUtils.parseTime(ctx.time.getText());
   }
 
   public Query getQuery() {

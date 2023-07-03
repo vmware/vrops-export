@@ -24,8 +24,9 @@ import com.vmware.vropsexport.exceptions.ExporterException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.ResolverStyle;
@@ -34,7 +35,7 @@ import java.util.Date;
 
 public class ParseUtils {
   private static final String dateTimePattern = "yyyy-MM-dd HH:mm[:ss][ zzz]";
-  private static final String timePattern = "HH:mm[:ss][ zzz]";
+  private static final String timePattern = "HH:mm[:ss]";
 
   private static final DateTimeFormatter dateTimeFormatter =
       new DateTimeFormatterBuilder()
@@ -85,9 +86,8 @@ public class ParseUtils {
   }
 
   public static Date parseTime(final String s) {
-    final TemporalAccessor t = timeFormatter.parse(s);
-    final ZoneId z = ZoneId.from(t);
-    final ZonedDateTime inst = ZonedDateTime.now()
-    return new Date(inst.toEpochMilli());
+    final LocalTime t = LocalTime.parse(s, timeFormatter);
+    return new Date(
+        LocalDate.now().atTime(t).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
   }
 }

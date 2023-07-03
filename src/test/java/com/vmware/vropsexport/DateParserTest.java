@@ -24,36 +24,57 @@ import com.vmware.vropsexport.utils.ParseUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 public class DateParserTest {
   @Test
   public void testParseDateTime() {
-    final TimeZone tz = TimeZone.getDefault();
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    Assert.assertEquals(-6106017600000L, ParseUtils.parseDateTime("1776-07-04 12:00").getTime());
-    Assert.assertEquals(-6106017599000L, ParseUtils.parseDateTime("1776-07-04 12:00:01").getTime());
+    final long fromLocal =
+        LocalDateTime.parse("2023-07-04T12:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli();
+    final long fromUTC = Instant.parse("2023-07-04T12:00:00Z").toEpochMilli();
+    Assert.assertEquals(fromLocal, ParseUtils.parseDateTime("2023-07-04 12:00").getTime());
     Assert.assertEquals(
-        -6106017600000L, ParseUtils.parseDateTime("1776-07-04 12:00 UTC").getTime());
+        fromLocal + 1000, ParseUtils.parseDateTime("2023-07-04 12:00:01").getTime());
+    Assert.assertEquals(fromUTC, ParseUtils.parseDateTime("2023-07-04 12:00 UTC").getTime());
     Assert.assertEquals(
-        -6106017599000L, ParseUtils.parseDateTime("1776-07-04 12:00:01 UTC").getTime());
+        fromUTC + 1000, ParseUtils.parseDateTime("2023-07-04 12:00:01 UTC").getTime());
+    Assert.assertEquals(fromUTC, ParseUtils.parseDateTime("2023-07-04 12:00 UTC").getTime());
     Assert.assertEquals(
-        -6105999838000L, ParseUtils.parseDateTime("1776-07-04 12:00 EST").getTime());
-    Assert.assertEquals(
-        -6105999837000L, ParseUtils.parseDateTime("1776-07-04 12:00:01 EST").getTime());
-    TimeZone.setDefault(tz);
+        fromUTC + 1000, ParseUtils.parseDateTime("2023-07-04 12:00:01 UTC").getTime());
+  }
+
+  public void checkTime(final Date d, final int h, final int m, final int s) {
+    final Calendar cal = new GregorianCalendar();
+    cal.setTime(d);
+    Assert.assertEquals("Hour", h, cal.get(Calendar.HOUR_OF_DAY));
+    Assert.assertEquals("Minute", m, cal.get(Calendar.MINUTE));
+    Assert.assertEquals("Second", s, cal.get(Calendar.SECOND));
   }
 
   @Test
   public void testParseTime() {
-    final TimeZone tz = TimeZone.getDefault();
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    Assert.assertEquals(-6106017600000L, ParseUtils.parseTime("12:00").getTime());
-    Assert.assertEquals(-6106017599000L, ParseUtils.parseTime("12:00:01").getTime());
-    Assert.assertEquals(-6106017600000L, ParseUtils.parseTime("12:00 UTC").getTime());
-    Assert.assertEquals(-6106017599000L, ParseUtils.parseTime("12:00:01 UTC").getTime());
-    Assert.assertEquals(-6105999838000L, ParseUtils.parseTime("12:00 EST").getTime());
-    Assert.assertEquals(-6105999837000L, ParseUtils.parseTime("12:00:01 EST").getTime());
-    TimeZone.setDefault(tz);
+    for (int h = 12; h < 24; ++h) {
+      for (int m = 0; m < 60; ++m) {
+        checkTime(ParseUtils.parseTime(String.format("%02d:%02d", h, m)), h, m, 0);
+      }
+    }
+    for (int h = 12; h < 24; ++h) {
+      for (int m = 0; m < 60; ++m) {
+        for (int s = 0; s < 60; ++s) {
+          checkTime(ParseUtils.parseTime(String.format("%02d:%02d:%02d", h, m, s)), h, m, s);
+        }
+      }
+    }
   }
 }
