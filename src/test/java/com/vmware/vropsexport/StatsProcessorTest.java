@@ -17,31 +17,31 @@
  */
 package com.vmware.vropsexport;
 
+import static org.mockito.AdditionalMatchers.or;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.exceptions.ValidationException;
 import com.vmware.vropsexport.models.NamedResource;
+import com.vmware.vropsexport.opsql.Compiler;
 import com.vmware.vropsexport.opsql.Query;
-import com.vmware.vropsexport.opsql.QueryCompiler;
+import com.vmware.vropsexport.opsql.SessionContext;
 import com.vmware.vropsexport.processors.CSVPrinter;
 import com.vmware.vropsexport.processors.JsonPrinter;
 import com.vmware.vropsexport.utils.LRUCache;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
-import static org.mockito.AdditionalMatchers.or;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class StatsProcessorTest {
 
@@ -222,7 +222,7 @@ public class StatsProcessorTest {
 
   private void runQueryTest(final String query, final String name, final String metricInput)
       throws HttpException, IOException, ExporterException, ValidationException {
-    final Query q = QueryCompiler.compile(query);
+    final Query q = (Query) Compiler.compile(query, new SessionContext()).get(0);
     final byte[] data = runTest(q.toConfig(), metricInput, new JsonPrinter.Factory());
     final ObjectMapper om = new ObjectMapper();
     final Map<String, Object> wanted =

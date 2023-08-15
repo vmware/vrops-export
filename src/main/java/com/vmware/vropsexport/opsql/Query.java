@@ -18,21 +18,21 @@
 package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.Config;
+import com.vmware.vropsexport.Exporter;
 import com.vmware.vropsexport.Field;
+import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.ResourceRequest;
-
+import java.io.IOException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.http.HttpException;
 
-public class Query {
+public class Query implements RunnableStatement {
   final ResourceRequest resourceRequest;
-
   final List<Field> fields;
-
   Date fromTime;
-
   Date toTime;
 
   public Query() {
@@ -98,5 +98,26 @@ public class Query {
     conf.setQuery(resourceRequest);
     conf.setFields(fields);
     return conf;
+  }
+
+  @Override
+  public void run(final SessionContext ctx) throws ExporterException {
+    final Config conf = toConfig();
+    final Exporter exporter =
+        new Exporter(
+            ctx.getClient(),
+            ctx.getNumThreads(),
+            conf,
+            ctx.isVerbose(),
+            true,
+            ctx.getMaxRows(),
+            ctx.getMaxRes());
+    final long begin = fromTime != null ? fromTime.getTime() : ctx.getFromTime();
+    final long end = toTime != null ? toTime.getTime() : ctx.getToTime();
+    try {
+      exporter.exportTo(ctx.getOutput(), begin, end, null, true);
+    } catch (final IOException | HttpException e) {
+      throw new ExporterException(e);
+    }
   }
 }

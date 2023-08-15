@@ -17,9 +17,10 @@
  */
 package com.vmware.vropsexport.opsql;
 
+import java.util.List;
 import org.antlr.v4.runtime.*;
 
-public class QueryCompiler {
+public class Compiler {
   private static class ExceptionThrowerListener extends BaseErrorListener {
     public static ExceptionThrowerListener instance = new ExceptionThrowerListener();
 
@@ -35,16 +36,17 @@ public class QueryCompiler {
     }
   }
 
-  public static Query compile(final String qtext) throws RecognitionException {
+  public static List<RunnableStatement> compile(final String qtext, final SessionContext context)
+      throws RecognitionException {
     final OpsqlLexer lexer = new OpsqlLexer(CharStreams.fromString(qtext));
+    lexer.removeErrorListeners();
     lexer.addErrorListener(ExceptionThrowerListener.instance);
     final OpsqlParser parser = new OpsqlParser(new CommonTokenStream(lexer));
+    parser.removeErrorListeners();
     parser.addErrorListener(ExceptionThrowerListener.instance);
-    final OpsqlParser.QueryContext q = parser.query();
-
-    final QueryBuilderVisitor queryBuilder = new QueryBuilderVisitor();
-    q.accept(queryBuilder);
-
-    return queryBuilder.getQuery();
+    final OpsqlParser.StatementListContext q = parser.statementList();
+    final StatementListVisitor builder = new StatementListVisitor(context);
+    q.accept(builder);
+    return builder.getStatements();
   }
 }

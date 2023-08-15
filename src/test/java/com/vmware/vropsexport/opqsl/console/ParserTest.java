@@ -29,6 +29,11 @@ public class ParserTest {
   }
 
   @Test
+  public void testCommands() {
+    checkQuery("timezone(\"Africa/Wakanda\")", new String[] {"timezone", "\"Africa/Wakanda\""});
+  }
+
+  @Test
   public void testLists() {
     checkQuery(
         "resource(VMWARE:VirtualMachine, VMWARE:HostSystem).name(\"hello\", \"goodbye\").fields(cpu|demandmhz, cpu|demandpct)",

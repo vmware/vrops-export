@@ -4,14 +4,23 @@ grammar Opsql;
     package com.vmware.vropsexport.opsql;
 }
 
+statementList
+    : statement (';' statement)*
+    ;
+
+statement
+    : TimeZone '(' StringLiteral ')'                            # timeZoneStatement
+    | Format '(' StringLiteral ')'                              # formatStatement
+    | query                                                     # queryStatement
+    ;
+
 query
     : Resource '(' resource=Identifier ')'
         parentsDeclaration?
         childrenDeclaration?
         ('.' filter)*
         '.' Fields '(' fieldList ')'
-        ('.' timeSpec)?                                         # queryStatement
-    | Set Identifier '=' literal                                # setStatement
+        ('.' timeSpec)?
     ;
 
 fieldList
@@ -118,6 +127,7 @@ Child:              'child';
 Children:           'children';
 Fields:             'fields';
 First:              'first';
+Format:             'format';
 From:               'from';
 Health:             'health';
 Id:                 'id';
@@ -141,6 +151,7 @@ Status:             'status';
 StdDev:             'stddev';
 Sum:                'sum';
 Tag:                'tag';
+TimeZone:           'timezone';
 Variance:           'variance';
 Where:              'where';
 WhereHealth:        'whereHealth';
@@ -174,11 +185,6 @@ fragment QuadDigit
 
 fragment TimeUnit
     : 's' | 'm' | 'h' | 'd' | 'w'
-    ;
-
-TimeZone
-    : [A-Za-z][A-Za-z][A-Za-z]
-    | 'UTC' ('+' | '-') DoubleDigit ':' DoubleDigit
     ;
 
 PropertyIdentifier
@@ -229,8 +235,7 @@ HexadecimalDigit
     ;
 
 StringLiteral
-    :  '"' SCharSequence? '"'
-//    | '\'' SCharSequence? '\''
+    :  '"' SCharSequence? '"' 
     ;
 
 fragment SCharSequence

@@ -18,15 +18,14 @@
 package com.vmware.vropsexport.opsql.console;
 
 import com.vmware.vropsexport.opsql.OpsqlLexer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
 import org.jline.reader.CompletingParsedLine;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.SyntaxError;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
 
 public class Parser implements org.jline.reader.Parser {
 
@@ -97,7 +96,7 @@ public class Parser implements org.jline.reader.Parser {
   }
 
   private static final Pattern wordPattern =
-      Pattern.compile("\"?@?[A-Za-z_|$:][A-Za-z_0-9|$:]*\"?");
+      Pattern.compile("(@?[A-Za-z_|$:][A-Za-z_0-9|$:]*)|(\".*\")");
 
   @Override
   public ParsedLine parse(final String s, final int i, final ParseContext parseContext)

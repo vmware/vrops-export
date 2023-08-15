@@ -22,7 +22,6 @@ package com.vmware.vropsexport.utils;
 
 import com.vmware.vropsexport.exceptions.ExporterException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -34,23 +33,20 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 
 public class ParseUtils {
-  private static final String dateTimePattern = "yyyy-MM-dd HH:mm[:ss][ zzz]";
+  private static final String dateTimePattern = "yyyy-MM-dd HH:mm[:ss]";
   private static final String timePattern = "HH:mm[:ss]";
 
   private static final DateTimeFormatter dateTimeFormatter =
       new DateTimeFormatterBuilder()
           .append(DateTimeFormatter.ofPattern(dateTimePattern))
           .parseLenient()
-          .toFormatter()
-          .withZone(ZoneId.systemDefault());
-
+          .toFormatter();
   private static final DateTimeFormatter timeFormatter =
       new DateTimeFormatterBuilder()
           .append(DateTimeFormatter.ofPattern(timePattern))
           .parseLenient()
           .toFormatter()
-          .withResolverStyle(ResolverStyle.SMART)
-          .withZone(ZoneId.systemDefault());
+          .withResolverStyle(ResolverStyle.SMART);
 
   @SuppressFBWarnings("SF_SWITCH_FALLTHROUGH")
   public static long parseLookback(final String lb) throws ExporterException {
@@ -79,15 +75,18 @@ public class ParseUtils {
     }
   }
 
-  public static Date parseDateTime(final String s) {
-    final TemporalAccessor t = dateTimeFormatter.parse(s);
+  public static Date parseDateTime(final String s, final ZoneId tz) {
+    final TemporalAccessor t = dateTimeFormatter.withZone(tz).parse(s);
     final Instant inst = Instant.from(t);
     return new Date(inst.toEpochMilli());
   }
 
-  public static Date parseTime(final String s) {
+  public static Date parseTime(final String s, final ZoneId tz) {
     final LocalTime t = LocalTime.parse(s, timeFormatter);
-    return new Date(
-        LocalDate.now().atTime(t).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+    return new Date(LocalDate.now().atTime(t).atZone(tz).toInstant().toEpochMilli());
+  }
+
+  public static String unquote(final String s) {
+    return s.startsWith("\"") && s.endsWith("\"") ? s.substring(1, s.length() - 1) : s;
   }
 }

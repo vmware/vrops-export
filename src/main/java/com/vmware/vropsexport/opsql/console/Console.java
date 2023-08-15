@@ -21,15 +21,15 @@ import com.vmware.vropsexport.Metadata;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.opsql.OpsqlException;
 import com.vmware.vropsexport.opsql.QueryRunner;
+import com.vmware.vropsexport.opsql.SessionContext;
+import java.io.File;
+import java.io.IOException;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-
-import java.io.File;
-import java.io.IOException;
 
 public class Console {
 
@@ -39,7 +39,7 @@ public class Console {
     this.backend = backend;
   }
 
-  public void run(final QueryRunner runner) throws ExporterException {
+  public void run(final QueryRunner runner, final SessionContext context) throws ExporterException {
     try {
       try (final Terminal terminal = TerminalBuilder.terminal()) {
         final LineReader lineReader =
@@ -63,11 +63,11 @@ public class Console {
             continue;
           }
           try {
-            runner.executeQuery(query, System.out);
+            runner.executeQuery(query, context);
           } catch (final OpsqlException e) {
-            // Error would already have been printed. Continue!
+            System.err.println(e.getMessage());
           } catch (final ExporterException e) {
-            System.err.println("Error: " + e.getMessage());
+            System.err.println(e.getMessage());
           }
         }
       }

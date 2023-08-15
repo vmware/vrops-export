@@ -21,7 +21,6 @@ import com.vmware.vropsexport.Field;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.ResourceRequest;
 import com.vmware.vropsexport.utils.ParseUtils;
-
 import java.util.*;
 
 public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
@@ -84,7 +83,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     @Override
     public ResourceRequest.Condition visitStringLiteral(
         final OpsqlParser.StringLiteralContext ctx) {
-      cond.setStringValue(unquote(ctx.getText()));
+      cond.setStringValue(ParseUtils.unquote(ctx.getText()));
       return super.visitStringLiteral(ctx);
     }
 
@@ -199,24 +198,17 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   private final Map<String, Relationship> relationshipAliases = new HashMap<>();
 
-  public QueryBuilderVisitor() {
-    super();
-  }
+  private final SessionContext context;
 
-  private static String unquote(final String s) {
-    if (s.length() == 2) {
-      return "";
-    }
-    if (s.length() < 2) {
-      throw new IllegalArgumentException("Internal error: Quoted string has no quotes");
-    }
-    return s.substring(1, s.length() - 1);
+  public QueryBuilderVisitor(final SessionContext context) {
+    super();
+    this.context = context;
   }
 
   private static List<String> extractStringList(final OpsqlParser.StringLiteralListContext ctx) {
     final List<String> s = new ArrayList<String>(ctx.children.size());
     for (int i = 0; i < ctx.children.size(); i += 2) {
-      s.add(unquote(ctx.getChild(i).getText()));
+      s.add(ParseUtils.unquote(ctx.getChild(i).getText()));
     }
     return s;
   }
@@ -257,7 +249,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitQueryStatement(final OpsqlParser.QueryStatementContext ctx) {
-    final String resource = ctx.resource.getText();
+    final String resource = ctx.query().resource.getText();
     final int p = resource.indexOf(":");
     if (p == -1) {
       query.getResourceRequest().setResourceKind(Collections.singletonList(resource));
@@ -359,9 +351,9 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
       if (ctx.timeZone != null) {
         d += " " + ctx.timeZone.getText();
       }
-      return ParseUtils.parseDateTime(d);
+      return ParseUtils.parseDateTime(d, context.getTimezone());
     }
-    return ParseUtils.parseTime(ctx.time.getText());
+    return ParseUtils.parseTime(ctx.time.getText(), context.getTimezone());
   }
 
   public Query getQuery() {

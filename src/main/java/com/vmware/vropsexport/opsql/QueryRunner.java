@@ -18,43 +18,47 @@
 package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.Command;
-import com.vmware.vropsexport.Config;
-import com.vmware.vropsexport.Exporter;
 import com.vmware.vropsexport.Metadata;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.opsql.console.Console;
+import java.io.OutputStream;
+import java.time.ZoneId;
+import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.http.HttpException;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 public class QueryRunner extends Command {
   @Override
   public void run(final OutputStream out, final CommandLine commandLine) throws ExporterException {
+    final SessionContext context =
+        new SessionContext(
+            "csv",
+            ZoneId.systemDefault(),
+            verbose,
+            threads,
+            client,
+            maxRows,
+            maxRes,
+            begin,
+            end,
+            out);
     if (commandLine.hasOption('Q')) {
       final String query = commandLine.getOptionValue('Q');
       try {
-        executeQuery(query, out);
+        executeQuery(query, context);
       } catch (final OpsqlException e) {
-        // The error message is already printed at this point, so we can ignore the exception
+        System.err.println(e.getMessage());
       }
     } else {
-      new Console(new Metadata(client)).run(this);
+      new Console(new Metadata(client)).run(this, context);
     }
   }
 
-  public void executeQuery(final String query, final OutputStream out) throws ExporterException {
-    final Query q = QueryCompiler.compile(query);
-    final Config conf = q.toConfig();
-    final Exporter exporter = new Exporter(client, threads, conf, verbose, true, maxRows, maxRes);
-    final long begin = q.getFromTime() != null ? q.getFromTime().getTime() : this.begin;
-    final long end = q.getToTime() != null ? q.getToTime().getTime() : this.end;
-    try {
-      exporter.exportTo(out, begin, end, null, true);
-    } catch (final IOException | HttpException e) {
-      throw new ExporterException(e);
+  public void executeQuery(final String query, final SessionContext context)
+      throws ExporterException {
+    final List<RunnableStatement> statements = Compiler.compile(query, context);
+    for (final RunnableStatement stmt : statements) {
+      stmt.run(context);
     }
   }
 
