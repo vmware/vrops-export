@@ -184,7 +184,7 @@ public class QueryCompilerTest {
     for (final RunnableStatement rs : stmts) {
       rs.run(ctx);
     }
-    Assert.assertEquals(tz, ctx.getTimezone().getId());
+    Assert.assertEquals(tz, ZoneId.systemDefault().getId());
   }
 
   @Test
@@ -192,6 +192,10 @@ public class QueryCompilerTest {
     checkTimezone("UTC");
     checkTimezone("America/New_York");
     checkTimezone("Europe/Stockholm");
+  }
+
+  @Test
+  public void testInvalidTimzeone() throws ExporterException {
     try {
       checkTimezone("Africa/Wakanda");
       // We shouldn't make it here

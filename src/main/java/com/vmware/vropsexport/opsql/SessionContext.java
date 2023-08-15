@@ -26,7 +26,6 @@ import java.time.ZoneId;
 
 public class SessionContext {
   private String format;
-  private ZoneId timezone;
   private boolean verbose;
   private int numThreads;
   private Client client;
@@ -41,7 +40,6 @@ public class SessionContext {
     toTime = System.currentTimeMillis();
     fromTime = toTime - 3600000;
     format = "csv";
-    timezone = ZoneId.systemDefault();
   }
 
   public SessionContext(
@@ -56,7 +54,6 @@ public class SessionContext {
       final long toTime,
       final OutputStream output) {
     this.format = format;
-    this.timezone = timezone;
     this.verbose = verbose;
     this.numThreads = numThreads;
     this.client = client;
@@ -73,14 +70,6 @@ public class SessionContext {
 
   public void setFormat(final String format) {
     this.format = format;
-  }
-
-  public ZoneId getTimezone() {
-    return timezone;
-  }
-
-  public void setTimezone(final ZoneId timezone) {
-    this.timezone = timezone;
   }
 
   public boolean isVerbose() {

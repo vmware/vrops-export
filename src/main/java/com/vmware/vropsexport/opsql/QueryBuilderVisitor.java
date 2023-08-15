@@ -21,6 +21,7 @@ import com.vmware.vropsexport.Field;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.ResourceRequest;
 import com.vmware.vropsexport.utils.ParseUtils;
+import java.time.ZoneId;
 import java.util.*;
 
 public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
@@ -351,9 +352,9 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
       if (ctx.timeZone != null) {
         d += " " + ctx.timeZone.getText();
       }
-      return ParseUtils.parseDateTime(d, context.getTimezone());
+      return ParseUtils.parseDateTime(d, ZoneId.systemDefault());
     }
-    return ParseUtils.parseTime(ctx.time.getText(), context.getTimezone());
+    return ParseUtils.parseTime(ctx.time.getText(), ZoneId.systemDefault());
   }
 
   public Query getQuery() {

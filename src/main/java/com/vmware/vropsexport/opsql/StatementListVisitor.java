@@ -25,6 +25,7 @@ import java.time.ZoneId;
 import java.time.zone.ZoneRulesException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 public class StatementListVisitor extends OpsqlBaseVisitor<Object> {
   private final List<RunnableStatement> statements = new ArrayList<>();
@@ -37,8 +38,10 @@ public class StatementListVisitor extends OpsqlBaseVisitor<Object> {
   @Override
   public Object visitTimeZoneStatement(final OpsqlParser.TimeZoneStatementContext ctx) {
     try {
-      final ZoneId tz = ZoneId.of(ParseUtils.unquote(ctx.StringLiteral().getText()));
-      statements.add((sessionContext) -> sessionContext.setTimezone(tz));
+      // Parse as ZoneId, since TimeZone fails silently on invalid timezone names
+      final TimeZone tz =
+          TimeZone.getTimeZone(ZoneId.of(ParseUtils.unquote(ctx.StringLiteral().getText())));
+      statements.add((sessionContext) -> TimeZone.setDefault(tz));
       return null;
     } catch (final ZoneRulesException e) {
       throw new OpsqlException(e.getMessage());
