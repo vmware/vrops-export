@@ -50,6 +50,9 @@ public class StatementListVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitFormatStatement(final OpsqlParser.FormatStatementContext ctx) {
+    statements.add(
+        (sessionContext) ->
+            sessionContext.setFormat(ParseUtils.unquote(ctx.StringLiteral().getText())));
     return super.visitFormatStatement(ctx);
   }
 

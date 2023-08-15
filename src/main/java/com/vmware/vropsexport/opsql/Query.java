@@ -93,16 +93,17 @@ public class Query implements RunnableStatement {
     return Objects.hash(resourceRequest, fields);
   }
 
-  public Config toConfig() {
+  public Config toConfig(final SessionContext ctx) {
     final Config conf = new Config();
     conf.setQuery(resourceRequest);
     conf.setFields(fields);
+    conf.setOutputFormat(ctx.getFormat());
     return conf;
   }
 
   @Override
   public void run(final SessionContext ctx) throws ExporterException {
-    final Config conf = toConfig();
+    final Config conf = toConfig(ctx);
     final Exporter exporter =
         new Exporter(
             ctx.getClient(),

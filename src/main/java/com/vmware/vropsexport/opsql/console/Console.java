@@ -42,6 +42,10 @@ public class Console {
   public void run(final QueryRunner runner, final SessionContext context) throws ExporterException {
     try {
       try (final Terminal terminal = TerminalBuilder.terminal()) {
+        // Use the terminal's output stream instead of the raw one.
+        if (context.getOutput() == System.out) {
+          context.setOutput(terminal.output());
+        }
         final LineReader lineReader =
             LineReaderBuilder.builder()
                 .terminal(terminal)
@@ -58,12 +62,14 @@ public class Console {
                             + "history"))
                 .build();
         for (; ; ) {
+          System.out.println("{\"data\":[]}");
           final String query = lineReader.readLine("opsql> ").trim();
           if (query.length() == 0) {
             continue;
           }
           try {
             runner.executeQuery(query, context);
+            terminal.output().flush();
           } catch (final OpsqlException e) {
             System.err.println(e.getMessage());
           } catch (final ExporterException e) {

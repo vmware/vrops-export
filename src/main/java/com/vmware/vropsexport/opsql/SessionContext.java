@@ -31,7 +31,7 @@ public class SessionContext {
   private Client client;
   private int maxRows;
   private int maxRes;
-  private final OutputStream output;
+  private OutputStream output;
   private final long fromTime;
   private final long toTime;
 
@@ -122,5 +122,9 @@ public class SessionContext {
 
   public long getToTime() {
     return toTime;
+  }
+
+  public void setOutput(final OutputStream output) {
+    this.output = output;
   }
 }

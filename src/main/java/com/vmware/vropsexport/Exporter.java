@@ -23,6 +23,16 @@ import com.vmware.vropsexport.processors.*;
 import com.vmware.vropsexport.utils.Chunker;
 import com.vmware.vropsexport.utils.IndexedLocks;
 import com.vmware.vropsexport.utils.LRUCache;
+import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
 import org.apache.http.NoHttpResponseException;
@@ -34,17 +44,6 @@ import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.nodes.NodeTuple;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
-
-import java.io.*;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @SuppressWarnings("SameParameterValue")
 public class Exporter implements DataProvider {
@@ -246,7 +245,13 @@ public class Exporter implements DataProvider {
     executor.shutdown();
     try {
       // We have no idea how long it's going to take, so pick a ridiculously long timeout.
+      if (verbose) {
+        log.debug("Waiting for all threads to finish");
+      }
       executor.awaitTermination(1, TimeUnit.DAYS);
+      if (verbose) {
+        log.debug("All threads have finished!");
+      }
     } catch (final InterruptedException e) {
       // Shouldn't happen...
       e.printStackTrace();

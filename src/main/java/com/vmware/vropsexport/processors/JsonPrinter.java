@@ -59,7 +59,7 @@ public class JsonPrinter implements RowsetProcessor {
 
   private final JsonConfig.JsonFormat format;
 
-  private final JsonProducer produder;
+  private final JsonProducer producer;
 
   public JsonPrinter(
       final OutputStream out,
@@ -71,7 +71,8 @@ public class JsonPrinter implements RowsetProcessor {
       this.format = format;
       final JsonFactory jf = new JsonFactory();
       generator = jf.createGenerator(out, JsonEncoding.UTF8);
-      produder = new JsonProducer(generator, dp, dateFormat);
+      generator.overrideStdFeatures(0, JsonGenerator.Feature.AUTO_CLOSE_TARGET.getMask());
+      producer = new JsonProducer(generator, dp, dateFormat);
     } catch (final IOException e) {
       throw new ExporterException(e);
     }
@@ -89,7 +90,7 @@ public class JsonPrinter implements RowsetProcessor {
 
   @Override
   public void process(final Rowset rowset, final RowMetadata meta) throws ExporterException {
-    produder.produce(rowset, meta, format);
+    producer.produce(rowset, meta, format);
   }
 
   @Override
@@ -98,6 +99,7 @@ public class JsonPrinter implements RowsetProcessor {
 
       generator.writeEndArray();
       generator.writeEndObject();
+      generator.writeRaw('\n');
       generator.close();
     } catch (final IOException e) {
       throw new ExporterException(e);
