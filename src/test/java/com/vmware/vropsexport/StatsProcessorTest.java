@@ -222,7 +222,7 @@ public class StatsProcessorTest {
 
   private void runQueryTest(final String query, final String name, final String metricInput)
       throws HttpException, IOException, ExporterException, ValidationException {
-    final Query q = (Query) Compiler.compile(query, new SessionContext()).get(0);
+    final Query q = (Query) Compiler.compile(query).get(0);
     final byte[] data =
         runTest(q.toConfig(new SessionContext()), metricInput, new JsonPrinter.Factory());
     final ObjectMapper om = new ObjectMapper();

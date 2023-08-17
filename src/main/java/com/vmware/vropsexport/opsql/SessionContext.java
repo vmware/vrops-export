@@ -21,6 +21,7 @@
 package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.Client;
+import com.vmware.vropsexport.Config;
 import java.io.OutputStream;
 import java.time.ZoneId;
 
@@ -34,15 +35,18 @@ public class SessionContext {
   private OutputStream output;
   private final long fromTime;
   private final long toTime;
+  private final Config config;
 
   public SessionContext() {
     output = System.out;
     toTime = System.currentTimeMillis();
     fromTime = toTime - 3600000;
     format = "csv";
+    config = new Config();
   }
 
   public SessionContext(
+      final Config config,
       final String format,
       final ZoneId timezone,
       final boolean verbose,
@@ -53,6 +57,7 @@ public class SessionContext {
       final long fromTime,
       final long toTime,
       final OutputStream output) {
+    this.config = config;
     this.format = format;
     this.verbose = verbose;
     this.numThreads = numThreads;
@@ -126,5 +131,9 @@ public class SessionContext {
 
   public void setOutput(final OutputStream output) {
     this.output = output;
+  }
+
+  public Config getConfig() {
+    return config;
   }
 }

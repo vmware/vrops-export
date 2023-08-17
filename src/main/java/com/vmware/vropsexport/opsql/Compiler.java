@@ -36,8 +36,7 @@ public class Compiler {
     }
   }
 
-  public static List<RunnableStatement> compile(final String qtext, final SessionContext context)
-      throws RecognitionException {
+  public static List<RunnableStatement> compile(final String qtext) throws RecognitionException {
     final OpsqlLexer lexer = new OpsqlLexer(CharStreams.fromString(qtext));
     lexer.removeErrorListeners();
     lexer.addErrorListener(ExceptionThrowerListener.instance);
@@ -45,7 +44,7 @@ public class Compiler {
     parser.removeErrorListeners();
     parser.addErrorListener(ExceptionThrowerListener.instance);
     final OpsqlParser.StatementListContext q = parser.statementList();
-    final StatementListVisitor builder = new StatementListVisitor(context);
+    final StatementListVisitor builder = new StatementListVisitor();
     q.accept(builder);
     return builder.getStatements();
   }

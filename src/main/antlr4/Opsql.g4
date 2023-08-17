@@ -11,6 +11,7 @@ statementList
 statement
     : TimeZone '(' StringLiteral ')'                            # timeZoneStatement
     | Format '(' StringLiteral ')'                              # formatStatement
+    | Set '(' Identifier ',' literal ')'                        # setStatement
     | query                                                     # queryStatement
     ;
 

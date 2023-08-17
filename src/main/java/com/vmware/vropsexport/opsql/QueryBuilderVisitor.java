@@ -24,7 +24,7 @@ import com.vmware.vropsexport.utils.ParseUtils;
 import java.time.ZoneId;
 import java.util.*;
 
-public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
+public class QueryBuilderVisitor extends BaseVisitor {
 
   private static class Relationship {
     private String adapterKind;
@@ -72,27 +72,6 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     addNegation("STARTS_WITH", "NOT_STARTS_WITH");
     addNegation("ENDS_WITH", "NOT_ENDS_WITH");
     addNegation("REGEX", "NOT_REGEX");
-  }
-
-  private static class LiteralResolver extends OpsqlBaseVisitor<ResourceRequest.Condition> {
-    private final ResourceRequest.Condition cond;
-
-    public LiteralResolver(final ResourceRequest.Condition cond) {
-      this.cond = cond;
-    }
-
-    @Override
-    public ResourceRequest.Condition visitStringLiteral(
-        final OpsqlParser.StringLiteralContext ctx) {
-      cond.setStringValue(ParseUtils.unquote(ctx.getText()));
-      return super.visitStringLiteral(ctx);
-    }
-
-    @Override
-    public ResourceRequest.Condition visitNumber(final OpsqlParser.NumberContext ctx) {
-      cond.setDoubleValue(Double.parseDouble(ctx.getText()));
-      return super.visitNumber(ctx);
-    }
   }
 
   private class IdentifierResolver extends OpsqlBaseVisitor<Field> {
@@ -145,7 +124,7 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
     f.setRelatedResourceKind(rel.resourceKind);
   }
 
-  private class BooleanExpressionVisitor extends OpsqlBaseVisitor<Object> {
+  private class BooleanExpressionVisitor extends BaseVisitor {
     private final ResourceRequest.FilterSpec spec = new ResourceRequest.FilterSpec();
 
     public BooleanExpressionVisitor() {
@@ -175,7 +154,12 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
       final ResourceRequest.Condition cond = new ResourceRequest.Condition();
       cond.setKey(ctx.propertyOrMetricIdentifier().accept(new IdentifierResolver()).getName());
       cond.setOperator(toInternalOp.get(ctx.booleanOperator().getText()));
-      ctx.accept(new LiteralResolver(cond));
+      final Object value = ctx.literal().accept(this);
+      if (value instanceof Number) {
+        cond.setDoubleValue((Double) value);
+      } else {
+        cond.setStringValue(value.toString());
+      }
       spec.getConditions().add(cond);
       return null; // No need to go deeper
     }
@@ -185,7 +169,12 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
       final ResourceRequest.Condition cond = new ResourceRequest.Condition();
       cond.setKey(ctx.propertyOrMetricIdentifier().accept(new IdentifierResolver()).getName());
       cond.setOperator(operatorNegations.get(toInternalOp.get(ctx.booleanOperator().getText())));
-      ctx.accept(new LiteralResolver(cond));
+      final Object value = ctx.literal().accept(this);
+      if (value instanceof Number) {
+        cond.setDoubleValue((Double) value);
+      } else {
+        cond.setStringValue(value.toString());
+      }
       spec.getConditions().add(cond);
       return null; // No need to go deeper
     }
@@ -199,15 +188,12 @@ public class QueryBuilderVisitor extends OpsqlBaseVisitor<Object> {
 
   private final Map<String, Relationship> relationshipAliases = new HashMap<>();
 
-  private final SessionContext context;
-
-  public QueryBuilderVisitor(final SessionContext context) {
+  public QueryBuilderVisitor() {
     super();
-    this.context = context;
   }
 
   private static List<String> extractStringList(final OpsqlParser.StringLiteralListContext ctx) {
-    final List<String> s = new ArrayList<String>(ctx.children.size());
+    final List<String> s = new ArrayList<>(ctx.children.size());
     for (int i = 0; i < ctx.children.size(); i += 2) {
       s.add(ParseUtils.unquote(ctx.getChild(i).getText()));
     }

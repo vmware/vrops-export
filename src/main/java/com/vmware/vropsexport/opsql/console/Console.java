@@ -62,7 +62,6 @@ public class Console {
                             + "history"))
                 .build();
         for (; ; ) {
-          System.out.println("{\"data\":[]}");
           final String query = lineReader.readLine("opsql> ").trim();
           if (query.length() == 0) {
             continue;

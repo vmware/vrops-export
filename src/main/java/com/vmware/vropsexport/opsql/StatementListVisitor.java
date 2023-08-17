@@ -20,20 +20,19 @@
 
 package com.vmware.vropsexport.opsql;
 
+import com.vmware.vropsexport.utils.BeanTools;
 import com.vmware.vropsexport.utils.ParseUtils;
+import java.lang.reflect.InvocationTargetException;
 import java.time.ZoneId;
 import java.time.zone.ZoneRulesException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
-public class StatementListVisitor extends OpsqlBaseVisitor<Object> {
+public class StatementListVisitor extends BaseVisitor {
   private final List<RunnableStatement> statements = new ArrayList<>();
-  private final SessionContext sessionContext;
 
-  public StatementListVisitor(final SessionContext sessionContext) {
-    this.sessionContext = sessionContext;
-  }
+  public StatementListVisitor() {}
 
   @Override
   public Object visitTimeZoneStatement(final OpsqlParser.TimeZoneStatementContext ctx) {
@@ -49,6 +48,23 @@ public class StatementListVisitor extends OpsqlBaseVisitor<Object> {
   }
 
   @Override
+  public Object visitSetStatement(final OpsqlParser.SetStatementContext ctx) {
+    final String key = ctx.Identifier().getText();
+    final Object value = ctx.literal().accept(this);
+    statements.add(
+        sessionContext -> {
+          try {
+            BeanTools.set(sessionContext.getConfig(), key, value);
+          } catch (final InvocationTargetException e) {
+            throw new OpsqlException("Internal error: " + e.getMessage());
+          } catch (final IllegalAccessException | NoSuchFieldException | NoSuchMethodException e) {
+            throw new OpsqlException("No such field: " + key);
+          }
+        });
+    return super.visitSetStatement(ctx);
+  }
+
+  @Override
   public Object visitFormatStatement(final OpsqlParser.FormatStatementContext ctx) {
     statements.add(
         (sessionContext) ->
@@ -58,7 +74,7 @@ public class StatementListVisitor extends OpsqlBaseVisitor<Object> {
 
   @Override
   public Object visitQueryStatement(final OpsqlParser.QueryStatementContext ctx) {
-    final QueryBuilderVisitor v = new QueryBuilderVisitor(sessionContext);
+    final QueryBuilderVisitor v = new QueryBuilderVisitor();
     v.visitQueryStatement(ctx);
     statements.add(v.getQuery());
     return null;

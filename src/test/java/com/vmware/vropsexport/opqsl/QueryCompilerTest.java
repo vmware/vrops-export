@@ -30,7 +30,7 @@ public class QueryCompilerTest {
   private Query compile(final String query) {
     return (Query)
         new Compiler()
-            .compile(query, new SessionContext()).stream()
+            .compile(query).stream()
                 .filter((s) -> s instanceof Query)
                 .findFirst()
                 .orElseThrow(RuntimeException::new);
@@ -180,7 +180,7 @@ public class QueryCompilerTest {
   private void checkTimezone(final String tz) throws ExporterException {
     final Compiler c = new Compiler();
     final SessionContext ctx = new SessionContext();
-    final List<RunnableStatement> stmts = c.compile("timezone(\"" + tz + "\")", ctx);
+    final List<RunnableStatement> stmts = c.compile("timezone(\"" + tz + "\")");
     for (final RunnableStatement rs : stmts) {
       rs.run(ctx);
     }
@@ -203,5 +203,21 @@ public class QueryCompilerTest {
     } catch (final OpsqlException e) {
       // This is OK
     }
+  }
+
+  private void runStatement(final SessionContext ctx, final String statement)
+      throws ExporterException {
+    final Compiler c = new Compiler();
+    final List<RunnableStatement> stmts = Compiler.compile(statement);
+    for (final RunnableStatement rs : stmts) {
+      rs.run(ctx);
+    }
+  }
+
+  @Test
+  public void testSimpleSet() throws ExporterException {
+    final SessionContext ctx = new SessionContext();
+    runStatement(ctx, "set(outputFormat, \"json\")");
+    Assert.assertEquals("json", ctx.getConfig().getOutputFormat());
   }
 }

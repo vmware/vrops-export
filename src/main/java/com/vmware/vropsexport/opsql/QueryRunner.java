@@ -18,6 +18,7 @@
 package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.Command;
+import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.Metadata;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.opsql.console.Console;
@@ -32,6 +33,7 @@ public class QueryRunner extends Command {
   public void run(final OutputStream out, final CommandLine commandLine) throws ExporterException {
     final SessionContext context =
         new SessionContext(
+            new Config(),
             "csv",
             ZoneId.systemDefault(),
             verbose,
@@ -56,7 +58,7 @@ public class QueryRunner extends Command {
 
   public void executeQuery(final String query, final SessionContext context)
       throws ExporterException {
-    final List<RunnableStatement> statements = Compiler.compile(query, context);
+    final List<RunnableStatement> statements = Compiler.compile(query);
     for (final RunnableStatement stmt : statements) {
       stmt.run(context);
     }
