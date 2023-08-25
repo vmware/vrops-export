@@ -198,11 +198,11 @@ public class Completer implements org.jline.reader.Completer {
   }
 
   private static Candidate makeCandidate(final String word) {
-    return new Candidate(word, word, null, null, "(", null, false, 0);
+    return new Candidate(word, word, null, null, null, null, false, 0);
   }
 
   private static Candidate makeCandidate(final String key, final String name) {
-    return new Candidate(key, key, null, name, "(", null, false, 0);
+    return new Candidate(key, key, null, name, null, null, false, 0);
   }
 
   private static List<String> inferResourceKind(final ParsedLine p, final Completer completer) {

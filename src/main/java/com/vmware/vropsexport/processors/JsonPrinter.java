@@ -46,7 +46,8 @@ public class JsonPrinter implements RowsetProcessor {
           config.getJsonConfig() != null
               ? config.getJsonConfig().getFormat()
               : JsonConfig.JsonFormat.compact,
-          config.getDateFormatter());
+          config.getDateFormatter(),
+          config.getJsonConfig().isPretty());
     }
 
     @Override
@@ -65,13 +66,17 @@ public class JsonPrinter implements RowsetProcessor {
       final OutputStream out,
       final DataProvider dp,
       final JsonConfig.JsonFormat format,
-      final DateFormat dateFormat)
+      final DateFormat dateFormat,
+      final boolean pretty)
       throws ExporterException {
     try {
       this.format = format;
       final JsonFactory jf = new JsonFactory();
       generator = jf.createGenerator(out, JsonEncoding.UTF8);
       generator.overrideStdFeatures(0, JsonGenerator.Feature.AUTO_CLOSE_TARGET.getMask());
+      if (pretty) {
+        generator.useDefaultPrettyPrinter();
+      }
       producer = new JsonProducer(generator, dp, dateFormat);
     } catch (final IOException e) {
       throw new ExporterException(e);
@@ -96,7 +101,6 @@ public class JsonPrinter implements RowsetProcessor {
   @Override
   public void close() throws ExporterException {
     try {
-
       generator.writeEndArray();
       generator.writeEndObject();
       generator.writeRaw('\n');

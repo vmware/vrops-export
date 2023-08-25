@@ -24,6 +24,8 @@ public class JsonConfig {
     elastic,
   }
 
+  private boolean pretty;
+
   private JsonFormat format = JsonFormat.compact;
 
   public JsonFormat getFormat() {
@@ -32,5 +34,13 @@ public class JsonConfig {
 
   public void setFormat(final JsonFormat format) {
     this.format = format;
+  }
+
+  public boolean isPretty() {
+    return pretty;
+  }
+
+  public void setPretty(final boolean pretty) {
+    this.pretty = pretty;
   }
 }

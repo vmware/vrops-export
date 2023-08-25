@@ -17,6 +17,10 @@
  */
 package com.vmware.vropsexport.opqsl.console;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.Metadata;
@@ -26,23 +30,18 @@ import com.vmware.vropsexport.models.ResourceAttributeResponse;
 import com.vmware.vropsexport.opsql.Constants;
 import com.vmware.vropsexport.opsql.console.Completer;
 import com.vmware.vropsexport.opsql.console.Parser;
-import org.apache.http.HttpException;
-import org.jline.reader.Candidate;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.apache.http.HttpException;
+import org.jline.reader.Candidate;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class CompleterTest {
   private final List<ResourceAttributeResponse.ResourceAttribute> stats;
@@ -113,4 +112,7 @@ public class CompleterTest {
     runTest(
         "resource(VMWARE:VirtualMachine).parents(VMWARE:HostSystem h).fields(h->cpu", 64, expected);
   }
+
+  @Test
+  public void testInnerExpansion() {}
 }

@@ -49,6 +49,10 @@ import org.yaml.snakeyaml.representer.Representer;
 public class Exporter implements DataProvider {
   private final Metadata metadata;
 
+  private static interface ShutdownTask {
+    public void run() throws Exception;
+  }
+
   private static class Progress implements ProgressMonitor {
     private final int totalRows;
 
@@ -153,9 +157,12 @@ public class Exporter implements DataProvider {
       final boolean quiet)
       throws IOException, HttpException, ExporterException {
     final TimeZone tz = TimeZone.getDefault();
+    final Stack<ShutdownTask> postShutdownActions = new Stack<>();
+    postShutdownActions.push(() -> out.flush());
     try {
       // Switch default time zone to the user specified one while we're running the export.
       TimeZone.setDefault(TimeZone.getTimeZone(conf.getTimezone()));
+      postShutdownActions.push(() -> TimeZone.setDefault(tz));
       Progress progress = null;
 
       final ResourceRequest query = conf.getQuery();
@@ -169,84 +176,84 @@ public class Exporter implements DataProvider {
                       .map(ResourceAttributeResponse.ResourceAttribute::getKey)
                       .collect(Collectors.toList()))
               : new RowMetadata(conf);
-      try (final RowsetProcessor rsp = rspFactory.makeFromConfig(out, conf, this)) {
-        rsp.preamble(meta, conf);
-        String parentId = null;
-        if (parentSpec != null) {
+      final RowsetProcessor rsp = rspFactory.makeFromConfig(out, conf, this);
+      postShutdownActions.push(() -> rsp.close());
+      rsp.preamble(meta, conf);
+      String parentId = null;
+      if (parentSpec != null) {
 
-          // Lookup parent
-          final Matcher m = Patterns.parentSpecPattern.matcher(parentSpec);
-          if (!m.matches()) {
-            throw new ExporterException(
-                "Not a valid parent spec: "
-                    + parentSpec
-                    + ". should be on the form ResourceKind:resourceName");
-          }
-          // TODO: No way of specifying adapter type here. Should there be?
-          final ResourceRequest parentQuery = new ResourceRequest();
-          parentQuery.setAdapterKind(Collections.singletonList(m.group(1)));
-          parentQuery.setResourceKind(Collections.singletonList(m.group(2)));
-          final List<NamedResource> pResources = fetchResources(query, 0).getResourceList();
-          if (pResources.size() == 0) {
-            throw new ExporterException("Parent not found");
-          }
-          if (pResources.size() > 1) {
-            throw new ExporterException("Parent spec is not unique");
-          }
-          parentId = pResources.get(0).getIdentifier();
+        // Lookup parent
+        final Matcher m = Patterns.parentSpecPattern.matcher(parentSpec);
+        if (!m.matches()) {
+          throw new ExporterException(
+              "Not a valid parent spec: "
+                  + parentSpec
+                  + ". should be on the form ResourceKind:resourceName");
+        }
+        // TODO: No way of specifying adapter type here. Should there be?
+        final ResourceRequest parentQuery = new ResourceRequest();
+        parentQuery.setAdapterKind(Collections.singletonList(m.group(1)));
+        parentQuery.setResourceKind(Collections.singletonList(m.group(2)));
+        final List<NamedResource> pResources = fetchResources(query, 0).getResourceList();
+        if (pResources.size() == 0) {
+          throw new ExporterException("Parent not found");
+        }
+        if (pResources.size() > 1) {
+          throw new ExporterException("Parent spec is not unique");
+        }
+        parentId = pResources.get(0).getIdentifier();
+      }
+
+      int page = 0;
+      for (; ; ) {
+        final PageOfResources resPage;
+
+        // Fetch resources
+        if (parentId != null) {
+          final String url = "/suite-api/api/resources/" + parentId + "/relationships";
+          resPage =
+              client.getJson(
+                  url, PageOfResources.class, "relationshipType=CHILD", "page=" + page++);
+        } else {
+          resPage = fetchResources(query, page++);
         }
 
-        int page = 0;
-        for (; ; ) {
-          final PageOfResources resPage;
-
-          // Fetch resources
-          if (parentId != null) {
-            final String url = "/suite-api/api/resources/" + parentId + "/relationships";
-            resPage =
-                client.getJson(
-                    url, PageOfResources.class, "relationshipType=CHILD", "page=" + page++);
-          } else {
-            resPage = fetchResources(query, page++);
-          }
-
-          final List<NamedResource> resources = resPage.getResourceList();
-          // If we got an empty set back, we ran out of pages.
-          if (resources.size() == 0) {
-            break;
-          }
-
-          // Initialize progress reporting
-          if (!quiet && progress == null) {
-            progress = new Progress(resPage.getPageInfo().getTotalCount());
-            progress.reportProgress(0);
-          }
-          int chunkSize = Math.min(MAX_RESPONSE_ROWS, maxRows);
-          if (verbose) {
-            log.debug("Raw chunk size is " + chunkSize + " resources");
-          }
-
-          // We don't want to make the chunks so big that not all threads will have work to do.
-          // Make sure that doesn't happen.
-          chunkSize = Math.min(chunkSize, 1 + (resources.size() / executor.getMaximumPoolSize()));
-          if (verbose) {
-            log.debug("Adjusted chunk size is " + chunkSize + " resources");
-          }
-          final Progress finalProgress = progress;
-          // Child relationships may return objects of the wrong type, so we have
-          // to check the type here.
-          final Stream<NamedResource> filteredResources =
-              resources.stream()
-                  .filter((r) -> r.isSameType(conf.getAdapterKind(), conf.getResourceKind()));
-          Chunker.chunkify(
-              filteredResources,
-              chunkSize,
-              (chunk) -> {
-                startChunkJob(chunk, rsp, meta, begin, end, finalProgress);
-              });
-
-          final ArrayList<NamedResource> chunk = new ArrayList<>(chunkSize);
+        final List<NamedResource> resources = resPage.getResourceList();
+        // If we got an empty set back, we ran out of pages.
+        if (resources.size() == 0) {
+          break;
         }
+
+        // Initialize progress reporting
+        if (!quiet && progress == null) {
+          progress = new Progress(resPage.getPageInfo().getTotalCount());
+          progress.reportProgress(0);
+        }
+        int chunkSize = Math.min(MAX_RESPONSE_ROWS, maxRows);
+        if (verbose) {
+          log.debug("Raw chunk size is " + chunkSize + " resources");
+        }
+
+        // We don't want to make the chunks so big that not all threads will have work to do.
+        // Make sure that doesn't happen.
+        chunkSize = Math.min(chunkSize, 1 + (resources.size() / executor.getMaximumPoolSize()));
+        if (verbose) {
+          log.debug("Adjusted chunk size is " + chunkSize + " resources");
+        }
+        final Progress finalProgress = progress;
+        // Child relationships may return objects of the wrong type, so we have
+        // to check the type here.
+        final Stream<NamedResource> filteredResources =
+            resources.stream()
+                .filter((r) -> r.isSameType(conf.getAdapterKind(), conf.getResourceKind()));
+        Chunker.chunkify(
+            filteredResources,
+            chunkSize,
+            (chunk) -> {
+              startChunkJob(chunk, rsp, meta, begin, end, finalProgress);
+            });
+
+        final ArrayList<NamedResource> chunk = new ArrayList<>(chunkSize);
       }
     } finally {
       executor.shutdown();
@@ -264,10 +271,13 @@ public class Exporter implements DataProvider {
         e.printStackTrace();
         return;
       }
-      out.flush();
-
-      // Switch back to the original time zone
-      TimeZone.setDefault(tz);
+      while (!postShutdownActions.isEmpty()) {
+        try {
+          postShutdownActions.pop().run();
+        } catch (final Exception e) {
+          e.printStackTrace();
+        }
+      }
     }
     if (!quiet) {
       System.err.println("100% done");

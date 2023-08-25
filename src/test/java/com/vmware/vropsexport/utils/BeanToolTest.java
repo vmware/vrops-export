@@ -133,6 +133,7 @@ public class BeanToolTest {
                 "wavefrontConfig.proxyPort",
                 "query.adapterKind",
                 "sqlConfig.databaseType",
+                "sqlConfig.databaseType",
                 "query.resourceTag",
                 "query.resourceId",
                 "sqlConfig.password",
@@ -140,7 +141,8 @@ public class BeanToolTest {
                 "query.resourceStatus",
                 "query.propertyConditions.conjunctionOperator",
                 "nameSanitizer",
-                "resourceType"
+                "resourceType",
+                "jsonConfig.pretty",
               })
           .collect(Collectors.toSet());
 
