@@ -21,14 +21,14 @@
 package com.vmware.vropsexport.utils;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class BeanToolTest {
 
-  class SampleBean {
+  static class SampleBean {
     private String string = "aString";
 
     private int integer = 42;
@@ -78,6 +78,32 @@ public class BeanToolTest {
     public void setBool(final boolean bool) {
       this.bool = bool;
     }
+
+    public static Set<String> getPropertyNames() {
+      return Arrays.stream(
+              new String[] {
+                "string", "integer", "bool", "nested", "map",
+              })
+          .collect(Collectors.toSet());
+    }
+
+    @Test
+    public Set<String> getRecursivePropertyNames() {
+      return Arrays.stream(
+              new String[] {
+                "string",
+                "integer",
+                "bool",
+                "nested",
+                "map",
+                "nested.string",
+                "nested.integer",
+                "nested.bool",
+                "nested.nested",
+                "nested.map"
+              })
+          .collect(Collectors.toSet());
+    }
   }
 
   @Test
@@ -91,7 +117,9 @@ public class BeanToolTest {
 
   @Test
   public void testSimpleSetter()
-      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException,
+      throws InvocationTargetException,
+          NoSuchMethodException,
+          IllegalAccessException,
           NoSuchFieldException {
     final SampleBean b = new SampleBean();
     BeanTools.set(b, "string", "new string");
@@ -125,7 +153,9 @@ public class BeanToolTest {
 
   @Test
   public void testNestedSetter()
-      throws NoSuchFieldException, InvocationTargetException, NoSuchMethodException,
+      throws NoSuchFieldException,
+          InvocationTargetException,
+          NoSuchMethodException,
           IllegalAccessException {
     final SampleBean b = new SampleBean();
     final SampleBean nested = new SampleBean();
@@ -134,5 +164,17 @@ public class BeanToolTest {
     b.setNested(nested);
     BeanTools.set(b, "nested.integer", 44);
     Assert.assertEquals(44, b.getNested().getInteger());
+  }
+
+  @Test
+  public void testNonRecursiveProperties() {
+    Assert.assertEquals(
+        SampleBean.getPropertyNames(), BeanTools.getSettableProperties(SampleBean.class, false));
+  }
+
+  @Test
+  public void testRecursiveProperties() {
+    Assert.assertEquals(
+        SampleBean.getPropertyNames(), BeanTools.getSettableProperties(SampleBean.class, true));
   }
 }

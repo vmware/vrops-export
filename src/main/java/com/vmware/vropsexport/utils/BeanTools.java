@@ -23,7 +23,8 @@ package com.vmware.vropsexport.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.StringTokenizer;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class BeanTools {
   private static class Target {
@@ -86,9 +87,52 @@ public class BeanTools {
   }
 
   public static void set(final Object target, final String key, final Object value)
-      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException,
+      throws InvocationTargetException,
+          NoSuchMethodException,
+          IllegalAccessException,
           NoSuchFieldException {
     final Target t = getTarget(target, key);
     innerSet(t.target, t.key, value);
+  }
+
+  private static String setterToProperty(final Method setter) {
+    return Character.toLowerCase(setter.getName().charAt(3)) + setter.getName().substring(4);
+  }
+
+  public static Set<String> getSettableProperties(final Class<?> clazz, final boolean recurse) {
+    if (!recurse) {
+      return getSetters(clazz).stream()
+          .map(BeanTools::setterToProperty)
+          .collect(Collectors.toSet());
+    }
+    final Set<String> result = new HashSet<>();
+    collectProperties(clazz, result, new HashSet<>(), "");
+    return result;
+  }
+
+  private static void collectProperties(
+      final Class<?> clazz,
+      final Set<String> properties,
+      final Set<Class<?>> visited,
+      final String prefix) {
+    if (visited.contains(clazz)) {
+      return; // Avoid infinite recursion if class contains reference to itself
+    }
+    visited.add(clazz);
+    for (final Method m : getSetters(clazz)) {
+      final String prop =
+          prefix.length() == 0 ? setterToProperty(m) : prefix + "." + setterToProperty(m);
+      properties.add(prop);
+      final Class<?> type = m.getParameters()[0].getType();
+      if (!(type.isPrimitive() || type == String.class || Number.class.isAssignableFrom(type))) {
+        collectProperties(type, properties, visited, prop);
+      }
+    }
+  }
+
+  public static List<Method> getSetters(final Class<?> clazz) {
+    return Arrays.stream(clazz.getMethods())
+        .filter(m -> m.getName().startsWith("set") && m.getParameters().length == 1)
+        .collect(Collectors.toList());
   }
 }
