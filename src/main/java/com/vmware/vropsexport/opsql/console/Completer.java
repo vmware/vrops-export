@@ -17,10 +17,15 @@
  */
 package com.vmware.vropsexport.opsql.console;
 
+import com.vmware.vropsexport.Config;
 import com.vmware.vropsexport.Metadata;
 import com.vmware.vropsexport.models.AdapterKind;
 import com.vmware.vropsexport.models.ResourceAttributeResponse;
 import com.vmware.vropsexport.opsql.Constants;
+import com.vmware.vropsexport.utils.BeanTools;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.apache.http.HttpException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,12 +33,13 @@ import org.jline.reader.Candidate;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-
 public class Completer implements org.jline.reader.Completer {
   private static final Logger log = LogManager.getLogger(Completer.class);
+
+  private static final List<String> configProperties =
+      BeanTools.getSettableProperties(Config.class, true).stream()
+          .filter(p -> !p.startsWith("query"))
+          .collect(Collectors.toList());
 
   @FunctionalInterface
   interface Resolver {
@@ -51,6 +57,7 @@ public class Completer implements org.jline.reader.Completer {
     resolvers.put("fields", Completer::resolveStatOrPropKey);
     resolvers.put("whereMetrics", Completer::resolveStatKey);
     resolvers.put("whereProperties", Completer::resolvePropertyKey);
+    resolvers.put("set", Completer::resolveConfigProperty);
   }
 
   private final List<Candidate> resourceKinds;
@@ -138,6 +145,11 @@ public class Completer implements org.jline.reader.Completer {
               .collect(Collectors.toList()));
     }
     return result;
+  }
+
+  private static List<Candidate> resolveConfigProperty(
+      final Completer completer, final ParsedLine parsedLine, final String pattern) {
+    return configProperties.stream().map(p -> makeCandidate(p)).collect(Collectors.toList());
   }
 
   private List<Candidate> loadResourceKinds() {

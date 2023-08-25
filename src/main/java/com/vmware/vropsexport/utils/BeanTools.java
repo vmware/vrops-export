@@ -87,9 +87,7 @@ public class BeanTools {
   }
 
   public static void set(final Object target, final String key, final Object value)
-      throws InvocationTargetException,
-          NoSuchMethodException,
-          IllegalAccessException,
+      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException,
           NoSuchFieldException {
     final Target t = getTarget(target, key);
     innerSet(t.target, t.key, value);

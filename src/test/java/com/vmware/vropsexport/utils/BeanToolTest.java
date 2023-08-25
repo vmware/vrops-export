@@ -20,6 +20,7 @@
 
 package com.vmware.vropsexport.utils;
 
+import com.vmware.vropsexport.Config;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -78,33 +79,73 @@ public class BeanToolTest {
     public void setBool(final boolean bool) {
       this.bool = bool;
     }
-
-    public static Set<String> getPropertyNames() {
-      return Arrays.stream(
-              new String[] {
-                "string", "integer", "bool", "nested", "map",
-              })
-          .collect(Collectors.toSet());
-    }
-
-    @Test
-    public Set<String> getRecursivePropertyNames() {
-      return Arrays.stream(
-              new String[] {
-                "string",
-                "integer",
-                "bool",
-                "nested",
-                "map",
-                "nested.string",
-                "nested.integer",
-                "nested.bool",
-                "nested.nested",
-                "nested.map"
-              })
-          .collect(Collectors.toSet());
-    }
   }
+
+  private static final Set<String> recursiveConfigProperties =
+      Arrays.stream(
+              new String[] {
+                "query.propertyConditions",
+                "allMetrics",
+                "sqlConfig.sql",
+                "nameSanitizer.replacement",
+                "compact",
+                "dateFormat",
+                "wavefrontConfig",
+                "csvConfig",
+                "elasticSearchConfig.apiKey",
+                "align",
+                "jsonConfig",
+                "query.resourceKind",
+                "jsonConfig.format",
+                "elasticSearchConfig.password",
+                "csvConfig.header",
+                "outputFormat",
+                "wavefrontConfig.wavefrontURL",
+                "query.propertyConditions.conditions",
+                "query",
+                "query.resourceHealth",
+                "csvConfig.delimiter",
+                "query.regex",
+                "query.statConditions",
+                "query.name",
+                "rollupMinutes",
+                "nameSanitizer.forbidden",
+                "sqlConfig.batchSize",
+                "elasticSearchConfig.bulkSize",
+                "elasticSearchConfig.username",
+                "fields",
+                "sqlConfig.connectionString",
+                "wavefrontConfig.token",
+                "timezone",
+                "elasticSearchConfig.index",
+                "rollupType",
+                "wavefrontConfig.proxyHost",
+                "resourceKind",
+                "sqlConfig.driver",
+                "sqlConfig",
+                "query.resourceState",
+                "sqlConfig.username",
+                "elasticSearchConfig.urls",
+                "adapterKind",
+                "elasticSearchConfig.type",
+                "elasticSearchConfig",
+                "compactifyAlg",
+                "wavefrontConfig.proxyPort",
+                "query.adapterKind",
+                "sqlConfig.databaseType",
+                "query.resourceTag",
+                "query.resourceId",
+                "sqlConfig.password",
+                "query.id",
+                "query.resourceStatus",
+                "query.propertyConditions.conjunctionOperator",
+                "nameSanitizer",
+                "resourceType"
+              })
+          .collect(Collectors.toSet());
+
+  private static final Set<String> congfigProperties =
+      recursiveConfigProperties.stream().filter(p -> !p.contains(".")).collect(Collectors.toSet());
 
   @Test
   public void testSimpleGetter()
@@ -117,9 +158,7 @@ public class BeanToolTest {
 
   @Test
   public void testSimpleSetter()
-      throws InvocationTargetException,
-          NoSuchMethodException,
-          IllegalAccessException,
+      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException,
           NoSuchFieldException {
     final SampleBean b = new SampleBean();
     BeanTools.set(b, "string", "new string");
@@ -153,9 +192,7 @@ public class BeanToolTest {
 
   @Test
   public void testNestedSetter()
-      throws NoSuchFieldException,
-          InvocationTargetException,
-          NoSuchMethodException,
+      throws NoSuchFieldException, InvocationTargetException, NoSuchMethodException,
           IllegalAccessException {
     final SampleBean b = new SampleBean();
     final SampleBean nested = new SampleBean();
@@ -168,13 +205,15 @@ public class BeanToolTest {
 
   @Test
   public void testNonRecursiveProperties() {
-    Assert.assertEquals(
-        SampleBean.getPropertyNames(), BeanTools.getSettableProperties(SampleBean.class, false));
+    Assert.assertEquals(congfigProperties, BeanTools.getSettableProperties(Config.class, false));
   }
 
   @Test
   public void testRecursiveProperties() {
     Assert.assertEquals(
-        SampleBean.getPropertyNames(), BeanTools.getSettableProperties(SampleBean.class, true));
+        recursiveConfigProperties, BeanTools.getSettableProperties(Config.class, true));
   }
+
+  @Test
+  public void testConfigProperties() {}
 }
