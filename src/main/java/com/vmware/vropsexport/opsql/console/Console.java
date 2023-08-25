@@ -69,10 +69,10 @@ public class Console {
           try {
             runner.executeQuery(query, context);
             terminal.output().flush();
-          } catch (final OpsqlException e) {
+          } catch (final OpsqlException | ExporterException e) {
             System.err.println(e.getMessage());
-          } catch (final ExporterException e) {
-            System.err.println(e.getMessage());
+          } catch (final Exception e) {
+            System.err.println("Internal error: " + e.getMessage());
           }
         }
       }

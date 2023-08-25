@@ -9,9 +9,7 @@ statementList
     ;
 
 statement
-    : TimeZone '(' StringLiteral ')'                            # timeZoneStatement
-    | Format '(' StringLiteral ')'                              # formatStatement
-    | Set '(' Identifier ',' literal ')'                        # setStatement
+    : Set '(' Identifier ',' propertyLiteral ')'                # setStatement
     | query                                                     # queryStatement
     ;
 
@@ -90,6 +88,16 @@ literal
     | ScientificNumber                                          # number
     ;
 
+propertyLiteral
+    : literal
+    | booleanLiteral
+    ;
+
+booleanLiteral
+    : True
+    | False
+    ;
+
 propertyOrMetricIdentifier
     : resource=Identifier '->' field=PropertyIdentifier         # relativePropertyIdenfifier
     | aggregation '(' resource=Identifier '->' field=Identifier ')' # relativeMetricIdentifier
@@ -126,9 +134,9 @@ As:                 'as';
 Avg:                'avg';
 Child:              'child';
 Children:           'children';
+False:              'false';
 Fields:             'fields';
 First:              'first';
-Format:             'format';
 From:               'from';
 Health:             'health';
 Id:                 'id';
@@ -152,7 +160,7 @@ Status:             'status';
 StdDev:             'stddev';
 Sum:                'sum';
 Tag:                'tag';
-TimeZone:           'timezone';
+True:               'true';
 Variance:           'variance';
 Where:              'where';
 WhereHealth:        'whereHealth';

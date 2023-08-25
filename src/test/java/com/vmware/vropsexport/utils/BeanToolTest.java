@@ -33,6 +33,8 @@ public class BeanToolTest {
 
     private int integer = 42;
 
+    private boolean bool = true;
+
     private Map<String, String> map = new HashMap<>();
 
     private SampleBean nested;
@@ -68,6 +70,14 @@ public class BeanToolTest {
     public void setNested(final SampleBean nested) {
       this.nested = nested;
     }
+
+    public boolean isBool() {
+      return bool;
+    }
+
+    public void setBool(final boolean bool) {
+      this.bool = bool;
+    }
   }
 
   @Test
@@ -92,6 +102,10 @@ public class BeanToolTest {
     Assert.assertEquals("new string", b.getString());
     Assert.assertEquals(123, b.getInteger());
     Assert.assertEquals(map, b.getMap());
+    BeanTools.set(b, "bool", false);
+    Assert.assertEquals(false, b.isBool());
+    BeanTools.set(b, "bool", true);
+    Assert.assertEquals(true, b.isBool());
   }
 
   @Test

@@ -23,9 +23,9 @@ import com.vmware.vropsexport.json.JsonConfig;
 import com.vmware.vropsexport.models.ResourceRequest;
 import com.vmware.vropsexport.sql.SQLConfig;
 import com.vmware.vropsexport.wavefront.WavefrontConfig;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -61,17 +61,18 @@ public class Config implements Validatable {
   private long rollupMinutes = 5;
   private String dateFormat = "yyyy-MM-dd HH:mm:ss";
   private String outputFormat = "csv";
-  private SQLConfig sqlConfig;
-  private WavefrontConfig wavefrontConfig;
+  private SQLConfig sqlConfig = new SQLConfig();
+  private WavefrontConfig wavefrontConfig = new WavefrontConfig();
   private ResourceRequest query = new ResourceRequest();
   private boolean compact;
   private String compactifyAlg = "LATEST";
   private CSVConfig csvConfig = new CSVConfig(true, ",");
-  private JsonConfig jsonConfig;
-  private ElasticSearchConfig elasticSearchConfig;
+  private JsonConfig jsonConfig = new JsonConfig();
+  private ElasticSearchConfig elasticSearchConfig = new ElasticSearchConfig();
   private int align = 0;
   private boolean allMetrics = false;
-  private NameSanitizerConfig nameSanitizer;
+  private NameSanitizerConfig nameSanitizer = new NameSanitizerConfig();
+  private ZoneId timezone = ZoneId.systemDefault();
 
   public Config() {}
 
@@ -86,22 +87,13 @@ public class Config implements Validatable {
     if (outputFormat == null) {
       throw new ValidationException("'outputFormat' must be specified");
     }
-    if ("sql".equals(outputFormat) && sqlConfig == null) {
-      throw new ValidationException("'sqlConfig' must be specified for SQL output");
-    }
-    if ("wavefront".equals(outputFormat) && sqlConfig == null) {
-      throw new ValidationException("'wavefrontConfig' must be specified for SQL output");
-    }
-    if ("elastic".equals(outputFormat) && sqlConfig == null) {
-      throw new ValidationException("'elasticConfig' must be specified for SQL output");
-    }
-    if (sqlConfig != null) {
+    if ("sql".equals(outputFormat)) {
       sqlConfig.validate();
     }
-    if (wavefrontConfig != null) {
+    if ("wavefront".equals(outputFormat)) {
       wavefrontConfig.validate();
     }
-    if (elasticSearchConfig != null) {
+    if ("elastic".equals(outputFormat)) {
       elasticSearchConfig.validate();
     }
   }
@@ -115,7 +107,7 @@ public class Config implements Validatable {
   }
 
   public NameSanitizer createNameSanitizer() {
-    return nameSanitizer != null
+    return nameSanitizer != null && nameSanitizer.forbidden != null
         ? new ReplacingNameSanitizer(nameSanitizer.forbidden, nameSanitizer.replacement)
         : s -> s;
   }
@@ -191,6 +183,7 @@ public class Config implements Validatable {
   }
 
   public void setDateFormat(final String dateFormat) {
+    new SimpleDateFormat(dateFormat); // Validate it before we use it.
     this.dateFormat = dateFormat;
   }
 
@@ -292,5 +285,21 @@ public class Config implements Validatable {
 
   public void setQuery(final ResourceRequest query) {
     this.query = query;
+  }
+
+  public String getTimezone() {
+    return timezone.getId();
+  }
+
+  public ZoneId getZoneId() {
+    return timezone;
+  }
+
+  public void setTimezone(final String timezone) {
+    this.timezone = ZoneId.of(timezone);
+  }
+
+  public void setTimezone(final ZoneId timezone) {
+    this.timezone = timezone;
   }
 }

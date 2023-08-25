@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.opsql.*;
 import com.vmware.vropsexport.opsql.Compiler;
+import com.vmware.vropsexport.utils.ParseUtils;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.TimeZone;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -29,11 +29,10 @@ public class QueryCompilerTest {
 
   private Query compile(final String query) {
     return (Query)
-        new Compiler()
-            .compile(query).stream()
-                .filter((s) -> s instanceof Query)
-                .findFirst()
-                .orElseThrow(RuntimeException::new);
+        Compiler.compile(query).stream()
+            .filter((s) -> s instanceof Query)
+            .findFirst()
+            .orElseThrow(RuntimeException::new);
   }
 
   @Test
@@ -42,48 +41,69 @@ public class QueryCompilerTest {
   }
 
   @Test
-  public void testRelativeTimeRangeQuery() throws Exception {
+  public void testRelativeTimeRangeQuery() throws ExporterException {
+    final SessionContext ctx = new SessionContext();
     Query q = compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1s)");
-    Assert.assertEquals(System.currentTimeMillis() - 1000, q.getFromTime().getTime(), 1000);
+    q.resolveDates(ctx);
+    Assert.assertEquals(System.currentTimeMillis() - 1000, q.getFromDate().getTime(), 1000);
     q = compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1m)");
-    Assert.assertEquals(System.currentTimeMillis() - 60000, q.getFromTime().getTime(), 1000);
+    q.resolveDates(ctx);
+    Assert.assertEquals(System.currentTimeMillis() - 60000, q.getFromDate().getTime(), 1000);
     q = compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1h)");
-    Assert.assertEquals(System.currentTimeMillis() - 60000 * 60, q.getFromTime().getTime(), 1000);
+    q.resolveDates(ctx);
+    Assert.assertEquals(System.currentTimeMillis() - 60000 * 60, q.getFromDate().getTime(), 1000);
     q = compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1d)");
+    q.resolveDates(ctx);
     Assert.assertEquals(
-        System.currentTimeMillis() - 60000 * 60 * 24, q.getFromTime().getTime(), 1000);
+        System.currentTimeMillis() - 60000 * 60 * 24, q.getFromDate().getTime(), 1000);
     q = compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).latest(1w)");
+    q.resolveDates(ctx);
     Assert.assertEquals(
-        System.currentTimeMillis() - 60000 * 60 * 24 * 7, q.getFromTime().getTime(), 1000);
+        System.currentTimeMillis() - 60000 * 60 * 24 * 7, q.getFromDate().getTime(), 1000);
   }
 
   @Test
-  public void testAbsoluteTimeRange() {
-    final TimeZone tz = TimeZone.getDefault();
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    try {
-      final long fromLocal =
-          LocalDateTime.parse("2023-07-04T12:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-              .atZone(ZoneId.systemDefault())
-              .toInstant()
-              .toEpochMilli();
-      final long toLocal =
-          LocalDateTime.parse("2023-07-05T12:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-              .atZone(ZoneId.systemDefault())
-              .toInstant()
-              .toEpochMilli();
-      Query q =
-          compile(
-              "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(2023-07-04 12:00)");
-      Assert.assertEquals(fromLocal, q.getFromTime().getTime());
-      q =
-          compile(
-              "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(2023-07-04 12:00, 2023-07-05 12:00)");
-      Assert.assertEquals(fromLocal, q.getFromTime().getTime());
-      Assert.assertEquals(toLocal, q.getToTime().getTime());
-    } finally {
-      TimeZone.setDefault(tz);
-    }
+  public void testAbsoluteTimeRange() throws ExporterException {
+    final SessionContext ctx = new SessionContext();
+    ctx.getConfig().setTimezone("UTC");
+    final ZoneId tz = ZoneId.of("UTC");
+    final long fromLocal =
+        LocalDateTime.parse("2023-07-04T12:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            .atZone(tz)
+            .toInstant()
+            .toEpochMilli();
+    final long toLocal =
+        LocalDateTime.parse("2023-07-05T12:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            .atZone(tz)
+            .toInstant()
+            .toEpochMilli();
+    Query q =
+        compile(
+            "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(2023-07-04 12:00)");
+    q.resolveDates(ctx);
+    Assert.assertEquals(fromLocal, q.getFromDate().getTime());
+    q =
+        compile(
+            "resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(2023-07-04 12:00, 2023-07-05 12:00)");
+    q.resolveDates(ctx);
+    Assert.assertEquals(fromLocal, q.getFromDate().getTime());
+    Assert.assertEquals(toLocal, q.getToDate().getTime());
+  }
+
+  @Test
+  public void testShortFormAbsoluteTimeRange() throws ExporterException {
+    final SessionContext ctx = new SessionContext();
+    ctx.getConfig().setTimezone("UTC");
+    final ZoneId tz = ZoneId.of("UTC");
+    final long fromLocal = ParseUtils.parseTime("00:00:00", ctx.getConfig().getZoneId()).getTime();
+    final long toLocal = ParseUtils.parseTime("13:00:00", ctx.getConfig().getZoneId()).getTime();
+    Query q = compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(00:00)");
+    q.resolveDates(ctx);
+    Assert.assertEquals(fromLocal, q.getFromDate().getTime());
+    q = compile("resource(VMWARE:VirtualMachine).fields(cpu|demandmhz).timerange(00:00, 13:00)");
+    q.resolveDates(ctx);
+    Assert.assertEquals(fromLocal, q.getFromDate().getTime());
+    Assert.assertEquals(toLocal, q.getToDate().getTime());
   }
 
   @Test
@@ -146,7 +166,7 @@ public class QueryCompilerTest {
   }
 
   @Test
-  public void testSyntaxError() throws IOException {
+  public void testSyntaxError() {
     boolean exceptionHappened = false;
     try {
       compile("resource(VMWARE:VirtualMachine).name(notALiteral).fields(cpu|demandmhz)");
@@ -178,13 +198,12 @@ public class QueryCompilerTest {
   }
 
   private void checkTimezone(final String tz) throws ExporterException {
-    final Compiler c = new Compiler();
     final SessionContext ctx = new SessionContext();
-    final List<RunnableStatement> stmts = c.compile("timezone(\"" + tz + "\")");
+    final List<RunnableStatement> stmts = Compiler.compile("set(timezone, \"" + tz + "\")");
     for (final RunnableStatement rs : stmts) {
       rs.run(ctx);
     }
-    Assert.assertEquals(tz, ZoneId.systemDefault().getId());
+    Assert.assertEquals(tz, ctx.getConfig().getTimezone());
   }
 
   @Test
@@ -199,7 +218,7 @@ public class QueryCompilerTest {
     try {
       checkTimezone("Africa/Wakanda");
       // We shouldn't make it here
-      Assert.fail("Should have cause exception");
+      Assert.fail("Should have caused exception");
     } catch (final OpsqlException e) {
       // This is OK
     }
@@ -207,7 +226,6 @@ public class QueryCompilerTest {
 
   private void runStatement(final SessionContext ctx, final String statement)
       throws ExporterException {
-    final Compiler c = new Compiler();
     final List<RunnableStatement> stmts = Compiler.compile(statement);
     for (final RunnableStatement rs : stmts) {
       rs.run(ctx);
@@ -219,5 +237,24 @@ public class QueryCompilerTest {
     final SessionContext ctx = new SessionContext();
     runStatement(ctx, "set(outputFormat, \"json\")");
     Assert.assertEquals("json", ctx.getConfig().getOutputFormat());
+    runStatement(ctx, "set(rollupMinutes, 42)");
+    Assert.assertEquals(42, ctx.getConfig().getRollupMinutes());
+    runStatement(ctx, "set(allMetrics, true)");
+    Assert.assertEquals(true, ctx.getConfig().isAllMetrics());
+    runStatement(ctx, "set(allMetrics, false)");
+    Assert.assertEquals(false, ctx.getConfig().isAllMetrics());
+  }
+
+  @Test
+  public void testComplexSet() throws ExporterException {
+    final SessionContext ctx = new SessionContext();
+    runStatement(ctx, "set(nameSanitizer.forbidden, \"abc1\")");
+    Assert.assertEquals("abc1", ctx.getConfig().getNameSanitizer().getForbidden());
+    runStatement(ctx, "set(wavefrontConfig.token, \"abc2\")");
+    Assert.assertEquals("abc2", ctx.getConfig().getWavefrontConfig().getToken());
+    runStatement(ctx, "set(sqlConfig.sql, \"abc3\")");
+    Assert.assertEquals("abc3", ctx.getConfig().getSqlConfig().getSql());
+    runStatement(ctx, "set(elasticSearchConfig.apiKey, \"abc4\")");
+    Assert.assertEquals("abc4", ctx.getConfig().getElasticSearchConfig().getApiKey());
   }
 }

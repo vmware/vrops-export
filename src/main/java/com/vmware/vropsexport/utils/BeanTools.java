@@ -20,6 +20,7 @@
 
 package com.vmware.vropsexport.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.StringTokenizer;
@@ -41,7 +42,12 @@ public class BeanTools {
 
   private static Method getGetMethod(final Object target, final String key)
       throws NoSuchMethodException {
-    return target.getClass().getMethod(getMethodName("get", key));
+    try {
+      return target.getClass().getMethod(getMethodName("get", key));
+    } catch (final NoSuchMethodException e) {
+      // Could be a boolean with an "is"-getter
+      return target.getClass().getMethod(getMethodName("is", key));
+    }
   }
 
   private static Object innerGet(final Object target, final String key)
@@ -49,10 +55,15 @@ public class BeanTools {
     return getGetMethod(target, key).invoke(target);
   }
 
-  private static void innerSet(final Object target, final String key, final Object value)
+  private static void innerSet(final Object target, final String key, Object value)
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
     final String methodName = getMethodName("set", key);
     final Class<?> propertyType = getGetMethod(target, key).getReturnType();
+
+    // Some values may have to be coerced. Luckily, Jackson can do that for us!
+    if (value.getClass() != propertyType) {
+      value = new ObjectMapper().convertValue(value, propertyType);
+    }
     target.getClass().getMethod(methodName, propertyType).invoke(target, value);
   }
 

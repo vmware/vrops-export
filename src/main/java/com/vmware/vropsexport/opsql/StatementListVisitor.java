@@ -21,13 +21,9 @@
 package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.utils.BeanTools;
-import com.vmware.vropsexport.utils.ParseUtils;
 import java.lang.reflect.InvocationTargetException;
-import java.time.ZoneId;
-import java.time.zone.ZoneRulesException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimeZone;
 
 public class StatementListVisitor extends BaseVisitor {
   private final List<RunnableStatement> statements = new ArrayList<>();
@@ -35,41 +31,20 @@ public class StatementListVisitor extends BaseVisitor {
   public StatementListVisitor() {}
 
   @Override
-  public Object visitTimeZoneStatement(final OpsqlParser.TimeZoneStatementContext ctx) {
-    try {
-      // Parse as ZoneId, since TimeZone fails silently on invalid timezone names
-      final TimeZone tz =
-          TimeZone.getTimeZone(ZoneId.of(ParseUtils.unquote(ctx.StringLiteral().getText())));
-      statements.add((sessionContext) -> TimeZone.setDefault(tz));
-      return null;
-    } catch (final ZoneRulesException e) {
-      throw new OpsqlException(e.getMessage());
-    }
-  }
-
-  @Override
   public Object visitSetStatement(final OpsqlParser.SetStatementContext ctx) {
     final String key = ctx.Identifier().getText();
-    final Object value = ctx.literal().accept(this);
+    final Object value = ctx.propertyLiteral().accept(this);
     statements.add(
         sessionContext -> {
           try {
             BeanTools.set(sessionContext.getConfig(), key, value);
           } catch (final InvocationTargetException e) {
-            throw new OpsqlException("Internal error: " + e.getMessage());
+            throw new OpsqlException(e.getTargetException().getMessage());
           } catch (final IllegalAccessException | NoSuchFieldException | NoSuchMethodException e) {
             throw new OpsqlException("No such field: " + key);
           }
         });
     return super.visitSetStatement(ctx);
-  }
-
-  @Override
-  public Object visitFormatStatement(final OpsqlParser.FormatStatementContext ctx) {
-    statements.add(
-        (sessionContext) ->
-            sessionContext.setFormat(ParseUtils.unquote(ctx.StringLiteral().getText())));
-    return super.visitFormatStatement(ctx);
   }
 
   @Override

@@ -32,4 +32,9 @@ public class BaseVisitor extends OpsqlBaseVisitor<Object> {
   public Object visitNumber(final OpsqlParser.NumberContext ctx) {
     return Double.parseDouble(ctx.getText());
   }
+
+  @Override
+  public Object visitBooleanLiteral(final OpsqlParser.BooleanLiteralContext ctx) {
+    return Boolean.parseBoolean(ctx.getText().toLowerCase());
+  }
 }

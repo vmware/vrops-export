@@ -22,7 +22,9 @@ import com.vmware.vropsexport.Exporter;
 import com.vmware.vropsexport.Field;
 import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.ResourceRequest;
+import com.vmware.vropsexport.utils.ParseUtils;
 import java.io.IOException;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,8 +34,12 @@ import org.apache.http.HttpException;
 public class Query implements RunnableStatement {
   final ResourceRequest resourceRequest;
   final List<Field> fields;
-  Date fromTime;
-  Date toTime;
+  private String fromTimeStr;
+  private String toTimeStr;
+  private Date fromDate;
+  private Date toDate;
+  private String lookback;
+  boolean resolved = false;
 
   public Query() {
     resourceRequest = new ResourceRequest();
@@ -43,12 +49,12 @@ public class Query implements RunnableStatement {
   public Query(
       final ResourceRequest resourceRequest,
       final List<Field> fields,
-      final Date fromTime,
-      final Date toTime) {
+      final String fromTime,
+      final String toTime) {
     this.resourceRequest = resourceRequest;
     this.fields = fields;
-    this.fromTime = fromTime;
-    this.toTime = toTime;
+    fromTimeStr = fromTime;
+    toTimeStr = toTime;
   }
 
   public ResourceRequest getResourceRequest() {
@@ -59,20 +65,29 @@ public class Query implements RunnableStatement {
     return fields;
   }
 
-  public Date getFromTime() {
-    return fromTime;
+  public void setFromTimeStr(final String fromTimeStr) {
+    if (lookback != null) {
+      throw new OpsqlException("Relative and absolute time ranges are mutually exclusive");
+    }
+    this.fromTimeStr = fromTimeStr;
   }
 
-  public Date getToTime() {
-    return toTime;
+  public void setToTimeStr(final String toTimeStr) {
+    if (lookback != null) {
+      throw new OpsqlException("Relative and absolute time ranges are mutually exclusive");
+    }
+    this.toTimeStr = toTimeStr;
   }
 
-  public void setFromTime(final Date fromTime) {
-    this.fromTime = fromTime;
+  public String getLookback() {
+    return lookback;
   }
 
-  public void setToTime(final Date toTime) {
-    this.toTime = toTime;
+  public void setLookback(final String lookback) {
+    if (fromTimeStr != null || toTimeStr != null) {
+      throw new OpsqlException("Relative and absolute time ranges are mutually exclusive");
+    }
+    this.lookback = lookback;
   }
 
   @Override
@@ -94,10 +109,9 @@ public class Query implements RunnableStatement {
   }
 
   public Config toConfig(final SessionContext ctx) {
-    final Config conf = new Config();
+    final Config conf = ctx.getConfig();
     conf.setQuery(resourceRequest);
     conf.setFields(fields);
-    conf.setOutputFormat(ctx.getFormat());
     return conf;
   }
 
@@ -113,12 +127,46 @@ public class Query implements RunnableStatement {
             true,
             ctx.getMaxRows(),
             ctx.getMaxRes());
-    final long begin = fromTime != null ? fromTime.getTime() : ctx.getFromTime();
-    final long end = toTime != null ? toTime.getTime() : ctx.getToTime();
+    final long begin = fromTimeStr != null ? parseDate(fromTimeStr, ctx) : ctx.getFromTime();
+    final long end = toTimeStr != null ? parseDate(toTimeStr, ctx) : ctx.getToTime();
     try {
       exporter.exportTo(ctx.getOutput(), begin, end, null, true);
     } catch (final IOException | HttpException e) {
       throw new ExporterException(e);
     }
+  }
+
+  public void resolveDates(final SessionContext ctx) throws ExporterException {
+    if (resolved) {
+      return;
+    }
+    if (fromTimeStr != null || lookback != null) {
+      fromDate =
+          new Date(
+              lookback != null
+                  ? System.currentTimeMillis() - ParseUtils.parseLookback(lookback)
+                  : parseDate(fromTimeStr, ctx));
+    }
+    if (toTimeStr != null || lookback != null) {
+      toDate = new Date(lookback != null ? System.currentTimeMillis() : parseDate(toTimeStr, ctx));
+    }
+    resolved = true;
+  }
+
+  private long parseDate(final String date, final SessionContext ctx) {
+    // Attempt to parse as datetime. If that doesn't work, try with time only.
+    try {
+      return ParseUtils.parseDateTime(date, ctx.getConfig().getZoneId()).getTime();
+    } catch (final DateTimeParseException e) {
+      return ParseUtils.parseTime(date, ctx.getConfig().getZoneId()).getTime();
+    }
+  }
+
+  public Date getFromDate() {
+    return fromDate;
+  }
+
+  public Date getToDate() {
+    return toDate;
   }
 }

@@ -18,10 +18,8 @@
 package com.vmware.vropsexport.opsql;
 
 import com.vmware.vropsexport.Field;
-import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.models.ResourceRequest;
 import com.vmware.vropsexport.utils.ParseUtils;
-import java.time.ZoneId;
 import java.util.*;
 
 public class QueryBuilderVisitor extends BaseVisitor {
@@ -313,34 +311,28 @@ public class QueryBuilderVisitor extends BaseVisitor {
 
   @Override
   public Object visitRelativeTimeSpec(final OpsqlParser.RelativeTimeSpecContext ctx) {
-    final long now = System.currentTimeMillis();
-    try {
-      query.setFromTime(new Date(now - ParseUtils.parseLookback(ctx.lookback.getText())));
-    } catch (final ExporterException e) {
-      throw new RuntimeException(
-          "Unexpected exception", e); // This should never happen, since lexer would have caught it
-    }
+    query.setLookback(ctx.lookback.getText());
     return super.visitRelativeTimeSpec(ctx);
   }
 
   @Override
   public Object visitAbsoluteTimeSpec(final OpsqlParser.AbsoluteTimeSpecContext ctx) {
-    query.setFromTime(parseDateTime(ctx.t1));
+    query.setFromTimeStr(normalizeDateTime(ctx.t1));
     if (ctx.t2 != null) {
-      query.setToTime(parseDateTime(ctx.t2));
+      query.setToTimeStr(normalizeDateTime(ctx.t2));
     }
     return super.visitAbsoluteTimeSpec(ctx);
   }
 
-  private Date parseDateTime(final OpsqlParser.AbsoluteTimeContext ctx) {
+  private String normalizeDateTime(final OpsqlParser.AbsoluteTimeContext ctx) {
     if (ctx.date != null) {
       String d = ctx.date.getText() + " " + ctx.time.getText();
       if (ctx.timeZone != null) {
         d += " " + ctx.timeZone.getText();
       }
-      return ParseUtils.parseDateTime(d, ZoneId.systemDefault());
+      return d;
     }
-    return ParseUtils.parseTime(ctx.time.getText(), ZoneId.systemDefault());
+    return ctx.time.getText();
   }
 
   public Query getQuery() {

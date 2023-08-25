@@ -152,113 +152,123 @@ public class Exporter implements DataProvider {
       final String parentSpec,
       final boolean quiet)
       throws IOException, HttpException, ExporterException {
-    Progress progress = null;
-
-    final ResourceRequest query = conf.getQuery();
-
-    final RowMetadata meta =
-        conf.isAllMetrics()
-            ? new RowMetadata(
-                conf,
-                metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
-                    .stream()
-                    .map(ResourceAttributeResponse.ResourceAttribute::getKey)
-                    .collect(Collectors.toList()))
-            : new RowMetadata(conf);
-    final RowsetProcessor rsp = rspFactory.makeFromConfig(out, conf, this);
-    rsp.preamble(meta, conf);
-    String parentId = null;
-    if (parentSpec != null) {
-
-      // Lookup parent
-      final Matcher m = Patterns.parentSpecPattern.matcher(parentSpec);
-      if (!m.matches()) {
-        throw new ExporterException(
-            "Not a valid parent spec: "
-                + parentSpec
-                + ". should be on the form ResourceKind:resourceName");
-      }
-      // TODO: No way of specifying adapter type here. Should there be?
-      final ResourceRequest parentQuery = new ResourceRequest();
-      parentQuery.setAdapterKind(Collections.singletonList(m.group(1)));
-      parentQuery.setResourceKind(Collections.singletonList(m.group(2)));
-      final List<NamedResource> pResources = fetchResources(query, 0).getResourceList();
-      if (pResources.size() == 0) {
-        throw new ExporterException("Parent not found");
-      }
-      if (pResources.size() > 1) {
-        throw new ExporterException("Parent spec is not unique");
-      }
-      parentId = pResources.get(0).getIdentifier();
-    }
-
-    int page = 0;
-    for (; ; ) {
-      final PageOfResources resPage;
-
-      // Fetch resources
-      if (parentId != null) {
-        final String url = "/suite-api/api/resources/" + parentId + "/relationships";
-        resPage =
-            client.getJson(url, PageOfResources.class, "relationshipType=CHILD", "page=" + page++);
-      } else {
-        resPage = fetchResources(query, page++);
-      }
-
-      final List<NamedResource> resources = resPage.getResourceList();
-      // If we got an empty set back, we ran out of pages.
-      if (resources.size() == 0) {
-        break;
-      }
-
-      // Initialize progress reporting
-      if (!quiet && progress == null) {
-        progress = new Progress(resPage.getPageInfo().getTotalCount());
-        progress.reportProgress(0);
-      }
-      int chunkSize = Math.min(MAX_RESPONSE_ROWS, maxRows);
-      if (verbose) {
-        log.debug("Raw chunk size is " + chunkSize + " resources");
-      }
-
-      // We don't want to make the chunks so big that not all threads will have work to do.
-      // Make sure that doesn't happen.
-      chunkSize = Math.min(chunkSize, 1 + (resources.size() / executor.getMaximumPoolSize()));
-      if (verbose) {
-        log.debug("Adjusted chunk size is " + chunkSize + " resources");
-      }
-      final Progress finalProgress = progress;
-      // Child relationships may return objects of the wrong type, so we have
-      // to check the type here.
-      final Stream<NamedResource> filteredResources =
-          resources.stream()
-              .filter((r) -> r.isSameType(conf.getAdapterKind(), conf.getResourceKind()));
-      Chunker.chunkify(
-          filteredResources,
-          chunkSize,
-          (chunk) -> {
-            startChunkJob(chunk, rsp, meta, begin, end, finalProgress);
-          });
-
-      final ArrayList<NamedResource> chunk = new ArrayList<>(chunkSize);
-    }
-    executor.shutdown();
+    final TimeZone tz = TimeZone.getDefault();
     try {
-      // We have no idea how long it's going to take, so pick a ridiculously long timeout.
-      if (verbose) {
-        log.debug("Waiting for all threads to finish");
+      // Switch default time zone to the user specified one while we're running the export.
+      TimeZone.setDefault(TimeZone.getTimeZone(conf.getTimezone()));
+      Progress progress = null;
+
+      final ResourceRequest query = conf.getQuery();
+
+      final RowMetadata meta =
+          conf.isAllMetrics()
+              ? new RowMetadata(
+                  conf,
+                  metadata.getStatKeysForResourceKind(conf.getAdapterKind(), conf.getResourceKind())
+                      .stream()
+                      .map(ResourceAttributeResponse.ResourceAttribute::getKey)
+                      .collect(Collectors.toList()))
+              : new RowMetadata(conf);
+      try (final RowsetProcessor rsp = rspFactory.makeFromConfig(out, conf, this)) {
+        rsp.preamble(meta, conf);
+        String parentId = null;
+        if (parentSpec != null) {
+
+          // Lookup parent
+          final Matcher m = Patterns.parentSpecPattern.matcher(parentSpec);
+          if (!m.matches()) {
+            throw new ExporterException(
+                "Not a valid parent spec: "
+                    + parentSpec
+                    + ". should be on the form ResourceKind:resourceName");
+          }
+          // TODO: No way of specifying adapter type here. Should there be?
+          final ResourceRequest parentQuery = new ResourceRequest();
+          parentQuery.setAdapterKind(Collections.singletonList(m.group(1)));
+          parentQuery.setResourceKind(Collections.singletonList(m.group(2)));
+          final List<NamedResource> pResources = fetchResources(query, 0).getResourceList();
+          if (pResources.size() == 0) {
+            throw new ExporterException("Parent not found");
+          }
+          if (pResources.size() > 1) {
+            throw new ExporterException("Parent spec is not unique");
+          }
+          parentId = pResources.get(0).getIdentifier();
+        }
+
+        int page = 0;
+        for (; ; ) {
+          final PageOfResources resPage;
+
+          // Fetch resources
+          if (parentId != null) {
+            final String url = "/suite-api/api/resources/" + parentId + "/relationships";
+            resPage =
+                client.getJson(
+                    url, PageOfResources.class, "relationshipType=CHILD", "page=" + page++);
+          } else {
+            resPage = fetchResources(query, page++);
+          }
+
+          final List<NamedResource> resources = resPage.getResourceList();
+          // If we got an empty set back, we ran out of pages.
+          if (resources.size() == 0) {
+            break;
+          }
+
+          // Initialize progress reporting
+          if (!quiet && progress == null) {
+            progress = new Progress(resPage.getPageInfo().getTotalCount());
+            progress.reportProgress(0);
+          }
+          int chunkSize = Math.min(MAX_RESPONSE_ROWS, maxRows);
+          if (verbose) {
+            log.debug("Raw chunk size is " + chunkSize + " resources");
+          }
+
+          // We don't want to make the chunks so big that not all threads will have work to do.
+          // Make sure that doesn't happen.
+          chunkSize = Math.min(chunkSize, 1 + (resources.size() / executor.getMaximumPoolSize()));
+          if (verbose) {
+            log.debug("Adjusted chunk size is " + chunkSize + " resources");
+          }
+          final Progress finalProgress = progress;
+          // Child relationships may return objects of the wrong type, so we have
+          // to check the type here.
+          final Stream<NamedResource> filteredResources =
+              resources.stream()
+                  .filter((r) -> r.isSameType(conf.getAdapterKind(), conf.getResourceKind()));
+          Chunker.chunkify(
+              filteredResources,
+              chunkSize,
+              (chunk) -> {
+                startChunkJob(chunk, rsp, meta, begin, end, finalProgress);
+              });
+
+          final ArrayList<NamedResource> chunk = new ArrayList<>(chunkSize);
+        }
       }
-      executor.awaitTermination(1, TimeUnit.DAYS);
-      if (verbose) {
-        log.debug("All threads have finished!");
+    } finally {
+      executor.shutdown();
+      try {
+        // We have no idea how long it's going to take, so pick a ridiculously long timeout.
+        if (verbose) {
+          log.debug("Waiting for all threads to finish");
+        }
+        executor.awaitTermination(1, TimeUnit.DAYS);
+        if (verbose) {
+          log.debug("All threads have finished!");
+        }
+      } catch (final InterruptedException e) {
+        // Shouldn't happen...
+        e.printStackTrace();
+        return;
       }
-    } catch (final InterruptedException e) {
-      // Shouldn't happen...
-      e.printStackTrace();
-      return;
+      out.flush();
+
+      // Switch back to the original time zone
+      TimeZone.setDefault(tz);
     }
-    out.flush();
-    rsp.close();
     if (!quiet) {
       System.err.println("100% done");
     }

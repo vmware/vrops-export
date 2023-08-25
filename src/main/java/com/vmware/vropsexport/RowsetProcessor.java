@@ -19,10 +19,11 @@ package com.vmware.vropsexport;
 
 import com.vmware.vropsexport.exceptions.ExporterException;
 
-public interface RowsetProcessor {
+public interface RowsetProcessor extends AutoCloseable {
   void preamble(RowMetadata meta, Config conf) throws ExporterException;
 
   void process(Rowset rowset, RowMetadata meta) throws ExporterException;
 
+  @Override
   void close() throws ExporterException;
 }
