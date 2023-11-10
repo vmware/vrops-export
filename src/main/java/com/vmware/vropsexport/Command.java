@@ -4,11 +4,6 @@ import com.vmware.vropsexport.exceptions.ExporterException;
 import com.vmware.vropsexport.security.CertUtils;
 import com.vmware.vropsexport.security.RecoverableCertificateException;
 import com.vmware.vropsexport.utils.ParseUtils;
-import org.apache.commons.cli.*;
-import org.apache.http.HttpException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,6 +16,14 @@ import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Scanner;
+import org.apache.commons.cli.*;
+import org.apache.http.HttpException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 public abstract class Command {
 
@@ -43,6 +46,7 @@ public abstract class Command {
   protected int maxRes;
   protected boolean dumpRest;
   protected Client client;
+  private static final Logger log = LogManager.getLogger(Client.class);
 
   protected static String getExceptionMessage(Throwable t) {
     while (t != null && t.getMessage() == null) {
@@ -66,6 +70,9 @@ public abstract class Command {
       }
     } catch (final ExporterException e) {
       System.err.println("ERROR: " + getExceptionMessage(e));
+      if (log.isDebugEnabled()) {
+        e.printStackTrace(System.err);
+      }
       System.exit(1);
     } catch (final CertificateException
         | KeyManagementException
@@ -79,8 +86,13 @@ public abstract class Command {
   }
 
   protected Client createClient()
-      throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException,
-          ExporterException, HttpException, KeyManagementException {
+      throws CertificateException,
+          IOException,
+          KeyStoreException,
+          NoSuchAlgorithmException,
+          ExporterException,
+          HttpException,
+          KeyManagementException {
     for (; ; ) {
       final KeyStore ks = CertUtils.loadExtendedTrust(trustStore, trustPass);
       try {
@@ -148,8 +160,13 @@ public abstract class Command {
   }
 
   protected CommandLine parseOptions(final String[] args)
-      throws ExporterException, HttpException, IOException, CertificateException, KeyStoreException,
-          NoSuchAlgorithmException, KeyManagementException {
+      throws ExporterException,
+          HttpException,
+          IOException,
+          CertificateException,
+          KeyStoreException,
+          NoSuchAlgorithmException,
+          KeyManagementException {
     // Parse command line
     final CommandLineParser parser = new DefaultParser();
     final Options opts = defineOptions();
@@ -197,7 +214,11 @@ public abstract class Command {
     outputFile = commandLine.getOptionValue('o');
     verbose = commandLine.hasOption('v');
     if (verbose) {
-      Configurator.setRootLevel(Level.DEBUG);
+      final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+      final Configuration config = ctx.getConfiguration();
+      final LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+      loggerConfig.setLevel(Level.DEBUG);
+      ctx.updateLoggers();
     }
     useTmpFile = !commandLine.hasOption('S');
     trustStore = commandLine.getOptionValue('T');

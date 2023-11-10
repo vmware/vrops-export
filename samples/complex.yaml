@@ -20,7 +20,7 @@ rollupMinutes: 5
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
   - alias: PARENT_VCENTER
-  - prop: summary|parentVCenter
+    prop: summary|parentVCenter
   - alias: PARENT_DATACENTER
     prop: summary|parentDatacenter
   - alias: PARENT_CLUSTER
