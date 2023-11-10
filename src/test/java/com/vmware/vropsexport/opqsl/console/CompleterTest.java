@@ -44,6 +44,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class CompleterTest {
+
   private final List<ResourceAttributeResponse.ResourceAttribute> stats;
 
   private final List<ResourceAttributeResponse.ResourceAttribute> props;
@@ -112,7 +113,4 @@ public class CompleterTest {
     runTest(
         "resource(VMWARE:VirtualMachine).parents(VMWARE:HostSystem h).fields(h->cpu", 64, expected);
   }
-
-  @Test
-  public void testInnerExpansion() {}
 }
