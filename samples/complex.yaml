@@ -1,0 +1,87 @@
+# Copyright 2017-2023 VMware, Inc. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+resourceType: VMWARE:VirtualMachine
+rollupType: LATEST
+rollupMinutes: 5
+dateFormat: "yyyy-MM-dd HH:mm:ss"
+fields:
+  - alias: PARENT_VCENTER
+    prop: summary|parentVCenter
+  - alias: PARENT_DATACENTER
+    prop: summary|parentDatacenter
+  - alias: PARENT_CLUSTER
+    prop: summary|parentCluster
+  - alias: PARENT_HOST
+    prop: summary|parentHost
+  - alias: CPUS_ALLOCATED
+    metric: cpu|corecount_provisioned
+  - alias: CPU_USAGE_P
+    metric: cpu|usage_average
+  - alias: MEMORY_ALLOCATED
+    metric: mem|actual.capacity
+  - alias: MEMORY_USAGE_P
+    metric: mem|usage_average
+  - alias: MEMORY_GUEST_USAGE
+    metric: mem|guest_usage
+  - alias: DISK_SPACE_ALLOCATED
+    metric: diskspace|provisionedSpace
+  - alias: DISK_SPACE_USAGE
+    metric: diskpace|workload
+  - alias: OPERATING_SYSTEM
+    prop: summary|guest|fullName
+  - alias: VSPHERE_TAG
+    prop: summary|tagJson
+  - alias: SUMMARY_RUNTIME_POWER_STATE
+    prop: summary|runtime|powerState
+  - alias: VMTOOLS_VERSION_STATUS
+    prop: summary|guest|toolsVersionStatus2
+  - alias: VMTOOLS_RUNNING_STATUS
+    prop: summary|guest|toolsRunningStatus
+  - alias: VMTOOLS_VERSION
+    prop: summary|guest|toolsVersion
+  - alias: VM_AS_TEMPLATE
+    prop: summary|config|isTemplate
+  - alias: VM_UUID
+    prop: summary|UUID
+  - alias: CPU_CONTENTION_P
+    metric: cpu|capacity_contentionPct
+  - alias: CPU_DEMAND_P
+    metric: cpu|demandPct
+  - alias: MEMORY_CONTENTION_P
+    metric: mem|host_contentionPct
+  - alias: MEMORY_DEMAND_P
+    metric: mem|guest_demand
+  - alias: NUMBER_OF_NICS
+    prop: summary|config|numEthernetCards
+  - alias: OS_IP
+    prop: summary|guest|ipAddress
+  - alias: IP_NIC_1
+    prop: net:4000|ip_address
+  - alias: IP_NIC_2
+    prop: net:4001|ip_address
+  - alias: VM_FOLDER
+    prop: summary|parentFolder
+  - alias: HW_VERSION
+    prop: config|version
+  - alias: RESOURCE_POOL_NAME
+    prop: $parent:ResourcePool.config|name
+  - alias: RESOURCE_POOL_CPU  # The export tool needs at least one metric to load the resource.
+    metric: $parent:ResourcePool.cpu|workload
+  - alias: PORTGROUP_NAME
+    prop: $parent:VmwareDistributedVirtualSwitch.config|name
+  - alias: PORTGROUP_WORKLOAD
+    metric: $parent:VmwareDistributedVirtualSwitch.network|usage|workload
