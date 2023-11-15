@@ -75,7 +75,7 @@ public class RowMetadata {
       } else {
         if (fld.hasProp()) {
           final String propKey = fld.getProp();
-          if (metricMap.containsKey(propKey)) {
+          if (propMap.containsKey(propKey)) {
             throw new ExporterException(
                 "Repeated properties are not supported. Offending property: " + propKey);
           }
