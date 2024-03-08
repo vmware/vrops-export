@@ -86,13 +86,8 @@ public abstract class Command {
   }
 
   protected Client createClient()
-      throws CertificateException,
-          IOException,
-          KeyStoreException,
-          NoSuchAlgorithmException,
-          ExporterException,
-          HttpException,
-          KeyManagementException {
+      throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException,
+          ExporterException, HttpException, KeyManagementException {
     for (; ; ) {
       final KeyStore ks = CertUtils.loadExtendedTrust(trustStore, trustPass);
       try {
@@ -160,13 +155,8 @@ public abstract class Command {
   }
 
   protected CommandLine parseOptions(final String[] args)
-      throws ExporterException,
-          HttpException,
-          IOException,
-          CertificateException,
-          KeyStoreException,
-          NoSuchAlgorithmException,
-          KeyManagementException {
+      throws ExporterException, HttpException, IOException, CertificateException, KeyStoreException,
+          NoSuchAlgorithmException, KeyManagementException {
     // Parse command line
     final CommandLineParser parser = new DefaultParser();
     final Options opts = defineOptions();

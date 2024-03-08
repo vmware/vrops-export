@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 resourceType: VMWARE:VirtualMachine
-rollupType: AVG
+rollupType: LATEST
 rollupMinutes: 5
 dateFormat: "yyyy-MM-dd HH:mm:ss"
 fields:
@@ -38,47 +38,51 @@ fields:
   - alias: MEMORY_GUEST_USAGE
     metric: mem|guest_usage
   - alias: DISK_SPACE_ALLOCATED
-    metric: diskspace|actual.capacity
-
-  
-  # CPU fields
-  - alias: cpuDemand
+    metric: diskspace|provisionedSpace
+  - alias: DISK_SPACE_USAGE
+    metric: diskpace|workload
+  - alias: OPERATING_SYSTEM
+    prop: summary|guest|fullName
+  - alias: VSPHERE_TAG
+    prop: summary|tagJson
+  - alias: SUMMARY_RUNTIME_POWER_STATE
+    prop: summary|runtime|powerState
+  - alias: VMTOOLS_VERSION_STATUS
+    prop: summary|guest|toolsVersionStatus2
+  - alias: VMTOOLS_RUNNING_STATUS
+    prop: summary|guest|toolsRunningStatus
+  - alias: VMTOOLS_VERSION
+    prop: summary|guest|toolsVersion
+  - alias: VM_AS_TEMPLATE
+    prop: summary|config|isTemplate
+  - alias: VM_UUID
+    prop: summary|UUID
+  - alias: CPU_CONTENTION_P
+    metric: cpu|capacity_contentionPct
+  - alias: CPU_DEMAND_P
     metric: cpu|demandPct
-  - alias: cpuReady
-    metric: cpu|readyPct
-  - alias: cpuCostop
-    metric: cpu|costopPct
-  # Memory fields
-  - alias: memDemand
+  - alias: MEMORY_CONTENTION_P
+    metric: mem|host_contentionPct
+  - alias: MEMORY_DEMAND_P
     metric: mem|guest_demand
-  - alias: memSwapOut
-    metric: mem|swapoutRate_average
-  - alias: memSwapIn
-    metric: mem|swapinRate_average
-  # Storage fields
-  - alias: storageDemandKbps
-    metric: storage|demandKBps
-  # Diskspace fields
-  - alias: vmUsed
-    metric: diskspace|used
-  # Network fields
-  - alias: netBytesRx
-    metric: net|bytesRx_average
-  - alias: netBytesTx
-    metric: net|bytesTx_average
-  # Host CPU
-  - alias: hostCPUDemand
-    metric: $parent:HostSystem.cpu|demandmhz
-  # Guest OS
-  - alias: guestOS
-    prop: config|guestFullName
-  # Host CPU type
-  - alias: hostCPUType
-    prop: $parent:HostSystem.cpu|cpuModel
-  # Host name
-  - alias: hostName
-    prop: summary|parentHost
-  # Host name a different way
-  - alias: hostName2
-    prop: $parent:HostSystem.$resName
- 
+  - alias: NUMBER_OF_NICS
+    prop: summary|config|numEthernetCards
+  - alias: OS_IP
+    prop: summary|guest|ipAddress
+  - alias: IP_NIC_1
+    prop: net:4000|ip_address
+  - alias: IP_NIC_2
+    prop: net:4001|ip_address
+  - alias: VM_FOLDER
+    prop: summary|parentFolder
+  - alias: HW_VERSION
+    prop: config|version
+  - alias: RESOURCE_POOL_NAME
+    prop: $parent:ResourcePool.config|name
+  - alias: RESOURCE_POOL_CPU  # The export tool needs at least one metric to load the resource.
+    metric: $parent:ResourcePool.cpu|workload
+  - alias: PORTGROUP_NAME
+    prop: $parent:VmwareDistributedVirtualSwitch.config|name
+  - alias: PORTGROUP_WORKLOAD
+    metric: $parent:VmwareDistributedVirtualSwitch.network|usage|workload
+
